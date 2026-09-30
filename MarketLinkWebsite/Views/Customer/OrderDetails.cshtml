@@ -1,0 +1,328 @@
+@model MarketLinkWebsite.Controllers.CustomerOrderDetailsViewModel
+@{
+    ViewData["Title"] = "Order details";
+    var farmerCancelled = Model.Order.Status == "Cancelled" && !string.IsNullOrWhiteSpace(Model.CancellationReason);
+    var farmerDeclined = Model.Order.Status == "Declined";
+
+    var pickupPin = Model.MarketLatitude != 0 && Model.MarketLongitude != 0
+        ? new MarketMapMarker
+        {
+            Kind = "market",
+            Lat = Model.MarketLatitude,
+            Lon = Model.MarketLongitude,
+            Title = Model.PickupLocationName,
+            Subtitle = Model.MarketAddress,
+            Meta = new List<MarketMapFact>
+            {
+                new() { Label = "Day", Value = Model.MarketDay },
+                new() { Label = "Collect", Value = Model.Order.PickupWindow }
+            }
+        }
+        : null;
+}
+@await Html.PartialAsync("_CustomerNav")
+
+<div class="container-xl pb-5">
+    @await Html.PartialAsync("_CustomerFlash")
+
+    @if (farmerCancelled)
+    {
+        <div class="alert alert-danger rounded-4 border-0 shadow-sm mb-4" role="alert">
+            <div class="d-flex gap-3">
+                <i class="bi bi-x-octagon-fill fs-4" aria-hidden="true"></i>
+                <div>
+                    <h2 class="h6 fw-bold mb-1">Your order has been cancelled</h2>
+                    <p class="mb-2">The farmer could not fulfil reservation <strong>@Model.Order.OrderNumber</strong>. Your reason:</p>
+                    <p class="mb-2 fst-italic">@Model.CancellationReason</p>
+                    <p class="mb-0 small">Any reserved items have been released back to the farm and nothing was charged. You are welcome to reorder from the same products.</p>
+                </div>
+            </div>
+            <div class="mt-3 d-flex flex-wrap gap-2">
+                <a asp-controller="Product" asp-action="Index" class="btn btn-sm btn-light fw-semibold"><i class="bi bi-basket2 me-1" aria-hidden="true"></i>Start a new pre-order</a>
+                <a asp-controller="Customer" asp-action="Orders" class="btn btn-sm btn-outline-light fw-semibold">View my orders</a>
+            </div>
+        </div>
+    }
+    else if (farmerDeclined)
+    {
+        <div class="alert alert-warning rounded-4 border-0 shadow-sm mb-4" role="alert">
+            <div class="d-flex gap-3">
+                <i class="bi bi-exclamation-triangle-fill fs-4" aria-hidden="true"></i>
+                <div>
+                    <h2 class="h6 fw-bold mb-1">The farmer declined this order</h2>
+                    <p class="mb-0 small">The farmer could not take this reservation. Any reserved items have been released and you have not been charged.</p>
+                </div>
+            </div>
+            <div class="mt-3">
+                <a asp-controller="Product" asp-action="Index" class="btn btn-sm btn-dark fw-semibold"><i class="bi bi-basket2 me-1" aria-hidden="true"></i>Find something else</a>
+            </div>
+        </div>
+    }
+    else if (Model.Order.Status == "New" || Model.Order.Status == "Pending")
+    {
+        <div class="alert alert-info rounded-4 border-0 shadow-sm mb-4" role="status">
+            <div class="d-flex gap-3">
+                <i class="bi bi-hourglass-split fs-4" aria-hidden="true"></i>
+                <div>
+                    <h2 class="h6 fw-bold mb-1">Waiting for the farmer to accept</h2>
+                    <p class="mb-0 small">You can edit or cancel this reservation any time until @Model.FarmNames accepts it. After that the farmer starts preparing your items.</p>
+                </div>
+            </div>
+        </div>
+    }
+
+    <nav aria-label="Breadcrumb" class="mb-4">
+        <ol class="breadcrumb small mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Customer" asp-action="Dashboard" class="text-decoration-none" style="color: var(--ml-accent-text);">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Customer" asp-action="Orders" class="text-decoration-none" style="color: var(--ml-accent-text);">Orders</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Order.OrderNumber</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2"><span class="badge rounded-pill soft-success"><i class="bi @Model.Order.StatusIcon me-1" aria-hidden="true"></i>@Model.Order.Status</span><span class="small text-muted">Placed @Model.Order.OrderDate.ToString("MMM d, yyyy")</span></div>
+            <h1 class="display-6 fw-bold text-dark mb-2">Order @Model.Order.OrderNumber</h1>
+            <p class="text-muted mb-0">A closer look at your local harvest and pickup details.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-controller="Customer" asp-action="Orders" class="btn btn-outline-success rounded-pill fw-semibold" style="border-color: var(--ml-accent-text); color: var(--ml-accent-text);"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>All orders</a>
+            @if (Model.Order.CanEdit)
+            {
+                <a asp-controller="CustomerOrder" asp-action="Edit" asp-route-id="@Model.Order.Id" class="btn btn-brand rounded-pill fw-semibold" style="background: var(--ml-leaf-solid); border-color: var(--ml-accent-text);"><i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Edit reservation</a>
+            }
+            @if (Model.Order.CanCancel)
+            {
+                <form asp-controller="CustomerOrder" asp-action="Cancel" method="post" class="d-inline"
+                      data-confirm="Cancel this reservation? The reserved items go back to the farmer and cannot be restored.">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Order.Id" />
+                    <button type="submit" class="btn btn-outline-danger rounded-pill fw-semibold"><i class="bi bi-x-circle me-1" aria-hidden="true"></i>Cancel order</button>
+                </form>
+            }
+            @if (Model.Order.Status is "Completed" or "Cancelled" or "Declined")
+            {
+                <a asp-controller="CustomerReorder" asp-action="Index" asp-route-id="@Model.Order.Id" class="btn btn-brand rounded-pill fw-semibold" style="background: var(--ml-leaf-solid); border-color: var(--ml-accent-text);"><i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>Reorder these items</a>
+            }
+            @if (Model.Items.Any(item => item.CanReview && !item.IsReviewed))
+            {
+                <a asp-controller="Review" asp-action="Create" asp-route-productId="@Model.Items.First(item => item.CanReview && !item.IsReviewed).ProductId" class="btn btn-brand rounded-pill fw-semibold" style="background: var(--ml-leaf-solid); border-color: var(--ml-accent-text);"><i class="bi bi-star me-1" aria-hidden="true"></i>Review an item</a>
+            }
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <section class="card border-0 shadow-sm rounded-5 bg-white p-4 p-md-5 mb-4" aria-labelledby="pickup-progress-heading">
+                <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
+                    <div><div class="eyebrow text-uppercase fw-bold mb-1" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">Order progress</div><h2 id="pickup-progress-heading" class="h4 fw-bold text-dark mb-1">Your pickup journey</h2><p class="small text-muted mb-0">We’ll keep you posted at every step.</p></div>
+                    <span class="small text-muted"><i class="bi bi-clock me-1" aria-hidden="true"></i>Order history</span>
+                </div>
+                <div class="order-timeline">
+                    @foreach (var step in Model.Timeline)
+                    {
+                        var stateClass = step.State == "complete" ? "complete" : step.State == "current" ? "current" : "upcoming";
+                        <div class="order-timeline-step @stateClass">
+                            <div class="order-timeline-marker"><i class="bi @step.Icon" aria-hidden="true"></i></div>
+                            <div class="order-timeline-copy"><div class="d-flex flex-wrap align-items-center gap-2"><h3 class="h6 fw-bold text-dark mb-0">@step.Title</h3>@if (step.State == "current"){<span class="badge rounded-pill soft-success">Current</span>}</div><p class="small text-muted mb-1">@step.Detail</p><span class="small fw-semibold" style="color: var(--ml-accent-text);">@step.Time</span></div>
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <section class="card border-0 shadow-sm rounded-5 bg-white overflow-hidden" aria-labelledby="items-heading">
+                <div class="p-4 p-md-5 pb-3 d-flex align-items-center justify-content-between gap-3">
+                    <div><div class="eyebrow text-uppercase fw-bold mb-1" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">What you ordered</div><h2 id="items-heading" class="h4 fw-bold text-dark mb-0">@Model.Items.Count item@(Model.Items.Count == 1 ? string.Empty : "s")</h2></div>
+                    <span class="small text-muted">@Model.Order.ItemSummary</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <caption class="visually-hidden">Items in order @Model.Order.OrderNumber</caption>
+                        <thead class="table-light"><tr><th class="ps-4" scope="col">Item</th><th scope="col">Quantity</th><th class="text-end" scope="col">Price</th><th class="text-end" scope="col">Total</th><th class="text-end pe-4" scope="col">Review</th></tr></thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr>
+                                    <th class="ps-4" scope="row"><div class="d-flex align-items-center gap-3">@if (!string.IsNullOrWhiteSpace(item.ImageUrl)){<img src="@item.ImageUrl" class="rounded-3" style="width: 3.5rem; height: 3.5rem; object-fit: cover;" alt="@item.Name" />}<div><div class="fw-semibold text-dark">@item.Name</div><div class="small text-muted">@item.FarmerName</div></div></div></th>
+                                    <td><span class="small text-dark text-nowrap">@item.Quantity &times; @item.Unit</span></td>
+                                    <td class="text-end small text-muted">@item.UnitPrice.ToString("C2")</td>
+                                    <td class="text-end fw-semibold text-dark">@item.LineTotal.ToString("C2")</td>
+                                    <td class="text-end pe-4">@if (item.CanReview && !item.IsReviewed){<a asp-controller="Review" asp-action="Create" asp-route-productId="@item.ProductId" class="btn btn-sm btn-link text-decoration-none p-0" style="color: var(--ml-accent-text);">Review</a>}else if (item.IsReviewed){<span class="small text-muted">Reviewed</span>}else{<span class="small text-muted">—</span>}</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-4 p-md-5 pt-3"><div class="d-flex justify-content-end"><div class="w-100" style="max-width: 290px;"><div class="d-flex justify-content-between small text-muted mb-2"><span>Subtotal</span><span>@Model.Subtotal.ToString("C2")</span></div><div class="d-flex justify-content-between small text-muted mb-3"><span>MarketLink fee</span><span>@Model.MarketFee.ToString("C2")</span></div><div class="d-flex justify-content-between fw-bold text-dark border-top pt-3"><span>Total</span><span class="h5 mb-0">@Model.Total.ToString("C2")</span></div></div></div></div>
+            </section>
+        </div>
+
+        <div class="col-xl-4">
+            <section class="card border-0 shadow-sm rounded-5 bg-white p-4 p-md-5 mb-4" aria-labelledby="pickup-info-heading">
+                <div class="d-flex align-items-center gap-3 mb-4"><span class="d-inline-flex align-items-center justify-content-center rounded-3" style="width: 2.8rem; height: 2.8rem; background: var(--ml-sage-tint); color: var(--ml-accent-text);"><i class="bi bi-geo-alt" aria-hidden="true"></i></span><div><div class="eyebrow text-uppercase fw-bold mb-1" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">Pickup details</div><h2 id="pickup-info-heading" class="h5 fw-bold text-dark mb-0">@Model.Order.PickupDate</h2></div></div>
+                <div class="pickup-info-box rounded-4 p-3 mb-3"><div class="small fw-semibold text-dark mb-1">@Model.Order.PickupWindow</div><div class="small text-muted">@Model.PickupLocationName</div><div class="small text-muted">@Model.MarketAddress</div></div>
+
+                @if (pickupPin is not null)
+                {
+                    <div class="mb-3">
+                        @await Html.PartialAsync("_MarketMap", new MarketMapViewModel
+                        {
+                            Title = "Where you collect",
+                            Subtitle = Model.PickupLocationName,
+                            HeightClass = "market-map-canvas-mid",
+                            Markers = new List<MarketMapMarker> { pickupPin }
+                        })
+                    </div>
+                }
+                else if (!string.IsNullOrWhiteSpace(Model.MarketDirectionsUrl))
+                {
+                    <div class="order-map-actions mb-3">
+                        <a class="btn btn-sm btn-brand" href="@Model.MarketDirectionsUrl" target="_blank" rel="noopener"><i class="bi bi-sign-turn-right"></i> Directions to @Model.PickupLocationName</a>
+                    </div>
+                }
+
+                @if (Model.Farms.Count > 0)
+                {
+                    <div class="order-farms">
+                        <h3 class="order-farms-title"><i class="bi bi-tree"></i> Where your product comes from</h3>
+                        @foreach (var farm in Model.Farms)
+                        {
+                            <div class="order-farm">
+                                <span class="order-farm-media">
+                                    @if (!string.IsNullOrWhiteSpace(farm.ImageUrl))
+                                    {
+                                        <img src="@farm.ImageUrl" alt="@farm.FarmName" loading="lazy" />
+                                    }
+                                    else
+                                    {
+                                        <span class="order-farm-initials">@farm.Initials</span>
+                                    }
+                                </span>
+                                <div class="order-farm-copy">
+                                    <strong>@farm.FarmName</strong>
+                                    <span class="order-farm-items">@farm.ItemCount item@(farm.ItemCount == 1 ? string.Empty : "s") from this farm</span>
+                                    @if (!string.IsNullOrWhiteSpace(farm.OperatingDays))
+                                    {
+                                        <span><i class="bi bi-calendar3"></i> Open @farm.OperatingDays</span>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(farm.PickupWindows))
+                                    {
+                                        <span><i class="bi bi-clock"></i> @farm.PickupWindows</span>
+                                    }
+                                    <div class="order-farm-links">
+                                        <a href="@farm.FarmUrl"><i class="bi bi-shop"></i> Farm profile</a>
+                                        @if (!string.IsNullOrWhiteSpace(farm.MapUrl))
+                                        {
+                                            <a href="@farm.MapUrl" target="_blank" rel="noopener"><i class="bi bi-map"></i> Farm location</a>
+                                        }
+                                    </div>
+                                    @if (farm.Stalls.Count > 0)
+                                    {
+                                        <div class="order-farm-stalls">
+                                            <span class="order-farm-stalls-label">Pickup stall@(farm.Stalls.Count == 1 ? string.Empty : "s")</span>
+                                            @foreach (var stall in farm.Stalls)
+                                            {
+                                                var isMine = stall.MarketId == Model.Order.MarketId;
+                                                var dir = stall.DirectionsUrl;
+                                                <div class="order-stall@(isMine ? " is-mine" : string.Empty)">
+                                                    <span class="order-stall-marker" aria-hidden="true"><i class="bi @(isMine ? "bi-geo-alt-fill" : "bi-geo-alt")"></i></span>
+                                                    <span class="order-stall-copy">
+                                                        <strong>@stall.MarketName@(string.IsNullOrWhiteSpace(stall.StallNumber) ? string.Empty : $" - stall {stall.StallNumber}")</strong>
+                                                        <span>@stall.MarketAddress</span>
+                                                        <span>@stall.OpenTime to @stall.CloseTime &middot; @stall.MarketDay</span>
+                                                    </span>
+                                                    @if (isMine)
+                                                    {
+                                                        <span class="order-stall-badge">Your pickup point</span>
+                                                    }
+                                                    <a class="order-stall-go" href="@dir" target="_blank" rel="noopener" aria-label="Directions to @stall.MarketName"><i class="bi bi-sign-turn-right"></i></a>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+
+                <div class="small text-muted mb-1">Contact address on this order</div>
+                <address class="small text-dark mb-3"><strong class="text-dark">@Model.PickupAddress.Recipient</strong><br />@Model.PickupAddress.AddressLine<br />@Model.PickupAddress.City@if (!string.IsNullOrWhiteSpace(Model.PickupAddress.Region)){<text>, @Model.PickupAddress.Region @Model.PickupAddress.PostalCode</text>}</address>
+                <div class="d-flex gap-2 align-items-center small text-muted"><i class="bi bi-telephone" aria-hidden="true"></i>@Model.PickupAddress.Phone</div>
+                @if (!string.IsNullOrWhiteSpace(Model.Notes))
+                {
+                    <div class="small text-muted mt-3"><strong class="text-dark">Order note:</strong> @Model.Notes</div>
+                }
+                <a asp-controller="Customer" asp-action="Addresses" class="btn btn-sm btn-outline-success w-100 mt-4 rounded-pill fw-semibold" style="border-color: var(--ml-accent-text); color: var(--ml-accent-text);">Manage addresses</a>
+            </section>
+
+            <section class="card border-0 shadow-sm rounded-5 bg-white p-4 p-md-5" aria-labelledby="help-heading">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 2.8rem; height: 2.8rem; background: var(--ml-amber-tint); color: var(--ml-accent-amber);"><i class="bi bi-chat-heart" aria-hidden="true"></i></div>
+                <h2 id="help-heading" class="h5 fw-bold text-dark">Need a hand?</h2>
+                <p class="small text-muted">Our market team can help with pickup questions, substitutions, or a change to your order.</p>
+                <a asp-controller="Home" asp-action="Contact" class="small fw-semibold text-decoration-none" style="color: var(--ml-accent-text);">Contact support <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+            </section>
+        </div>
+    </div>
+</div>
+
+<style>
+    .order-timeline {
+        position: relative;
+    }
+
+    .order-timeline-step {
+        display: flex;
+        gap: 1rem;
+        position: relative;
+        padding-bottom: 1.5rem;
+    }
+
+    .order-timeline-step:last-child {
+        padding-bottom: 0;
+    }
+
+    .order-timeline-step:not(:last-child)::before {
+        content: "";
+        position: absolute;
+        left: 1.1rem;
+        top: 2.35rem;
+        bottom: 0.15rem;
+        width: 2px;
+        background: #dce8d9;
+    }
+
+    .order-timeline-marker {
+        width: 2.3rem;
+        height: 2.3rem;
+        flex: 0 0 2.3rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #edf3eb;
+        color: #6d7b6e;
+        position: relative;
+        z-index: 1;
+    }
+
+    .order-timeline-step.complete .order-timeline-marker {
+        background: #4f772d;
+        color: #fff;
+    }
+
+    .order-timeline-step.current .order-timeline-marker {
+        background: #e8f0e6;
+        color: #4f772d;
+        box-shadow: 0 0 0 5px #f1f6ef;
+    }
+
+    .order-timeline-copy {
+        padding-top: 0.2rem;
+    }
+
+    .pickup-info-box {
+        background: #f1f6ef;
+        border: 1px solid #dce8d9;
+    }
+</style>

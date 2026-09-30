@@ -1,0 +1,176 @@
+﻿@model MarketLinkWebsite.Areas.Admin.Models.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Overview";
+}
+
+<div class="admin-page-header">
+    <div>
+        <div class="admin-page-eyebrow">Marketplace pulse</div>
+        <h1 class="admin-page-title">@(ViewData["Greeting"] as string ?? "Welcome"), @Model.AdminName</h1>
+        <p class="admin-page-subtitle">Here is what is happening across MarketLink today. Your marketplace is growing steadily.</p>
+    </div>
+    <div class="admin-page-actions">
+        <form asp-area="Admin" asp-controller="Report" asp-action="Generate" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="period" value="Last 30 days" />
+            <button type="submit" class="admin-btn admin-btn-secondary">
+                <i class="bi bi-download" aria-hidden="true"></i>
+                Export report
+            </button>
+        </form>
+        <a class="admin-btn admin-btn-primary" asp-area="Admin" asp-controller="Market" asp-action="Create">
+            <i class="bi bi-plus-lg" aria-hidden="true"></i>
+            Add market
+        </a>
+    </div>
+</div>
+
+<section class="admin-metric-grid" aria-label="Marketplace summary">
+    @foreach (var metric in Model.Metrics)
+    {
+        <article class="admin-card admin-metric-card">
+            <div class="admin-metric-top">
+                <span class="admin-metric-label">@metric.Label</span>
+                <span class="admin-metric-icon metric-icon-@metric.IconTone" aria-hidden="true">
+                    <i class="bi @metric.Icon"></i>
+                </span>
+            </div>
+            <p class="admin-metric-value">@metric.Value</p>
+            <div class="admin-metric-bottom">
+                <span class="admin-change admin-change-@metric.ChangeTone"><i class="bi bi-arrow-up-right" aria-hidden="true"></i>@metric.Change</span>
+                <span class="admin-metric-detail">@metric.Detail</span>
+            </div>
+        </article>
+    }
+</section>
+
+<section class="admin-dashboard-grid" aria-label="Revenue and activity">
+    <article class="admin-card admin-chart-card">
+        <div class="admin-card-header">
+            <div>
+                <h2 class="admin-card-title">Revenue overview</h2>
+                <p class="admin-card-description">Gross merchandise value across all markets</p>
+            </div>
+            <div class="text-end">
+                <div class="admin-chart-total">@Model.CurrentRevenue.ToString("C0")</div>
+                <span class="admin-chart-total-label">Current month</span>
+            </div>
+        </div>
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="admin-chart-legend mb-0">
+                <span class="admin-legend-item"><span class="admin-legend-dot"></span>Revenue</span>
+                <span class="admin-legend-item"><span class="admin-legend-dot admin-legend-dot-current"></span>Current month</span>
+            </div>
+            <div class="admin-segmented-control" aria-label="Revenue period">
+                <a class="admin-segment" asp-area="Admin" asp-controller="Report" asp-action="Index">6M</a>
+                <a class="admin-segment admin-segment-active" asp-area="Admin" asp-controller="Report" asp-action="Index">1Y</a>
+                <a class="admin-segment" asp-area="Admin" asp-controller="Report" asp-action="Index">All</a>
+            </div>
+        </div>
+        <div class="admin-chart" role="img" aria-label="Monthly revenue trend from January through June">
+            <div class="admin-chart-y-axis" aria-hidden="true"><span>@Model.RevenueAxisMaximum.ToString("C0")</span><span>@(Model.RevenueAxisMaximum * 0.6667m).ToString("C0")</span><span>@(Model.RevenueAxisMaximum * 0.3333m).ToString("C0")</span><span>$0</span></div>
+            <div class="admin-chart-plot">
+                @foreach (var point in Model.RevenueTrend)
+                {
+                    <div class="admin-chart-column">
+                        <div class="admin-chart-bar-area">
+                            <div class="admin-chart-bar @(point.IsCurrent ? "admin-chart-bar-current" : string.Empty)" style="height: @point.Height%;" title="@point.Amount from @point.Orders orders"></div>
+                        </div>
+                        <span class="admin-chart-label @(point.IsCurrent ? "admin-chart-label-current" : string.Empty)">@point.Month</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </article>
+
+    <article class="admin-card admin-activity-card">
+        <div class="admin-card-header">
+            <div>
+                <h2 class="admin-card-title">Recent activity</h2>
+                <p class="admin-card-description">The latest marketplace updates</p>
+            </div>
+            <a class="admin-link-arrow" asp-area="Admin" asp-controller="Notification" asp-action="Index">View all <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+        </div>
+        <ul class="admin-activity-list">
+            @foreach (var activity in Model.RecentActivity)
+            {
+                <li class="admin-activity-item">
+                    <span class="admin-activity-icon icon-@activity.Tone" aria-hidden="true"><i class="bi @activity.Icon"></i></span>
+                    <div class="admin-activity-copy">
+                        <p class="admin-activity-title">@activity.Title</p>
+                        <p class="admin-activity-description">@activity.Description</p>
+                    </div>
+                    <time class="admin-activity-time">@activity.TimeLabel</time>
+                </li>
+            }
+        </ul>
+    </article>
+</section>
+
+<section class="admin-lower-grid" aria-label="Pending work and notifications">
+    <article class="admin-card admin-table-card">
+        <div class="admin-card-header">
+            <div>
+                <h2 class="admin-card-title">Farmer applications</h2>
+                <p class="admin-card-description">Applications waiting for your review</p>
+            </div>
+            <a class="admin-link-arrow" asp-area="Admin" asp-controller="Farmer" asp-action="Approvals">Review all <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+        </div>
+        @if (Model.PendingFarmers.Count > 0)
+        {
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <caption class="admin-table-caption">Pending farmer applications</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Farmer</th>
+                            <th scope="col">Location</th>
+                            <th scope="col">Submitted</th>
+                            <th scope="col"><span class="visually-hidden">Action</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var farmer in Model.PendingFarmers)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="admin-person-cell">
+                                        <span class="admin-avatar admin-avatar-sm admin-avatar-@farmer.AvatarTone" aria-hidden="true">@farmer.Initials</span>
+                                        <span class="admin-person-copy"><strong>@farmer.Name</strong><small>@farmer.FarmName</small></span>
+                                    </div>
+                                </td>
+                                <td class="admin-table-muted">@farmer.Location</td>
+                                <td class="admin-table-muted">@farmer.SubmittedLabel</td>
+                                <td class="admin-table-action"><a asp-area="Admin" asp-controller="Farmer" asp-action="Approvals" aria-label="Review @farmer.Name"><i class="bi bi-arrow-up-right" aria-hidden="true"></i></a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="admin-empty-state"><i class="bi bi-check2-circle" aria-hidden="true"></i><strong>All caught up</strong><p>There are no farmer applications waiting for review.</p></div>
+        }
+    </article>
+
+    <article class="admin-card admin-notification-card">
+        <div class="admin-card-header">
+            <div>
+                <h2 class="admin-card-title">Notifications</h2>
+                <p class="admin-card-description">Stay on top of marketplace activity</p>
+            </div>
+            <a class="admin-link-arrow" asp-area="Admin" asp-controller="Notification" asp-action="Index">See all <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+        </div>
+        <div class="admin-notification-list">
+            @foreach (var notification in Model.Notifications)
+            {
+                <a class="admin-notification-item" href="@notification.ActionUrl">
+                    <span class="admin-notification-icon tone-@notification.Tone" aria-hidden="true"><i class="bi @notification.Icon"></i></span>
+                    <span class="admin-notification-copy"><span class="admin-notification-title">@notification.Title</span><span class="admin-notification-message">@notification.Message</span></span>
+                    <span class="admin-notification-time">@notification.TimeLabel</span>
+                </a>
+            }
+        </div>
+    </article>
+</section>

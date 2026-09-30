@@ -1,0 +1,248 @@
+@model InventoryViewModel
+@{
+    ViewData["Title"] = "Inventory";
+}
+
+<div class="farmer-page-header">
+    <div>
+        <div class="farmer-page-kicker">STOCK CONTROL</div>
+        <h1 class="farmer-page-title">Inventory &amp; weekly stock</h1>
+        <p class="farmer-page-subtitle">Set how much you have each week, pause sold-out items, and keep stock accurate for shoppers.</p>
+    </div>
+    <div class="farmer-page-actions">
+        <a class="farmer-btn farmer-btn-secondary" asp-area="Farmer" asp-controller="Product" asp-action="Index">
+            <i class="bi bi-grid" aria-hidden="true"></i>
+            All products
+        </a>
+        <a class="farmer-btn farmer-btn-primary" asp-area="Farmer" asp-controller="Product" asp-action="Create">
+            <i class="bi bi-plus-lg" aria-hidden="true"></i>
+            Add product
+        </a>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.Notice))
+{
+    <div class="farmer-alert farmer-alert-success" role="status">
+        <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+        <span>@Model.Notice</span>
+    </div>
+}
+
+@if (TempData["Error"] is string inventoryError && !string.IsNullOrWhiteSpace(inventoryError))
+{
+    <div class="farmer-alert farmer-alert-danger" role="alert">
+        <i class="bi bi-exclamation-octagon-fill" aria-hidden="true"></i>
+        <span>@inventoryError</span>
+    </div>
+}
+
+<section class="row g-3 mb-4" aria-label="Inventory summary">
+    <div class="col-6 col-lg-3">
+        <div class="farmer-summary-card">
+            <span class="farmer-summary-icon farmer-tone-green"><i class="bi bi-boxes" aria-hidden="true"></i></span>
+            <div><strong>@Model.TotalItems</strong><span>Items tracked</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="farmer-summary-card">
+            <span class="farmer-summary-icon farmer-tone-blue"><i class="bi bi-broadcast" aria-hidden="true"></i></span>
+            <div><strong>@Model.ListedItems</strong><span>Live listings</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="farmer-summary-card">
+            <span class="farmer-summary-icon farmer-tone-amber"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i></span>
+            <div><strong>@Model.LowStockItems</strong><span>Need restocking</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="farmer-summary-card">
+            <span class="farmer-summary-icon farmer-tone-violet"><i class="bi bi-layers" aria-hidden="true"></i></span>
+            <div><strong>@Model.TotalUnits</strong><span>Units on hand</span></div>
+        </div>
+    </div>
+</section>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <nav class="farmer-filter-chips" aria-label="Filter inventory">
+        @foreach (var option in new[] { "All items", "Low stock", "Sold out", "Not listed" })
+        {
+            var isActive = Model.Filter == option;
+            <a class="farmer-filter-chip @(isActive ? "is-active" : string.Empty)"
+               asp-area="Farmer" asp-controller="Inventory" asp-action="Index" asp-route-filter="@option">
+                @option
+                @if (option == "Low stock" && Model.LowStockItems > 0)
+                {
+                    <span>@Model.LowStockItems</span>
+                }
+                else if (option == "Sold out" && Model.SoldOutItems > 0)
+                {
+                    <span>@Model.SoldOutItems</span>
+                }
+            </a>
+        }
+    </nav>
+</div>
+
+@if (Model.Items.Count == 0)
+{
+    <div class="farmer-empty-state">
+        <span class="farmer-empty-icon"><i class="bi bi-box-seam"></i></span>
+        <h2>Nothing here yet</h2>
+        <p>Add a product first, then set its stock and weekly plan here.</p>
+        <a class="farmer-btn farmer-btn-primary" asp-area="Farmer" asp-controller="Product" asp-action="Create">
+            <i class="bi bi-plus-lg" aria-hidden="true"></i> Add product
+        </a>
+    </div>
+}
+else
+{
+    <div class="farmer-inventory-list">
+        @foreach (var item in Model.Items)
+        {
+            var collapseId = $"plan-{item.Id}";
+            <article class="farmer-inventory-card @(item.IsLowStock ? "is-low" : string.Empty) @(item.IsSoldOut ? "is-soldout" : string.Empty)">
+                <div class="farmer-inventory-main">
+                    <img class="farmer-inventory-image" src="@item.ImageUrl" alt="@item.Name" loading="lazy" />
+
+                    <div class="farmer-inventory-copy">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <h2 class="farmer-inventory-name">@item.Name</h2>
+                            @if (item.IsOrganic)
+                            {
+                                <span class="farmer-organic-badge"><i class="bi bi-flower1" aria-hidden="true"></i> Organic</span>
+                            }
+                            @if (item.IsSoldOut)
+                            {
+                                <span class="farmer-inventory-pill farmer-pill-danger"><i class="bi bi-x-circle" aria-hidden="true"></i> Sold out</span>
+                            }
+                            else if (!item.IsListed)
+                            {
+                                <span class="farmer-inventory-pill farmer-pill-muted"><i class="bi bi-pause-circle" aria-hidden="true"></i> Not listed</span>
+                            }
+                            else if (item.IsLowStock)
+                            {
+                                <span class="farmer-inventory-pill farmer-pill-warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Low stock</span>
+                            }
+                            else
+                            {
+                                <span class="farmer-inventory-pill farmer-pill-ok"><i class="bi bi-check-circle" aria-hidden="true"></i> Live</span>
+                            }
+                        </div>
+                        <p class="farmer-inventory-meta">@item.Category · per @item.Unit · updated @item.UpdatedLabel</p>
+                    </div>
+
+                    <form asp-area="Farmer" asp-controller="Inventory" asp-action="UpdateStock" method="post" class="farmer-inventory-quick">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@item.Id" />
+
+                        <label class="visually-hidden" for="stock-@item.Id">Stock for @item.Name</label>
+                        <input id="stock-@item.Id" class="form-control" type="number" name="stock" min="0" max="1000000" value="@item.Stock" />
+
+                        <label class="visually-hidden" for="threshold-@item.Id">Restock alert for @item.Name</label>
+                        <input id="threshold-@item.Id" class="form-control" type="number" name="reorderThreshold" min="0" max="1000000" value="@item.ReorderThreshold" title="Alert me at" />
+
+                        <label class="farmer-inventory-check">
+                            <input type="checkbox" name="keepPlan" value="true" @(item.PlanEnabled ? "checked" : null) />
+                            <span>Apply to weekly plan</span>
+                        </label>
+
+                        <button type="submit" class="farmer-btn farmer-btn-primary farmer-btn-sm">
+                            <i class="bi bi-check-lg" aria-hidden="true"></i> Save
+                        </button>
+                    </form>
+
+                    <div class="farmer-inventory-tools">
+                        <button class="farmer-btn farmer-btn-ghost farmer-btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="false" aria-controls="@collapseId">
+                            <i class="bi bi-calendar-week" aria-hidden="true"></i> Weekly plan
+                        </button>
+
+                        <form asp-area="Farmer" asp-controller="Inventory" asp-action="ToggleListing" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@item.Id" />
+                            @{
+                                var toggleLabel = item.IsListed ? "Mark unavailable" : "List it";
+                                var toggleIcon = item.IsListed ? "bi-pause-fill" : "bi-play-fill";
+                            }
+                            <button type="submit" class="farmer-btn farmer-btn-ghost farmer-btn-sm">
+                                <i class="bi @toggleIcon" aria-hidden="true"></i>
+                                <span>@toggleLabel</span>
+                            </button>
+                        </form>
+
+                        <a class="farmer-btn farmer-btn-ghost farmer-btn-sm" asp-area="Farmer" asp-controller="Product" asp-action="Edit" asp-route-id="@item.Id">
+                            <i class="bi bi-pencil" aria-hidden="true"></i> Edit
+                        </a>
+
+                        <form asp-area="Farmer" asp-controller="Inventory" asp-action="Remove" method="post"
+                              data-confirm="Remove @item.Name from your catalogue? Its stock and weekly plan are deleted. Past orders keep their record.">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <button type="submit" class="farmer-btn farmer-btn-ghost farmer-btn-sm farmer-btn-ghost-danger">
+                                <i class="bi bi-trash3" aria-hidden="true"></i> Remove
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="collapse" id="@collapseId">
+                    <div class="farmer-inventory-plan">
+                        <form asp-area="Farmer" asp-controller="Inventory" asp-action="UpdateWeeklyPlan" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="Id" value="@item.Id" />
+
+                            <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap mb-3">
+                                <div>
+                                    <h3 class="farmer-inventory-plan-title">Recurring weekly stock template</h3>
+                                    <p class="farmer-inventory-plan-sub">Weekly total @item.WeeklyTotal units · @item.TodayStock planned for today</p>
+                                    <p class="farmer-inventory-plan-sub mb-0">
+                                        While the template is active it is applied once a day, so the
+                                        figure for today becomes your live stock. Turn it off and your
+                                        manual stock changes are left alone.
+                                    </p>
+                                </div>
+                                <div class="d-flex align-items-center gap-3 flex-wrap">
+                                    <label class="farmer-inventory-check">
+                                        <input type="checkbox" name="Enabled" value="true" @(item.PlanEnabled ? "checked" : null) />
+                                        <span>Template active</span>
+                                    </label>
+                                    <label class="farmer-inventory-check">
+                                        <input type="checkbox" name="ApplyToToday" value="true" />
+                                        <span>Apply today's figure to stock now</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="farmer-inventory-week">
+                                @{
+                                    var week = new[] { ("Monday", "MondayStock", item.MondayStock), ("Tuesday", "TuesdayStock", item.TuesdayStock), ("Wednesday", "WednesdayStock", item.WednesdayStock), ("Thursday", "ThursdayStock", item.ThursdayStock), ("Friday", "FridayStock", item.FridayStock), ("Saturday", "SaturdayStock", item.SaturdayStock), ("Sunday", "SundayStock", item.SundayStock) };
+                                    var todayName = DateTime.Now.DayOfWeek.ToString();
+                                }
+                                @foreach (var day in week)
+                                {
+                                    var fieldId = item.Id + "-" + day.Item2;
+                                    <div class="farmer-inventory-day @(todayName == day.Item1 ? "is-today" : string.Empty)">
+                                        <label for="@fieldId">@day.Item1</label>
+                                        <input id="@fieldId" class="form-control" type="number" name="@day.Item2" min="0" max="1000000" value="@day.Item3" />
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2 mt-3">
+                                <button type="submit" class="farmer-btn farmer-btn-primary farmer-btn-sm">
+                                    <i class="bi bi-save" aria-hidden="true"></i> Save template
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </article>
+        }
+    </div>
+}
+
+<div class="farmer-list-footer">
+    <span><i class="bi bi-info-circle" aria-hidden="true"></i> Stock is checked every time a shopper adds an item to a basket.</span>
+    <a asp-area="Farmer" asp-controller="Profile" asp-action="Index">Pickup windows and cut-off <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+</div>

@@ -1,0 +1,103 @@
+@model FarmerProductSummaryViewModel
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<div class="farmer-page-header">
+    <div>
+        <a class="farmer-back-link" asp-area="Farmer" asp-controller="Product" asp-action="Index"><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to products</a>
+        <div class="farmer-page-kicker mt-3">PRODUCT PREVIEW</div>
+        <h1 class="farmer-page-title">@Model.Name</h1>
+        <p class="farmer-page-subtitle">This is how your listing looks to neighbors at the market.</p>
+    </div>
+    <div class="farmer-page-actions">
+        <a class="farmer-btn farmer-btn-secondary" asp-area="Farmer" asp-controller="Product" asp-action="Index">Back to catalog</a>
+        <a class="farmer-btn farmer-btn-primary" asp-area="Farmer" asp-controller="Product" asp-action="Edit" asp-route-id="@Model.Id"><i class="bi bi-pencil" aria-hidden="true"></i> Edit listing</a>
+    </div>
+</div>
+
+<div class="row g-4 align-items-start">
+    <div class="col-12 col-lg-6">
+        <div class="farmer-detail-image-wrap">
+            <img src="@Model.ImageUrl" alt="@Model.Name" class="farmer-detail-image" />
+            <span class="farmer-status farmer-status-@Model.StatusTone"><i class="bi @(Model.IsAvailable ? "bi-broadcast" : "bi-pencil")" aria-hidden="true"></i>@Model.Status</span>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6">
+        <section class="farmer-panel farmer-detail-info h-100">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <span class="farmer-product-category">@Model.Category</span>
+                @if (Model.IsOrganic)
+                {
+                    <span class="farmer-organic-badge"><i class="bi bi-flower1" aria-hidden="true"></i> Organic</span>
+                }
+            </div>
+            <div class="farmer-detail-price">@Model.Price.ToString("C") <small>/ @Model.Unit.Replace("per ", string.Empty)</small></div>
+            <p class="farmer-detail-description">@Model.Description</p>
+            <div class="farmer-detail-divider"></div>
+            <dl class="farmer-detail-list">
+                <div><dt>Availability</dt><dd><strong class="@(Model.Stock <= Model.ReorderThreshold ? "text-warning-emphasis" : "text-success")">@Model.Stock units in stock</strong></dd></div>
+                <div><dt>Low-stock alert</dt><dd>@Model.ReorderThreshold units</dd></div>
+                <div><dt>Last updated</dt><dd>@Model.UpdatedLabel</dd></div>
+                <div><dt>Listing ID</dt><dd>#ML-P@(Model.Id)</dd></div>
+            </dl>
+            <div class="farmer-detail-note"><i class="bi bi-info-circle-fill" aria-hidden="true"></i><span>Inventory counts update as orders are prepared. Low-stock reminders are sent automatically.</span></div>
+        </section>
+    </div>
+</div>
+
+<section class="farmer-panel farmer-form-panel mt-4" aria-labelledby="inventory-heading">
+    <div class="farmer-form-section-heading">
+        <span class="farmer-form-step">01</span>
+        <div>
+            <h2 id="inventory-heading">Inventory</h2>
+            <p>Update the live quantity and the point at which MarketLink should remind you.</p>
+        </div>
+    </div>
+    <form method="post" asp-area="Farmer" asp-controller="Product" asp-action="UpdateInventory" class="row g-3 align-items-end">
+        <input type="hidden" name="id" value="@Model.Id" />
+        <div class="col-12 col-md-4">
+            <label class="form-label farmer-form-label" for="inventory-stock">Available quantity</label>
+            <input id="inventory-stock" class="form-control farmer-form-control" name="stock" type="number" min="0" step="1" value="@Model.Stock" required />
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label farmer-form-label" for="inventory-threshold">Low-stock alert at</label>
+            <input id="inventory-threshold" class="form-control farmer-form-control" name="reorderThreshold" type="number" min="0" step="1" value="@Model.ReorderThreshold" required />
+        </div>
+        <div class="col-12 col-md-4"><button class="farmer-btn farmer-btn-primary w-100" type="submit"><i class="bi bi-check2" aria-hidden="true"></i> Save inventory</button></div>
+    </form>
+</section>
+
+@if (Model.RecurringStockEnabled)
+{
+    <section class="farmer-panel farmer-form-panel mt-4" aria-labelledby="weekly-plan-heading">
+        <div class="farmer-form-section-heading">
+            <span class="farmer-form-step">02</span>
+            <div>
+                <h2 id="weekly-plan-heading">Weekly stock plan</h2>
+                <p>Saved quantities for each day of the current market week.</p>
+            </div>
+        </div>
+        <div class="row g-3">
+            <div class="col-6 col-md-3"><span class="farmer-form-hint">Monday</span><strong>@Model.MondayStock</strong></div>
+            <div class="col-6 col-md-3"><span class="farmer-form-hint">Tuesday</span><strong>@Model.TuesdayStock</strong></div>
+            <div class="col-6 col-md-3"><span class="farmer-form-hint">Wednesday</span><strong>@Model.WednesdayStock</strong></div>
+            <div class="col-6 col-md-3"><span class="farmer-form-hint">Thursday</span><strong>@Model.ThursdayStock</strong></div>
+            <div class="col-6 col-md-3"><span class="farmer-form-hint">Friday</span><strong>@Model.FridayStock</strong></div>
+            <div class="col-6 col-md-3"><span class="farmer-form-hint">Saturday</span><strong>@Model.SaturdayStock</strong></div>
+            <div class="col-6 col-md-3"><span class="farmer-form-hint">Sunday</span><strong>@Model.SundayStock</strong></div>
+        </div>
+    </section>
+}
+
+<section class="farmer-panel farmer-form-panel mt-4" aria-labelledby="delete-heading">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <h2 id="delete-heading" class="farmer-panel-title">Remove this listing</h2>
+            <p class="farmer-muted-copy mb-0">Past order line items stay available as order history after removal.</p>
+        </div>
+        <form method="post" asp-area="Farmer" asp-controller="Product" asp-action="Delete" asp-route-id="@Model.Id">
+            <button class="farmer-btn farmer-btn-secondary" type="submit"><i class="bi bi-trash" aria-hidden="true"></i> Remove product</button>
+        </form>
+    </div>
+</section>

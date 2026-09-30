@@ -1,0 +1,85 @@
+@model NotificationListViewModel
+@{
+    ViewData["Title"] = "Notifications";
+    var filter = ViewData["NotificationFilter"] as string ?? "All";
+}
+
+<div class="farmer-page-header">
+    <div>
+        <div class="farmer-page-kicker">STAY IN THE LOOP</div>
+        <h1 class="farmer-page-title">Notifications</h1>
+        <p class="farmer-page-subtitle">Orders, shopper notes, and small reminders from your MarketLink team.</p>
+    </div>
+    <div class="farmer-page-actions">
+        @if (Model.UnreadCount > 0)
+        {
+            <form method="post" asp-area="Farmer" asp-controller="Notification" asp-action="MarkAllRead">
+                <button class="farmer-btn farmer-btn-secondary" type="submit"><i class="bi bi-check2-all" aria-hidden="true"></i> Mark all read</button>
+            </form>
+        }
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.Notice))
+{
+    <div class="farmer-alert farmer-alert-success" role="status">
+        <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+        <span>@Model.Notice</span>
+    </div>
+}
+
+<section class="farmer-panel farmer-notifications-panel" aria-labelledby="notifications-heading">
+    <div class="farmer-notification-header">
+        <div>
+            <span class="farmer-panel-eyebrow">INBOX</span>
+            <h2 class="farmer-notification-header" id="notifications-heading">Your updates <span class="farmer-count-badge">@Model.UnreadCount new</span></h2>
+        </div>
+        <div class="farmer-notification-summary"><i class="bi bi-bell-fill" aria-hidden="true"></i><span>@Model.UnreadCount unread</span></div>
+    </div>
+    <div class="farmer-filter-pills my-3" role="navigation" aria-label="Notification filters">
+        <a class="@(filter == "All" ? "active" : string.Empty)" asp-area="Farmer" asp-controller="Notification" asp-action="Index">All <span>@Model.TotalCount</span></a>
+        <a class="@(filter == "Unread" ? "active" : string.Empty)" asp-area="Farmer" asp-controller="Notification" asp-action="Index" asp-route-filter="Unread">Unread <span>@Model.UnreadCount</span></a>
+    </div>
+
+    @if (Model.Notifications.Count == 0)
+    {
+        <div class="farmer-empty-state">
+            <span class="farmer-empty-icon"><i class="bi bi-bell" aria-hidden="true"></i></span>
+            <h3>No notifications in this view</h3>
+            <p>New order, review, and account updates will appear here.</p>
+        </div>
+    }
+    else
+    {
+        <div class="farmer-notification-list">
+            @foreach (var notification in Model.Notifications)
+            {
+                <article class="farmer-notification-item @(notification.IsRead ? "read" : "unread")">
+                    <span class="farmer-notification-icon farmer-tone-@notification.Tone"><i class="bi @notification.Icon" aria-hidden="true"></i></span>
+                    <div class="farmer-notification-copy">
+                        <div class="d-flex align-items-center gap-2 flex-wrap"><strong>@notification.Title</strong>@if (!notification.IsRead) { <span class="farmer-unread-label">New</span> }</div>
+                        <p>@notification.Message</p>
+                        <small>@notification.TimeLabel</small>
+                        @if (!string.IsNullOrWhiteSpace(notification.ActionUrl))
+                        {
+                            <a class="farmer-panel-link d-inline-block mt-1" href="@notification.ActionUrl">Open update <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+                        }
+                    </div>
+                    @if (!notification.IsRead)
+                    {
+                        <form method="post" asp-area="Farmer" asp-controller="Notification" asp-action="MarkRead" class="farmer-notification-action-form">
+                            <input type="hidden" name="id" value="@notification.Id" />
+                            <button class="farmer-mark-read-button" type="submit">Mark read</button>
+                        </form>
+                    }
+                    <button class="farmer-more-button" type="button" aria-label="More actions for @notification.Title"><i class="bi bi-three-dots" aria-hidden="true"></i></button>
+                </article>
+            }
+        </div>
+    }
+</section>
+
+<div class="farmer-list-footer">
+    <span><i class="bi bi-shield-check" aria-hidden="true"></i> We’ll never share your personal information with other sellers.</span>
+    <a href="mailto:hello@marketlink.local">Contact support <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+</div>

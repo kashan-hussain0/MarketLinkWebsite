@@ -1,0 +1,91 @@
+﻿@model MarketLinkWebsite.Areas.Admin.Models.CategoryListViewModel
+@{
+    ViewData["Title"] = "Categories";
+}
+
+<div class="admin-page-header">
+    <div>
+        <div class="admin-page-eyebrow">Catalog management</div>
+        <h1 class="admin-page-title">Categories</h1>
+        <p class="admin-page-subtitle">Keep the MarketLink catalog organized so customers can discover local products easily.</p>
+    </div>
+    <div class="admin-page-actions">
+        <a class="admin-btn admin-btn-primary" asp-area="Admin" asp-controller="Category" asp-action="Create"><i class="bi bi-plus-lg" aria-hidden="true"></i>Add category</a>
+    </div>
+</div>
+
+<section class="admin-stat-grid" aria-label="Category summary">
+    <article class="admin-stat-card">
+        <span class="admin-stat-icon metric-icon-sage" aria-hidden="true"><i class="bi bi-tags"></i></span>
+        <span class="admin-stat-copy"><span class="admin-stat-label">Total categories</span><strong class="admin-stat-value">@Model.TotalCategories</strong><span class="admin-stat-meta">Catalog groups</span></span>
+    </article>
+    <article class="admin-stat-card">
+        <span class="admin-stat-icon metric-icon-blue" aria-hidden="true"><i class="bi bi-check2-circle"></i></span>
+        <span class="admin-stat-copy"><span class="admin-stat-label">Active categories</span><strong class="admin-stat-value">@Model.ActiveCategories</strong><span class="admin-stat-meta">Visible to customers</span></span>
+    </article>
+    <article class="admin-stat-card">
+        <span class="admin-stat-icon metric-icon-violet" aria-hidden="true"><i class="bi bi-box-seam"></i></span>
+        <span class="admin-stat-copy"><span class="admin-stat-label">Products organized</span><strong class="admin-stat-value">@Model.TotalProducts</strong><span class="admin-stat-meta">Across all categories</span></span>
+    </article>
+</section>
+
+<section class="admin-list-card admin-card" aria-label="Category directory">
+    <div class="admin-card-header">
+        <div><h2 class="admin-card-title">Catalog categories</h2><p class="admin-card-description">Use categories to create a clear, welcoming browsing experience.</p></div>
+        <span class="admin-list-count">@Model.Categories.Count categories</span>
+    </div>
+
+    @if (Model.Categories.Count > 0)
+    {
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <caption class="admin-table-caption">MarketLink product categories</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Category</th>
+                        <th scope="col">Description</th>
+                        <th scope="col">Products</th>
+                        <th scope="col">Sort order</th>
+                        <th scope="col">Status</th>
+                        <th scope="col"><span class="visually-hidden">Actions</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <tr>
+                            <td>
+                                <div class="admin-person-cell">
+                                    <span class="admin-stat-icon icon-@category.IconTone" aria-hidden="true"><i class="bi @category.Icon"></i></span>
+                                    <span class="admin-person-copy"><strong>@category.Name</strong><small>@category.ProductCount products</small></span>
+                                </div>
+                            </td>
+                            <td class="admin-table-muted">@category.Description</td>
+                            <td class="admin-table-number">@category.ProductCount</td>
+                            <td class="admin-table-number">@category.SortOrder</td>
+                            <td><span class="admin-status status-@category.StatusTone">@category.Status</span></td>
+                            <td class="admin-table-action">
+                                <div class="d-flex justify-content-end align-items-center gap-2">
+                                    <a asp-area="Admin" asp-controller="Category" asp-action="Edit" asp-route-id="@category.Id" class="admin-table-action" aria-label="Edit @category.Name"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+                                    <form asp-area="Admin" asp-controller="Category" asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('Delete this category? Categories containing products cannot be removed.');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@category.Id" />
+                                        <button type="submit" class="admin-table-action border-0 bg-transparent p-0" aria-label="Delete @category.Name"><i class="bi bi-trash3" aria-hidden="true"></i></button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="admin-pagination">
+            <span>Showing @Model.Categories.Count categories</span>
+            <a class="admin-link-arrow" asp-area="Admin" asp-controller="Category" asp-action="Create">Add another <i class="bi bi-plus" aria-hidden="true"></i></a>
+        </div>
+    }
+    else
+    {
+        <div class="admin-empty-state"><i class="bi bi-tags" aria-hidden="true"></i><strong>No categories yet</strong><p>Add a category to start organizing the marketplace catalog.</p></div>
+    }
+</section>

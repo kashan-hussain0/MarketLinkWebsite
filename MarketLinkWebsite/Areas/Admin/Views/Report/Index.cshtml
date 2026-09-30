@@ -1,0 +1,192 @@
+@model MarketLinkWebsite.Areas.Admin.Models.ReportViewModel
+@{
+    ViewData["Title"] = "Reports";
+}
+
+<div class="admin-page-header">
+    <div>
+        <div class="admin-page-eyebrow">Insights &amp; analytics</div>
+        <h1 class="admin-page-title">Reports</h1>
+        <p class="admin-page-subtitle">A simple view of marketplace performance, growth, and the people making it happen.</p>
+    </div>
+    <div class="admin-page-actions">
+        <form asp-area="Admin" asp-controller="Report" asp-action="Export" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="period" value="@Model.SelectedPeriod" />
+            <button type="submit" class="admin-btn admin-btn-secondary"><i class="bi bi-download" aria-hidden="true"></i>Export report</button>
+        </form>
+    </div>
+</div>
+
+<section class="admin-report-hero" aria-label="Report period">
+    <div class="admin-report-hero-copy">
+        <h2 class="admin-report-hero-title">Marketplace performance at a glance</h2>
+        <p class="admin-report-hero-description">Review the latest signals from customers, farmers, and markets before your next planning session.</p>
+    </div>
+    <form class="admin-report-period-form" asp-area="Admin" asp-controller="Report" asp-action="Index" method="get">
+        <label class="visually-hidden" for="report-period">Report period</label>
+        <select class="admin-filter-select" id="report-period" name="period">
+            @if (Model.SelectedPeriod == "Last 7 days")
+            {
+                <option value="Last 7 days" selected>Last 7 days</option>
+            }
+            else
+            {
+                <option value="Last 7 days">Last 7 days</option>
+            }
+            @if (Model.SelectedPeriod == "Last 30 days")
+            {
+                <option value="Last 30 days" selected>Last 30 days</option>
+            }
+            else
+            {
+                <option value="Last 30 days">Last 30 days</option>
+            }
+            @if (Model.SelectedPeriod == "This year")
+            {
+                <option value="This year" selected>This year</option>
+            }
+            else
+            {
+                <option value="This year">This year</option>
+            }
+        </select>
+        <button type="submit" class="admin-btn admin-btn-soft admin-btn-sm">Apply</button>
+    </form>
+    <div class="admin-report-date"><i class="bi bi-calendar3" aria-hidden="true"></i>@Model.DateRangeLabel</div>
+</section>
+
+<section class="admin-report-metric-grid" aria-label="Report summary">
+    @foreach (var metric in Model.Metrics)
+    {
+        <article class="admin-card admin-report-metric-card">
+            <div class="admin-report-metric-top"><span class="admin-report-metric-label">@metric.Label</span><span class="admin-report-metric-icon metric-icon-@metric.IconTone" aria-hidden="true"><i class="bi @metric.Icon"></i></span></div>
+            <p class="admin-report-metric-value">@metric.Value</p>
+            <span class="admin-change admin-change-@metric.ChangeTone"><i class="bi bi-arrow-up-right" aria-hidden="true"></i>@metric.Change <span class="admin-inline-muted ms-1">vs. previous period</span></span>
+        </article>
+    }
+</section>
+
+<section class="admin-report-grid" aria-label="Revenue and popular products">
+    <article class="admin-card admin-report-chart-card">
+        <div class="admin-card-header">
+            <div><h2 class="admin-card-title">Sales performance</h2><p class="admin-card-description">Net sales by month</p></div>
+            <span class="admin-inline-muted">USD</span>
+        </div>
+        <div class="admin-report-bars" role="img" aria-label="Net sales by month">
+            @foreach (var bar in Model.RevenueByMonth)
+            {
+                <div class="admin-report-bar-column">
+                    <span class="admin-report-bar-value">@bar.Value</span>
+                    <div class="admin-report-bar-area"><div class="admin-report-bar @(bar.Tone == "current" ? "admin-report-bar-current" : string.Empty)" style="height: @bar.Height%;" title="@bar.Value"></div></div>
+                    <span class="admin-report-bar-label">@bar.Label</span>
+                </div>
+            }
+        </div>
+        <div class="admin-chart-legend mt-3"><span class="admin-legend-item"><span class="admin-legend-dot"></span>Previous months</span><span class="admin-legend-item"><span class="admin-legend-dot admin-legend-dot-current"></span>Current period</span></div>
+    </article>
+
+    <article class="admin-card admin-popular-card">
+        <div class="admin-card-header">
+            <div><h2 class="admin-card-title">Popular products</h2><p class="admin-card-description">Top sellers in this period</p></div>
+            <i class="bi bi-three-dots text-secondary" aria-hidden="true"></i>
+        </div>
+        <div class="admin-popular-list">
+            @foreach (var product in Model.TopProducts)
+            {
+                <div class="admin-popular-item">
+                    <span class="admin-product-thumb tone-@product.ImageTone" aria-hidden="true">@product.Initials</span>
+                    <span class="admin-popular-copy"><strong>@product.Name</strong><small>@product.Category · @product.UnitsSold sold</small></span>
+                    <span class="admin-popular-number">@product.Revenue.ToString("C")<small>revenue</small></span>
+                </div>
+            }
+        </div>
+    </article>
+</section>
+
+<section class="admin-report-table-card admin-card" aria-label="Top farmer performance">
+    <div class="admin-card-header">
+        <div><h2 class="admin-card-title">Top farmer performance</h2><p class="admin-card-description">The partners creating the most value this period.</p></div>
+        <a class="admin-link-arrow" asp-area="Admin" asp-controller="Farmer" asp-action="Index">View farmers <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+    </div>
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <caption class="admin-table-caption">Top farmer performance</caption>
+            <thead><tr><th scope="col">Farmer</th><th scope="col">Orders</th><th scope="col">Revenue</th><th scope="col">Change</th></tr></thead>
+            <tbody>
+                @foreach (var farmer in Model.TopFarmers)
+                {
+                    <tr>
+                        <td><div class="admin-person-cell"><span class="admin-avatar admin-avatar-sm admin-avatar-sage" aria-hidden="true">@farmer.Initials</span><span class="admin-person-copy"><strong>@farmer.Name</strong><small>@farmer.Detail</small></span></div></td>
+                        <td class="admin-table-number">@farmer.Orders</td>
+                        <td class="admin-table-number">@farmer.Revenue</td>
+                        <td><span class="admin-change admin-change-@farmer.ChangeTone"><i class="bi bi-arrow-up-right" aria-hidden="true"></i>@farmer.Change</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.TopFarmers.Count == 0)
+    {
+        <div class="admin-empty-state"><i class="bi bi-bar-chart" aria-hidden="true"></i><strong>No farmer sales in this period</strong><p>Paid, non-cancelled orders will appear here.</p></div>
+    }
+</section>
+
+<section class="admin-report-table-card admin-card" aria-label="Revenue across markets">
+    <div class="admin-card-header">
+        <div><h2 class="admin-card-title">Revenue across markets</h2><p class="admin-card-description">Where the pickup demand actually sits.</p></div>
+        <a class="admin-link-arrow" asp-area="Admin" asp-controller="Market" asp-action="Index">Manage markets <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+    </div>
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <caption class="admin-table-caption">Revenue across markets</caption>
+            <thead><tr><th scope="col">Market</th><th scope="col">Orders</th><th scope="col">Revenue</th><th scope="col">Reach</th></tr></thead>
+            <tbody>
+                @foreach (var market in Model.RevenueByMarket)
+                {
+                    <tr>
+                        <td><div class="admin-person-cell"><span class="admin-avatar admin-avatar-sm admin-avatar-sage" aria-hidden="true"><i class="bi bi-geo-alt" aria-hidden="true"></i></span><span class="admin-person-copy"><strong>@market.Name</strong><small>@market.Detail</small></span></div></td>
+                        <td class="admin-table-number">@market.Orders</td>
+                        <td class="admin-table-number">@market.Revenue</td>
+                        <td><span class="admin-change admin-change-@market.ChangeTone">@market.Change</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.RevenueByMarket.Count == 0)
+    {
+        <div class="admin-empty-state"><i class="bi bi-map" aria-hidden="true"></i><strong>No market sales in this period</strong><p>Pick a wider period to see revenue by market.</p></div>
+    }
+</section>
+
+<section class="admin-report-table-card admin-card" aria-label="Recent administrator activity">
+    <div class="admin-card-header">
+        <div><h2 class="admin-card-title">Recent admin activity</h2><p class="admin-card-description">A persisted audit trail of sensitive workspace actions.</p></div>
+    </div>
+    @if (Model.RecentAdminActions.Count > 0)
+    {
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <caption class="admin-table-caption">Recent admin audit activity</caption>
+                <thead><tr><th scope="col">Action</th><th scope="col">Entity</th><th scope="col">Details</th><th scope="col">Actor</th><th scope="col">Time</th></tr></thead>
+                <tbody>
+                    @foreach (var action in Model.RecentAdminActions)
+                    {
+                        <tr>
+                            <td class="admin-table-muted">@action.Action</td>
+                            <td class="admin-table-muted">@action.EntityName</td>
+                            <td>@action.Details</td>
+                            <td class="admin-table-muted">@action.Actor</td>
+                            <td class="admin-table-muted">@action.TimeLabel</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="admin-empty-state"><i class="bi bi-clock-history" aria-hidden="true"></i><strong>No admin activity yet</strong></div>
+    }
+</section>

@@ -1,0 +1,220 @@
+@model InsightsViewModel
+@{
+    ViewData["Title"] = "Sales & insights";
+    var peak = Model.WeeklySales.Count == 0 ? 0m : Model.WeeklySales.Max(point => point.Revenue);
+}
+
+<div class="farmer-page-header">
+    <div>
+        <div class="farmer-page-kicker">SALES &amp; INSIGHTS</div>
+        <h1 class="farmer-page-title">How your farm is performing</h1>
+        <p class="farmer-page-subtitle">@Model.PeriodNote. Every figure counts only the items you supply.</p>
+    </div>
+    <div class="farmer-page-actions">
+        <a class="farmer-btn farmer-btn-secondary" asp-area="Farmer" asp-controller="Order" asp-action="Index">
+            <i class="bi bi-bag" aria-hidden="true"></i>All orders
+        </a>
+        <a class="farmer-btn farmer-btn-primary" asp-area="Farmer" asp-controller="Inventory" asp-action="Index">
+            <i class="bi bi-layers" aria-hidden="true"></i>Manage stock
+        </a>
+    </div>
+</div>
+
+<div class="insight-split mb-4">
+    <section class="insight-panel" aria-label="Reporting period">
+        <div class="insight-panel-header">
+            <div>
+                <h2 class="insight-panel-title">Reporting period</h2>
+                <p class="insight-panel-note">Switch the window to compare demand.</p>
+            </div>
+        </div>
+        <div class="insight-body">
+            <div class="insight-period" role="navigation" aria-label="Reporting period">
+                @foreach (var option in new[] { "Last 7 days", "Last 30 days", "Last 90 days", "This year" })
+                {
+                    <a class="@(Model.Period == option ? "is-active" : string.Empty)"
+                       asp-area="Farmer" asp-controller="Insights" asp-action="Index" asp-route-period="@option">@option</a>
+                }
+            </div>
+            <ul class="insight-note-list mt-3">
+                <li><i class="bi bi-info-circle" aria-hidden="true"></i>@Model.BusiestDayLabel</li>
+                <li><i class="bi bi-graph-up" aria-hidden="true"></i>Top product drives @Model.TopProductShareLabel</li>
+                <li><i class="bi bi-basket" aria-hidden="true"></i>@Model.UnitsSoldLabel units supplied in this period</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="insight-panel" aria-label="Order status breakdown">
+        <div class="insight-panel-header">
+            <div>
+                <h2 class="insight-panel-title">Where your orders sit</h2>
+                <p class="insight-panel-note">All @Model.TotalOrders order@(Model.TotalOrders == 1 ? string.Empty : "s") you have received.</p>
+            </div>
+        </div>
+        <div class="insight-body">
+            @if (Model.StatusBreakdown.Count == 0)
+            {
+                <p class="insight-empty">No orders to summarise yet.</p>
+            }
+            else
+            {
+                <ul class="insight-status-list">
+                    @foreach (var row in Model.StatusBreakdown)
+                    {
+                        <li class="insight-status-row">
+                            <span class="insight-status-label"><i class="bi @row.Icon" aria-hidden="true"></i>@row.Label</span>
+                            <span class="insight-status-bar"><span style="width:@row.Percent%"></span></span>
+                            <span class="insight-status-count">@row.Count</span>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </section>
+</div>
+
+<section class="insight-grid mb-4" aria-label="Key numbers">
+    <article class="insight-stat">
+        <span class="insight-stat-label">Total orders</span>
+        <span class="insight-stat-value">@Model.TotalOrders</span>
+        <span class="insight-stat-note">@Model.CompletedCount completed</span>
+    </article>
+    <article class="insight-stat">
+        <span class="insight-stat-label">Pending orders</span>
+        <span class="insight-stat-value">@Model.PendingOrders</span>
+        <span class="insight-stat-note">Waiting on you right now</span>
+    </article>
+    <article class="insight-stat">
+        <span class="insight-stat-label">Revenue summary</span>
+        <span class="insight-stat-value">@Model.RevenueLabel</span>
+        <span class="insight-stat-note">@Model.Period</span>
+    </article>
+    <article class="insight-stat">
+        <span class="insight-stat-label">Average order</span>
+        <span class="insight-stat-value">@Model.AverageOrderValueLabel</span>
+        <span class="insight-stat-note">Lifetime @Model.LifetimeRevenueLabel</span>
+    </article>
+</section>
+
+<div class="insight-split mb-4">
+    <section class="insight-panel" aria-label="Daily revenue">
+        <div class="insight-panel-header">
+            <div>
+                <h2 class="insight-panel-title">Daily revenue</h2>
+                <p class="insight-panel-note">Last 28 days · settled orders only</p>
+            </div>
+            <span class="farmer-panel-chip">@Model.LifetimeRevenueLabel lifetime</span>
+        </div>
+        <div class="insight-body">
+            @if (peak <= 0m)
+            {
+                <p class="insight-empty">No settled revenue in the last 28 days.</p>
+            }
+            else
+            {
+                <div class="insight-chart" role="img" aria-label="Daily revenue bar chart for the last 28 days">
+                    @foreach (var point in Model.WeeklySales)
+                    {
+                        var height = (int)Math.Round(point.Revenue * 100m / peak);
+                        <div class="insight-chart-col" title="@point.DateLabel — @point.Revenue.ToString("C")">
+                            <span class="insight-chart-value">@(point.Revenue > 0m ? point.Revenue.ToString("C0") : string.Empty)</span>
+                            <span class="insight-chart-bar @(point.Revenue > 0m ? string.Empty : "is-empty")" style="height:@Math.Max(height, point.Revenue > 0m ? 6 : 2)%"></span>
+                            <span class="insight-chart-label">@point.Label</span>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="insight-panel" aria-label="Best sellers">
+        <div class="insight-panel-header">
+            <div>
+                <h2 class="insight-panel-title">Best sellers</h2>
+                <p class="insight-panel-note">Ranked by units supplied</p>
+            </div>
+        </div>
+        <div class="insight-body">
+            @if (Model.BestSellers.Count == 0)
+            {
+                <p class="insight-empty">No sales in this period yet.</p>
+            }
+            else
+            {
+                <ol class="insight-rank-list">
+                    @{
+                        var position = 0;
+                    }
+                    @foreach (var seller in Model.BestSellers)
+                    {
+                        position++;
+                        <li class="insight-rank">
+                            <span class="insight-rank-position">@position</span>
+                            <span class="insight-rank-copy">
+                                <strong>@seller.Name</strong>
+                                <small>@seller.UnitsSold unit@(seller.UnitsSold == 1 ? string.Empty : "s")</small>
+                            </span>
+                            <span class="insight-rank-value">
+                                <strong>@seller.RevenueLabel</strong>
+                                <small>revenue</small>
+                            </span>
+                        </li>
+                    }
+                </ol>
+            }
+        </div>
+    </section>
+</div>
+
+<section class="insight-panel" aria-label="Order history">
+    <div class="insight-panel-header">
+        <div>
+            <h2 class="insight-panel-title">Order history</h2>
+            <p class="insight-panel-note">@Model.CompletedCount completed · @Model.CancelledCount declined or cancelled</p>
+        </div>
+    </div>
+
+    @if (Model.RecentOrders.Count == 0)
+    {
+        <p class="insight-empty">You have not received any pre-orders yet.</p>
+    }
+    else
+    {
+        <div class="farmer-order-table-wrap">
+            <table class="farmer-order-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Order</th>
+                        <th scope="col">Placed</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Items</th>
+                        <th scope="col">Your subtotal</th>
+                        <th scope="col"><span class="visually-hidden">Open</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model.RecentOrders)
+                    {
+                        <tr>
+                            <td><strong>@order.OrderNumber</strong></td>
+                            <td>@order.DateLabel</td>
+                            <td>
+                                <span class="farmer-status farmer-status-@order.StatusTone"><i class="bi @order.StatusIcon" aria-hidden="true"></i>@order.Status</span>
+                            </td>
+                            <td>@order.ItemCount</td>
+                            <td><strong>@order.SubtotalLabel</strong></td>
+                            <td class="text-end">
+                                <a class="farmer-edit-link" asp-area="Farmer" asp-controller="Order" asp-action="Details" asp-route-id="@order.Id">Open</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+<div class="farmer-list-footer">
+    <span><i class="bi bi-info-circle" aria-hidden="true"></i> Revenue counts only your own items, and payment is settled in cash at pickup.</span>
+    <a asp-area="Farmer" asp-controller="Profile" asp-action="Index">Storefront settings <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+</div>

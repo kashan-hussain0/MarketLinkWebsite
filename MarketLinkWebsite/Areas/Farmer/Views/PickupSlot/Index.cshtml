@@ -1,0 +1,162 @@
+@model PickupSlotViewModel
+@{
+    ViewData["Title"] = "Pickup slots";
+}
+
+<div class="farmer-page-header">
+    <div>
+        <div class="farmer-page-kicker">COLLECTION TIMES</div>
+        <h1 class="farmer-page-title">Pickup slots</h1>
+        <p class="farmer-page-subtitle">Publish the hours you are actually at the stall and shoppers will only be able to book those times.</p>
+    </div>
+    <div class="farmer-page-actions">
+        <a class="farmer-btn farmer-btn-secondary" asp-area="Farmer" asp-controller="Profile" asp-action="Index">
+            <i class="bi bi-person-vcard" aria-hidden="true"></i>
+            Farm profile
+        </a>
+    </div>
+</div>
+
+@if (TempData["Success"] is string slotSuccess && !string.IsNullOrWhiteSpace(slotSuccess))
+{
+    <div class="farmer-alert farmer-alert-success" role="status">
+        <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+        <span>@slotSuccess</span>
+    </div>
+}
+
+@if (TempData["Error"] is string slotError && !string.IsNullOrWhiteSpace(slotError))
+{
+    <div class="farmer-alert farmer-alert-danger" role="alert">
+        <i class="bi bi-exclamation-octagon-fill" aria-hidden="true"></i>
+        <span>@slotError</span>
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <section class="farmer-card" aria-label="Published pickup slots">
+            <header class="farmer-card-header">
+                <h2 class="farmer-card-title">Your published slots</h2>
+                <span class="farmer-summary-card p-0 border-0 bg-transparent">
+                    <div><strong>@Model.Slots.Count</strong><span>Slots</span></div>
+                </span>
+            </header>
+
+            @if (Model.Slots.Count == 0)
+            {
+                <div class="farmer-empty">
+                    <i class="bi bi-clock-history" aria-hidden="true"></i>
+                    <h3>No slots published yet</h3>
+                    <p>Until you add a slot, shoppers see the hours you put in <a asp-area="Farmer" asp-controller="Profile" asp-action="Index">your farm profile</a>, cut down to the market's opening hours.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="farmer-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Day</th>
+                                <th scope="col">Window</th>
+                                <th scope="col">Status</th>
+                                <th scope="col"><span class="visually-hidden">Actions</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var slot in Model.Slots)
+                            {
+                                <tr>
+                                    <td><strong>@slot.DayName</strong></td>
+                                    <td>@slot.StartTime - @slot.EndTime</td>
+                                    <td>
+                                        @if (slot.IsActive)
+                                        {
+                                            <span class="farmer-badge farmer-tone-green">Open</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="farmer-badge farmer-tone-muted">Closed</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <form asp-area="Farmer" asp-controller="PickupSlot" asp-action="Toggle" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@slot.Id" />
+                                            <button class="farmer-btn farmer-btn-ghost" type="submit">
+                                                @(slot.IsActive ? "Close" : "Reopen")
+                                            </button>
+                                        </form>
+                                        <form asp-area="Farmer" asp-controller="PickupSlot" asp-action="Delete" method="post" class="d-inline"
+                                              onsubmit="return confirm('Remove the @slot.DayName slot from @slot.StartTime to @slot.EndTime?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@slot.Id" />
+                                            <button class="farmer-btn farmer-btn-danger-ghost" type="submit">Remove</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    </div>
+
+    <div class="col-lg-5">
+        <section class="farmer-card" aria-label="Add a pickup slot">
+            <header class="farmer-card-header">
+                <h2 class="farmer-card-title">Publish a new slot</h2>
+            </header>
+
+            <form asp-area="Farmer" asp-controller="PickupSlot" asp-action="Create" method="post" novalidate>
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label class="form-label" for="DayOfWeek">Day</label>
+                    <select class="form-select" id="DayOfWeek" name="DayOfWeek" asp-for="NewSlot.DayOfWeek">
+                        @foreach (var day in Model.Days)
+                        {
+                            <option value="@day.Value">@day.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label" for="StartTime">Starts</label>
+                        <input class="form-control" id="StartTime" name="StartTime" type="time"
+                               value="@Model.NewSlot.StartTime" required />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" for="EndTime">Ends</label>
+                        <input class="form-control" id="EndTime" name="EndTime" type="time"
+                               value="@Model.NewSlot.EndTime" required />
+                    </div>
+                </div>
+
+                <button class="farmer-btn farmer-btn-primary w-100" type="submit">
+                    <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                    Publish slot
+                </button>
+            </form>
+
+            <hr />
+
+            <p class="small text-muted mb-0">
+                <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+                A slot outside the market's opening hours is hidden from shoppers, so you
+                never promise a collection time the market is closed. Overlapping slots on
+                the same day are rejected.
+            </p>
+
+            @if (!string.IsNullOrWhiteSpace(Model.ProfileDays))
+            {
+                <p class="small text-muted mb-0 mt-2">
+                    <i class="bi bi-calendar-week me-1" aria-hidden="true"></i>
+                    Your profile lists these trading days: <strong>@Model.ProfileDays</strong>.
+                </p>
+            }
+        </section>
+    </div>
+</div>

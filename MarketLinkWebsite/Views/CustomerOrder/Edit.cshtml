@@ -1,0 +1,151 @@
+@model MarketLinkWebsite.Controllers.CustomerOrderEditViewModel
+@{
+    ViewData["Title"] = "Edit reservation";
+    var market = Model.Markets.FirstOrDefault(item => item.Id == Model.MarketId);
+    var slots = Enumerable.Range(0, 12).Select(hour => DateTime.Today.AddHours(8 + hour))
+        .Select(time => $"{time:hh\\:tt AM}".Replace("AM", time.Hour >= 12 ? "PM" : "AM"))
+        .Distinct()
+        .ToList();
+}
+
+<section class="section-block-sm">
+    <div class="container">
+        <nav class="breadcrumb-simple" aria-label="Breadcrumb">
+            <a asp-controller="Customer" asp-action="Orders">My orders</a><i class="bi bi-chevron-right"></i>
+            <span>Edit @Model.OrderNumber</span>
+        </nav>
+
+        <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3 mb-4">
+            <div>
+                <span class="eyebrow">Modify reservation</span>
+                <h1 class="section-title mb-0">Edit @Model.OrderNumber</h1>
+                <p class="section-copy mb-0">Change quantities or pickup details. Stocks are re-checked before saving.</p>
+            </div>
+            <a class="btn btn-soft" asp-controller="Customer" asp-action="OrderDetails" asp-route-id="@Model.Id">Back to order</a>
+        </div>
+
+        @if (TempData["Error"] is string error && !string.IsNullOrWhiteSpace(error))
+        {
+            <div class="alert alert-danger rounded-3 border-0" role="alert">
+                <i class="bi bi-exclamation-octagon-fill me-2"></i>@error
+            </div>
+        }
+
+        <form asp-controller="CustomerOrder" asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <div class="content-card p-4 mb-4">
+                        <h2 class="h5 mb-3"><i class="bi bi-basket2 me-2 text-success"></i>Items in this reservation</h2>
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Item</th>
+                                        <th scope="col">Price</th>
+                                        <th scope="col" style="width:140px;">Quantity</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (var i = 0; i < Model.Lines.Count; i++)
+                                    {
+                                        var line = Model.Lines[i];
+                                        <tr>
+                                            <td>
+                                                <input type="hidden" asp-for="Lines[i].ProductId" />
+                                                <strong class="d-block">@line.ProductName</strong>
+                                                <small class="text-muted">@line.FarmerName · per @line.Unit</small>
+                                            </td>
+                                            <td>@line.UnitPrice.ToString("C")</td>
+                                            <td>
+                                                <input class="form-control" asp-for="Lines[i].Quantity" type="number" min="0" max="@line.MaxQuantity" />
+                                                @if (line.CanIncrease)
+                                                {
+                                                    <small class="form-text d-block text-success">@line.StockLabel · up to @line.MaxQuantity</small>
+                                                }
+                                                else
+                                                {
+                                                    <small class="form-text d-block text-warning">@line.StockLabel · you can only lower this</small>
+                                                }
+                                                <small class="form-text d-block">set 0 to remove this line</small>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="content-card p-4 mb-4">
+                        <h2 class="h5 mb-3"><i class="bi bi-calendar2-check me-2 text-success"></i>Pickup details</h2>
+
+                        <div asp-validation-summary="All" class="alert alert-danger rounded-3 border-0" role="alert"></div>
+
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="MarketId">Pickup market</label>
+                            <select class="form-select" asp-for="MarketId">
+                                @foreach (var option in Model.Markets)
+                                {
+                                    <option value="@option.Id">@option.Name (@option.OperatingDays)</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="PickupDate">Pickup date</label>
+                            <input class="form-control" asp-for="PickupDate" type="date" />
+                            @if (market is not null)
+                            {
+                                <span class="form-text">@market.Name operates on @market.OperatingDays.</span>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="PickupTimeSlot">Pickup slot</label>
+                            <select class="form-select" asp-for="PickupTimeSlot">
+                                <option value="">Choose a slot</option>
+                                @foreach (var slot in slots)
+                                {
+                                    <option value="@slot">@slot</option>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Model.PickupTimeSlot) && !slots.Contains(Model.PickupTimeSlot))
+                                {
+                                    <option value="@Model.PickupTimeSlot" selected>@Model.PickupTimeSlot</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="Phone">Contact number</label>
+                            <input class="form-control" asp-for="Phone" type="tel" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="PickupAddress" type="text" required minlength="5" maxlength="250" pattern="[A-Za-z0-9 ,.\-'#]{5,150}" title="Enter at least 5 characters." autocomplete="street-address">Pickup address</label>
+                            <input class="form-control" asp-for="PickupAddress" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="City" type="text" required minlength="2" maxlength="100" pattern="[A-Za-z][A-Za-z0-9 &'.\-]*" title="Start with a letter." autocomplete="address-level2">City</label>
+                            <input class="form-control" asp-for="City" />
+                        </div>
+
+                        <div class="mb-0">
+                            <label class="form-label" asp-for="Notes" maxlength="500" rows="3">Note for the farmer</label>
+                            <textarea class="form-control" asp-for="Notes" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                <button type="submit" class="btn btn-market px-4"><i class="bi bi-check2 me-1"></i>Save changes</button>
+                <a class="btn btn-soft" asp-controller="Customer" asp-action="OrderDetails" asp-route-id="@Model.Id">Cancel</a>
+            </div>
+        </form>
+    </div>
+</section>

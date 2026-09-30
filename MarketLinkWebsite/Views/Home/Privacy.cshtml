@@ -1,0 +1,67 @@
+@{
+    ViewData["Title"] = "Privacy and responsible use";
+}
+
+<section class="content-hero">
+    <div class="container">
+        <nav class="page-breadcrumb" aria-label="Breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Home</a><i class="bi bi-chevron-right"></i><span>Privacy</span>
+        </nav>
+        <div class="row align-items-center g-4">
+            <div class="col-lg-8">
+                <span class="eyebrow">Clear and respectful</span>
+                <h1 class="display-5 fw-bold mb-3">Privacy at MarketLink</h1>
+                <p class="lead text-muted mb-0">This page is a UI-ready privacy summary. Final legal wording will be reviewed before production deployment.</p>
+            </div>
+            <div class="col-lg-4 text-lg-end"><i class="bi bi-shield-check display-1 text-success opacity-75"></i></div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block-sm">
+    <div class="container">
+        <div class="row g-4">
+            <aside class="col-lg-3">
+                <div class="content-card p-3 position-sticky" style="top:100px;">
+                    <h2 class="h6 mb-3">On this page</h2>
+                    <nav class="d-grid gap-2 small" aria-label="Privacy sections">
+                        <a class="text-decoration-none" href="#information">Information we use</a>
+                        <a class="text-decoration-none" href="#accounts">Accounts and roles</a>
+                        <a class="text-decoration-none" href="#orders">Orders and pickup</a>
+                        <a class="text-decoration-none" href="#maps">Maps and location</a>
+                        <a class="text-decoration-none" href="#content">Reviews and content</a>
+                        <a class="text-decoration-none" href="#choices">Your choices</a>
+                    </nav>
+                </div>
+            </aside>
+            <div class="col-lg-9">
+                <div class="content-card p-4 p-lg-5">
+                    <section class="privacy-section" id="information">
+                        <h2 class="h3">Information we use</h2>
+                        <p class="text-muted lh-lg">MarketLink will use account, contact and pickup information only to support registrations, pre-orders, market communication and relevant service messages. Payment card information is not required because orders are paid at pickup.</p>
+                    </section>
+                    <section class="privacy-section" id="accounts">
+                        <h2 class="h3">Accounts and roles</h2>
+                        <p class="text-muted lh-lg">Customers, farmers and administrators will see only the information relevant to their role. Farmers may need to publish a business name, contact details and pickup location so customers can identify and reach the correct stall.</p>
+                    </section>
+                    <section class="privacy-section" id="orders">
+                        <h2 class="h3">Orders and pickup</h2>
+                        <p class="text-muted lh-lg">To manage a reservation, the platform may store contact details, order contents, pickup market, date, time slot and status. Historical order information helps customers review purchases and request eligible reorder actions.</p>
+                    </section>
+                    <section class="privacy-section" id="maps">
+                        <h2 class="h3">Maps and location</h2>
+                        <p class="text-muted lh-lg">Market and pickup maps may use OpenStreetMap or Google Maps. Precise personal location is not required to browse; only published market and stall coordinates are displayed publicly.</p>
+                    </section>
+                    <section class="privacy-section" id="content">
+                        <h2 class="h3">Reviews and community content</h2>
+                        <p class="text-muted lh-lg">Reviews should describe a genuine MarketLink experience. Customers can edit or remove eligible content, while administrators may remove listings or comments that violate platform guidelines.</p>
+                    </section>
+                    <section class="privacy-section" id="choices">
+                        <h2 class="h3">Your choices</h2>
+                        <p class="text-muted lh-lg mb-0">Customers may update profile details, saved markets, favourite farmers and notification preferences. Account access and deletion options will be included in the final account settings screen.</p>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

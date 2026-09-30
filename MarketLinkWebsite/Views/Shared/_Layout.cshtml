@@ -1,0 +1,133 @@
+@inject IConfiguration LayoutConfiguration
+@{
+    var smartAssistant = string.Equals(LayoutConfiguration["Ai:Provider"], "gemini", StringComparison.OrdinalIgnoreCase)
+        && !string.IsNullOrWhiteSpace(LayoutConfiguration["Ai:ApiKey"]);
+}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="MarketLink connects local farmers with customers for fresh weekly product and convenient market pickup." />
+    <meta name="theme-color" content="#173f2a" />
+    <title>@ViewData["Title"] | MarketLink</title>
+
+    <link rel="icon" type="image/svg+xml" href="~/img/marketlink-logo.svg" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" asp-append-version="true" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" /></noscript>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+</head>
+<body data-map-provider="@(LayoutConfiguration["Maps:Provider"] ?? "openstreetmap")" data-map-api-key="@(LayoutConfiguration["Maps:GoogleApiKey"] ?? "")">
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+
+    <div class="announcement-bar" role="marquee" aria-label="MarketLink announcements">
+        <div class="announcement-track">
+            @for (var loop = 0; loop < 2; loop++)
+            {
+                <div class="announcement-set" aria-hidden="@(loop == 1 ? "true" : null)">
+                    <span class="announcement-item"><i class="bi bi-basket2-heart-fill" aria-hidden="true"></i> Fresh from nearby growers, reserved for pickup</span>
+                    <span class="announcement-item"><i class="bi bi-geo-alt-fill" aria-hidden="true"></i> Markets open every week across the city</span>
+                    <span class="announcement-item"><i class="bi bi-cash-coin" aria-hidden="true"></i> Pay safely at the stall, no online fees</span>
+                    <span class="announcement-item"><i class="bi bi-truck" aria-hidden="true"></i> Pickup only — collected straight from the grower</span>
+                    <span class="announcement-item"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> Every farmer reviewed by our admin team</span>
+                    <span class="announcement-item"><i class="bi bi-clock-fill" aria-hidden="true"></i> Flexible pickup windows every market day</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    @await Html.PartialAsync("_Navbar")
+
+    <main id="main-content" class="site-main">
+        @RenderBody()
+    </main>
+
+    @await Html.PartialAsync("_Footer")
+
+    <button class="assistant-launcher" type="button" data-bs-toggle="offcanvas" data-bs-target="#assistantPanel" aria-controls="assistantPanel" aria-label="Open MarketLink assistant">
+        <i class="bi bi-stars" aria-hidden="true"></i>
+        <span>Ask MarketLink</span>
+    </button>
+
+    <div class="offcanvas offcanvas-end assistant-panel" tabindex="-1" id="assistantPanel" aria-labelledby="assistantTitle">
+        <div class="offcanvas-header">
+            <div>
+                <span class="assistant-kicker">MARKETLINK ASSISTANT</span>
+                <h2 class="offcanvas-title h5 mb-0" id="assistantTitle">How can we help?</h2>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column">
+            <div class="assistant-welcome">
+                <div class="assistant-avatar"><i class="bi bi-stars"></i></div>
+                <div>
+                    <strong>Hi! I'm your market guide.</strong>
+                    <p class="mb-0">Ask about products, opening times, pickup slots or market locations.</p>
+                </div>
+            </div>
+
+            <div class="assistant-messages flex-grow-1" id="assistantMessages">
+                <div class="assistant-bubble">You can find farm-fresh products by selecting a category or searching the weekly catalogue.</div>
+            </div>
+
+            <div class="assistant-suggestions d-flex flex-wrap gap-2 mb-3">
+                <button class="btn btn-sm btn-outline-secondary rounded-pill" type="button" data-assistant-prompt="What is open this weekend?">What is open this weekend?</button>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill" type="button" data-assistant-prompt="Show me organic product">Organic product</button>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill" type="button" data-assistant-prompt="How does pickup work?">Pickup information</button>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill" type="button" data-assistant-prompt="How do I get directions to a market?">Directions</button>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill" type="button" data-assistant-prompt="Which farms are rated highest?">Top rated farms</button>
+            </div>
+
+            <form class="assistant-input" id="assistantForm" method="post" asp-controller="Assistant" asp-action="Ask" data-assistant-form>
+                @Html.AntiForgeryToken()
+                <label class="visually-hidden" for="assistantMessage">Ask a question</label>
+                <input id="assistantMessage" name="question" class="form-control" type="text" placeholder="Ask a market question…" autocomplete="off" required />
+                <button class="btn btn-market" type="submit" aria-label="Send message">
+                    <i class="bi bi-arrow-up"></i>
+                </button>
+            </form>
+            <small class="text-muted text-center mt-2" id="assistantFootnote">
+                @(smartAssistant
+                    ? "Answers are written by a live assistant using this week's real catalogue data."
+                    : "Answers come straight from the live MarketLink catalogue.")
+            </small>
+        </div>
+    </div>
+
+    <div class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3">
+        <div id="demoToast" class="toast border-0" role="status" aria-live="polite" aria-atomic="true">
+            <div class="toast-body d-flex align-items-center gap-2">
+                <i class="bi bi-check-circle-fill text-success"></i>
+                <span id="demoToastMessage">Added to your pre-order.</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/map-integration.js" asp-append-version="true"></script>
+    <script>
+        (function () {
+            try {
+                var stored = localStorage.getItem('marketlink-theme');
+                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var theme = stored || (prefersDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (error) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/lib/leaflet/leaflet.js"></script>
+    <script src="~/js/market-map.js" asp-append-version="true"></script>
+    <script src="~/js/location-picker.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

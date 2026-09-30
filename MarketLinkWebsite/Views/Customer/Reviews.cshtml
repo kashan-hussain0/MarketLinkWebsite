@@ -1,0 +1,98 @@
+@model MarketLinkWebsite.Controllers.CustomerReviewListViewModel
+@{
+    ViewData["Title"] = "My reviews";
+}
+
+@await Html.PartialAsync("_CustomerNav")
+
+<div class="container-xl pb-5">
+    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+        <div>
+            <div class="eyebrow text-uppercase fw-bold mb-1" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">Your feedback</div>
+            <h1 class="h2 fw-bold text-dark mb-2">My reviews</h1>
+            <p class="text-muted mb-0">Everything you have written, and every reply a farmer has sent back to you.</p>
+        </div>
+        <a class="btn btn-market" asp-controller="Product" asp-action="Index"><i class="bi bi-basket me-1" aria-hidden="true"></i>Find products to review</a>
+    </div>
+
+    @if (Model.Reviews.Count == 0)
+    {
+        <div class="empty-state text-center rounded-4 p-5">
+            <i class="bi bi-star fs-1 text-muted" aria-hidden="true"></i>
+            <h2 class="h5 fw-bold mt-3">You have not written a review yet</h2>
+            <p class="text-muted mb-3">After you collect an order you can rate the product or the farm, and the farmer will be able to reply here.</p>
+            <a class="btn btn-market" asp-controller="Customer" asp-action="Orders">See my orders</a>
+        </div>
+    }
+    else
+    {
+        <p class="small text-muted mb-3">@Model.Reviews.Count review@(Model.Reviews.Count == 1 ? string.Empty : "s")</p>
+
+        <div class="d-flex flex-column gap-3">
+            @foreach (var review in Model.Reviews)
+            {
+                var targetUrl = review.TargetKind == "Farm"
+                    ? Url.Action("Index", "Farm", new { id = review.TargetId })
+                    : Url.Action("Details", "Product", new { id = review.TargetId });
+
+                <article class="review-card rounded-4 p-4">
+                    <div class="d-flex flex-wrap align-items-start gap-3">
+                        @if (!string.IsNullOrWhiteSpace(review.ImageUrl))
+                        {
+                            <img src="@review.ImageUrl" alt="@review.Target" class="rounded-3" style="width: 72px; height: 72px; object-fit: cover;" />
+                        }
+                        else
+                        {
+                            <span class="d-inline-flex align-items-center justify-content-center rounded-3" style="width: 72px; height: 72px; background: var(--ml-surface-2);" aria-hidden="true"><i class="bi bi-image fs-4 text-muted"></i></span>
+                        }
+
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                <span class="badge rounded-pill soft-info">@review.TargetKind</span>
+                                <a class="fw-bold text-dark text-decoration-none" href="@targetUrl">@review.Target</a>
+                                @if (review.VerifiedPurchase)
+                                {
+                                    <span class="badge rounded-pill soft-success"><i class="bi bi-patch-check me-1" aria-hidden="true"></i>Verified purchase</span>
+                                }
+                            </div>
+                            <div class="small text-muted mb-2">
+                                <span class="text-warning" aria-label="@review.Rating out of 5">@for (var star = 1; star <= 5; star++){<i class="bi @(star <= review.Rating ? "bi-star-fill" : "bi-star")" aria-hidden="true"></i>}</span>
+                                <span>@review.Rating / 5</span>
+                                <span>&middot;</span>
+                                <span>@review.CreatedAt.ToLocalTime().ToString("MMM d, yyyy")</span>
+                                @if (review.HelpfulCount > 0)
+                                {
+                                    <span>&middot;</span>
+                                    <span>@review.HelpfulCount found this helpful</span>
+                                }
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(review.Title))
+                            {
+                                <h2 class="h6 fw-bold text-dark mb-1">@review.Title</h2>
+                            }
+                            <p class="mb-0">@review.Comment</p>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(review.FarmerReply))
+                    {
+                        <div class="farm-review-reply mt-3 ms-4">
+                            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                <strong>@review.Target replied</strong>
+                                @if (review.FarmerRepliedAt is not null)
+                                {
+                                    <small>@review.FarmerRepliedAt.Value.ToLocalTime().ToString("MMM d, yyyy")</small>
+                                }
+                            </div>
+                            <p class="mb-0">@review.FarmerReply</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="small text-muted mt-3 mb-0 ms-4"><i class="bi bi-hourglass-split me-1" aria-hidden="true"></i>The farmer has not replied to this review yet.</p>
+                    }
+                </article>
+            }
+        </div>
+    }
+</div>

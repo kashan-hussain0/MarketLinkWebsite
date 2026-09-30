@@ -1,0 +1,72 @@
+@{
+    ViewData["Title"] = "About MarketLink";
+}
+
+<section class="content-hero">
+    <div class="container">
+        <nav class="page-breadcrumb" aria-label="Breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Home</a><i class="bi bi-chevron-right"></i><span>About us</span>
+        </nav>
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7">
+                <span class="eyebrow">Our mission</span>
+                <h1 class="display-4 fw-bold mb-3">Making local food easier to find, reserve and collect.</h1>
+                <p class="lead text-muted lh-lg mb-0">MarketLink connects neighbourhood shoppers with the farmers and makers who sell at local markets—without delivery fees, online payment charges or empty shelves.</p>
+            </div>
+            <div class="col-lg-5">
+                <img class="w-100 rounded-4 shadow" style="height:360px;object-fit:cover;" src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=1000&q=85" alt="Customers shopping at a farmers market" />
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block">
+    <div class="container">
+        <div class="row g-5 align-items-center">
+            <div class="col-lg-5">
+                <span class="eyebrow">Why MarketLink exists</span>
+                <h2 class="section-title">A clearer connection between the harvest and your table</h2>
+                <p class="section-copy">Traditional market shopping is rewarding, but finding what is available can be unpredictable. MarketLink gives customers a useful weekly preview while giving farmers a simple way to share accurate stock and pickup information.</p>
+                <p class="section-copy mt-3">The platform is intentionally pickup-focused: no online payment, no delivery logistics and no unnecessary complexity between a grower and a neighbour.</p>
+            </div>
+            <div class="col-lg-7">
+                <div class="row g-3">
+                    <div class="col-sm-6"><article class="value-card h-100"><span class="value-icon"><i class="bi bi-shop-window"></i></span><h3 class="h5">Market first</h3><p class="small text-muted mb-0">Designed around the way local markets already work.</p></article></div>
+                    <div class="col-sm-6"><article class="value-card h-100"><span class="value-icon"><i class="bi bi-eye"></i></span><h3 class="h5">Clear availability</h3><p class="small text-muted mb-0">Customers see current quantities before planning a pickup.</p></article></div>
+                    <div class="col-sm-6"><article class="value-card h-100"><span class="value-icon"><i class="bi bi-people"></i></span><h3 class="h5">Grower visibility</h3><p class="small text-muted mb-0">Profiles put the person and place behind each product in view.</p></article></div>
+                    <div class="col-sm-6"><article class="value-card h-100"><span class="value-icon"><i class="bi bi-wallet2"></i></span><h3 class="h5">Simple payments</h3><p class="small text-muted mb-0">Customers pay directly at pickup with no online processing fee.</p></article></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block pt-0">
+    <div class="container">
+        <div class="section-heading text-center mx-auto">
+            <span class="eyebrow justify-content-center">What we value</span>
+            <h2 class="section-title">Built around trust and useful information</h2>
+        </div>
+        <div class="steps-grid">
+            <article class="step-card"><span class="step-number">01</span><span class="step-icon"><i class="bi bi-patch-check"></i></span><h3>Responsible claims</h3><p class="mb-0">We describe what sellers choose to share and avoid presenting certification as something the web platform verifies.</p></article>
+            <article class="step-card"><span class="step-number">02</span><span class="step-icon"><i class="bi bi-universal-access"></i></span><h3>Inclusive by default</h3><p class="mb-0">Clear labels, keyboard-friendly controls and responsive layouts make the experience easier for more people.</p></article>
+            <article class="step-card"><span class="step-number">03</span><span class="step-icon"><i class="bi bi-recycle"></i></span><h3>Local resilience</h3><p class="mb-0">Keeping shopping and selling within the community supports growers and local market activity.</p></article>
+        </div>
+    </div>
+</section>
+
+<section class="section-block pt-0">
+    <div class="container">
+        <div class="farmer-cta p-4 p-lg-5">
+            <div class="row align-items-center g-4 position-relative">
+                <div class="col-lg-8 farmer-cta-content">
+                    <span class="eyebrow text-white-50">The MarketLink team</span>
+                    <h2>A small platform with a shared local purpose.</h2>
+                    <p>Our product, design and engineering work focuses on creating a dependable bridge between growers and the people who want to buy their product.</p>
+                    <a class="btn btn-light mt-3" asp-controller="Home" asp-action="Contact">Contact the team</a>
+                </div>
+                <div class="col-lg-4 text-center d-none d-lg-block"><i class="bi bi-heart-fill display-1 text-white opacity-75"></i></div>
+            </div>
+        </div>
+    </div>
+</section>

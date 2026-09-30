@@ -1,0 +1,60 @@
+<footer class="site-footer">
+    <div class="container py-5">
+        <div class="row g-5">
+            <div class="col-lg-4">
+                <a class="market-brand footer-brand" asp-controller="Home" asp-action="Index">
+                    <span class="brand-mark"><img src="~/img/marketlink-logo.svg" alt="" width="40" height="40" /></span>
+                    <span>Market<span>Link</span></span>
+                </a>
+                <p class="footer-intro mt-3">A simpler way to discover local harvests, reserve what you need and collect it directly from the people who grew it.</p>
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <span class="footer-trust"><i class="bi bi-patch-check-fill"></i>Local growers</span>
+                    <span class="footer-trust"><i class="bi bi-shield-check"></i>No online payment</span>
+                </div>
+            </div>
+
+            <div class="col-6 col-lg-2">
+                <h2 class="footer-heading">Explore</h2>
+                <ul class="footer-links list-unstyled">
+                    <li><a asp-controller="Product" asp-action="Index">Weekly product</a></li>
+                    <li><a asp-controller="Product" asp-action="Index" asp-route-category="Vegetables">Vegetables</a></li>
+                    <li><a asp-controller="Product" asp-action="Index" asp-route-category="Fresh fruits">Fresh fruits</a></li>
+                    <li><a asp-controller="Market" asp-action="Index">Markets &amp; map</a></li>
+                </ul>
+            </div>
+
+            <div class="col-6 col-lg-2">
+                <h2 class="footer-heading">MarketLink</h2>
+                <ul class="footer-links list-unstyled">
+                    <li><a asp-controller="Home" asp-action="About">Our mission</a></li>
+                    <li><a asp-controller="Home" asp-action="Contact">Contact us</a></li>
+                    <li><a asp-controller="Home" asp-action="Privacy">Privacy</a></li>
+                    <li><a asp-controller="Account" asp-action="FarmerRegister">Sell with us</a></li>
+                </ul>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="footer-pickup-card">
+                    <span class="footer-pickup-icon"><i class="bi bi-geo-alt-fill"></i></span>
+                    <div>
+                        <span class="small text-uppercase fw-bold">Next market day</span>
+                        <h2 class="h5 mb-1">Saturday at Central Square</h2>
+                        <p class="small mb-3">Open 7:00 AM – 1:00 PM · 24 active growers</p>
+                        <a class="btn btn-sm btn-light" asp-controller="Market" asp-action="Index">View market details <i class="bi bi-arrow-right ms-1"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="footer-divider" />
+
+        <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 footer-bottom">
+            <p class="mb-0">© @DateTime.UtcNow.Year MarketLink. Built for local food communities.</p>
+            <div class="d-flex flex-wrap justify-content-center gap-3">
+                <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+                <a asp-controller="Home" asp-action="Contact">Support</a>
+                <span>Pickup only · Cash at stall</span>
+            </div>
+        </div>
+    </div>
+</footer>

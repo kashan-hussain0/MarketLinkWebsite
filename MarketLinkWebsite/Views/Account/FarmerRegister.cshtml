@@ -1,0 +1,185 @@
+@model MarketLinkWebsite.Controllers.FarmerRegistrationForm
+@{
+    ViewData["Title"] = "Join as a farmer";
+}
+@await Html.PartialAsync("_AccountStyles")
+
+<div class="account-page py-4 py-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-10">
+                <div class="account-card bg-white">
+                    <div class="row g-0">
+                        <div class="col-lg-4 account-visual p-4 p-md-5 d-flex flex-column">
+                            <a class="d-inline-flex align-items-center gap-2 text-white text-decoration-none" asp-controller="Home" asp-action="Index" aria-label="MarketLink home">
+                                <span class="account-brand-mark"><i class="bi bi-shop-window fs-4" aria-hidden="true"></i></span>
+                                <span class="fs-5 fw-bold">Market<span class="fw-light">Link</span></span>
+                            </a>
+                            <div class="py-5 my-4 position-relative" style="z-index: 1;">
+                                <div class="eyebrow mb-3">For local growers and makers</div>
+                                <h1 class="display-6 fw-bold text-white lh-sm mb-3">Share what you grow with the neighborhood.</h1>
+                                <p class="mb-4" style="color: rgba(255,255,255,.78);">A thoughtful storefront, simple pre-orders, and a direct connection to shoppers who value local food.</p>
+                                <div class="vstack gap-3">
+                                    <div class="account-feature"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i><span>Tell your farm story in your own voice.</span></div>
+                                    <div class="account-feature"><i class="bi bi-box-seam" aria-hidden="true"></i><span>Keep your weekly harvest easy to manage.</span></div>
+                                    <div class="account-feature"><i class="bi bi-people" aria-hidden="true"></i><span>Build lasting relationships at the market.</span></div>
+                                </div>
+                            </div>
+                            <div class="small mt-auto position-relative" style="z-index: 1; color: rgba(255,255,255,.62);">
+                                <i class="bi bi-tree me-1" aria-hidden="true"></i>
+                                Rooted in community.
+                            </div>
+                        </div>
+
+                        <div class="col-lg-8 p-4 p-sm-5">
+                            <a class="d-inline-flex align-items-center small fw-semibold text-decoration-none mb-4" asp-controller="Account" asp-action="RegisterChoice" style="color: var(--ml-accent-text);">
+                                <i class="bi bi-arrow-left me-2" aria-hidden="true"></i>
+                                Back to registration choices
+                            </a>
+                            <div class="eyebrow text-uppercase fw-bold mb-2" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">Farmer registration</div>
+                            <h2 class="fw-bold text-dark mb-2">Bring your harvest to MarketLink</h2>
+                            <p class="text-muted mb-4">Create your seller profile and tell shoppers what makes your work special.</p>
+
+                            @if (ViewData["ErrorMessage"] is string errorMessage && !string.IsNullOrWhiteSpace(errorMessage))
+                            {
+                                <div class="alert alert-danger d-flex align-items-start gap-2 border-0 rounded-3" role="alert">
+                                    <i class="bi bi-exclamation-circle-fill mt-1" aria-hidden="true"></i>
+                                    <span>@errorMessage</span>
+                                </div>
+                            }
+
+                            <form asp-controller="Account" asp-action="FarmerRegister" method="post" class="account-form" enctype="multipart/form-data">
+                                <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3 border-0" role="alert"></div>
+                                <fieldset>
+                                    <legend class="h6 fw-bold text-dark mb-3">Your account</legend>
+                                    <div class="row g-3">
+                                        <div class="col-sm-6">
+                                            <label asp-for="FirstName" class="form-label"></label>
+                                            <input asp-for="FirstName" type="text" required minlength="2" maxlength="50" pattern="[A-Za-z][A-Za-z'\-.]*" title="Start with a letter, then letters, spaces, hyphens or dots only." class="form-control" autocomplete="given-name" placeholder="Maya" aria-describedby="farmer-first-name-error" />
+                                            <span id="farmer-first-name-error" asp-validation-for="FirstName" class="text-danger small"></span>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <label asp-for="LastName" class="form-label"></label>
+                                            <input asp-for="LastName" type="text" required minlength="2" maxlength="50" pattern="[A-Za-z][A-Za-z'\-.]*" title="Start with a letter, then letters, spaces, hyphens or dots only." class="form-control" autocomplete="family-name" placeholder="Santos" aria-describedby="farmer-last-name-error" />
+                                            <span id="farmer-last-name-error" asp-validation-for="LastName" class="text-danger small"></span>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <label asp-for="Email" class="form-label"></label>
+                                            <input asp-for="Email" type="email" required maxlength="256" spellcheck="false" class="form-control autocomplete="email" inputmode="email" placeholder="farm@example.com" aria-describedby="farmer-email-error" />
+                                            <span id="farmer-email-error" asp-validation-for="Email" class="text-danger small"></span>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <label asp-for="PhoneNumber" class="form-label"></label>
+                                            <input asp-for="PhoneNumber" type="tel" required maxlength="30" pattern="\+?[0-9][0-9 \-()]{6,20}" title="Use 7 to 21 characters. Digits, spaces, brackets, plus and hyphens only." autocomplete="tel" inputmode="tel" class="form-control" autocomplete="tel" inputmode="tel" placeholder="(555) 014-2088" aria-describedby="farmer-phone-error" />
+                                            <span id="farmer-phone-error" asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+                                <fieldset class="mt-4">
+                                    <legend class="h6 fw-bold text-dark mb-3">Your farm profile</legend>
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label asp-for="FarmName" class="form-label"></label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-white border-end-0" style="border-color: var(--ml-line-soft); color: var(--ml-accent-text);"><i class="bi bi-tree" aria-hidden="true"></i></span>
+                                                <input asp-for="FarmName" type="text" required minlength="2" maxlength="150" pattern="[A-Za-z][A-Za-z0-9 &'.\-]*" title="Start with a letter." class="form-control border-start-0" placeholder="Green Valley Farm" aria-describedby="farmer-farm-name-error" />
+                                            </div>
+                                            <span id="farmer-farm-name-error" asp-validation-for="FarmName" class="text-danger small"></span>
+                                        </div>
+                                        <div class="col-12">
+                                            <label asp-for="Description" class="form-label"></label>
+                                            <textarea asp-for="Description" class="form-control" rows="4" placeholder="Share your growing practices, favorite crops, and what makes your farm special." aria-describedby="farmer-description-help"></textarea>
+                                            <div id="farmer-description-help" class="form-text">A short, welcoming story helps shoppers connect with your work.</div>
+                                            <span asp-validation-for="Description" class="text-danger small"></span>
+                                        </div>
+                                        <div class="col-12">
+                                            <label asp-for="Address" class="form-label"></label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-white border-end-0" style="border-color: var(--ml-line-soft); color: var(--ml-accent-text);"><i class="bi bi-geo-alt" aria-hidden="true"></i></span>
+                                                <input asp-for="Address" type="text" required minlength="5" maxlength="200" pattern="[A-Za-z0-9 ,.\-'#]{5,150}" title="Enter at least 5 characters, using letters, digits, spaces and the usual punctuation." class="form-control border-start-0" autocomplete="street-address" placeholder="1200 County Road 8" aria-describedby="farmer-address-error" />
+                                            </div>
+                                            <span id="farmer-address-error" asp-validation-for="Address" class="text-danger small"></span>
+                                        </div>
+                                        <div class="col-sm-5">
+                                            <label asp-for="City" class="form-label"></label>
+                                            <input asp-for="City" type="text" required minlength="2" maxlength="100" pattern="[A-Za-z][A-Za-z0-9 &'.\-]*" title="Start with a letter." class="form-control" autocomplete="address-level2" placeholder="Northbridge" aria-describedby="farmer-city-error" />
+                                            <span id="farmer-city-error" asp-validation-for="City" class="text-danger small"></span>
+                                        </div>
+                                        <div class="col-sm-3">
+                                            <label asp-for="Region" class="form-label"></label>
+                                            <input asp-for="Region" type="text" required minlength="2" maxlength="100" pattern="[A-Za-z][A-Za-z'\-.]*" title="Start with a letter." class="form-control" autocomplete="address-level1" placeholder="OR" aria-describedby="farmer-region-error" />
+                                            <span id="farmer-region-error" asp-validation-for="Region" class="text-danger small"></span>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <label asp-for="PostalCode" class="form-label"></label>
+                                            <input asp-for="PostalCode" type="text" required minlength="3" maxlength="20" pattern="[A-Za-z0-9][A-Za-z0-9 \-]{2,9}" title="Enter 3 to 10 letters or digits, with optional spaces or hyphens." class="form-control" autocomplete="postal-code" placeholder="97218" aria-describedby="farmer-postal-error" />
+                                            <span id="farmer-postal-error" asp-validation-for="PostalCode" class="text-danger small"></span>
+                                        </div>
+                                        <div class="col-12">
+                                            <label asp-for="ProfilePicture" class="form-label"></label>
+                                            <input asp-for="ProfilePicture" class="form-control" type="file" accept="image/*" aria-describedby="farmer-photo-help" />
+                                            <div id="farmer-photo-help" class="form-text">Optional: any picture format</div>
+                                            <span asp-validation-for="ProfilePicture" class="text-danger small"></span>
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+                                <fieldset class="mt-4 pt-3 border-top">
+                                    <legend class="h6 fw-bold text-dark mb-3">Account security</legend>
+                                    <div class="row g-3">
+                                        <div class="col-sm-6">
+                                            <label asp-for="Password" class="form-label"></label>
+                                            <input asp-for="Password" type="password" required minlength="8" maxlength="100" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,100}" title="Use at least 8 characters with an uppercase letter, a lowercase letter, a number and a symbol." autocomplete="new-password" data-password-meter="true" class="form-control" autocomplete="new-password" placeholder="At least 8 characters" aria-describedby="farmer-password-help farmer-password-error" />
+                                            <div id="farmer-password-help" class="form-text">Use uppercase, lowercase, a number, and a symbol.</div>
+                                            <div class="account-strength mt-2">
+                                                <div class="account-strength-bar"><span data-password-strength-bar></span></div>
+                                                <div class="d-flex justify-content-between gap-2">
+                                                    <small class="text-muted" data-password-strength-label>Use 8 or more characters with uppercase, lowercase, a number, and a symbol.</small>
+                                                    <small class="text-muted text-nowrap" data-password-strength-count></small>
+                                                </div>
+                                            </div>
+                                            <span id="farmer-password-error" asp-validation-for="Password" class="text-danger small"></span>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <label asp-for="ConfirmPassword" class="form-label"></label>
+                                            <input asp-for="ConfirmPassword" type="password" required minlength="8" maxlength="100" autocomplete="new-password" data-password-match="Password" class="form-control" autocomplete="new-password" placeholder="Repeat your password" aria-describedby="farmer-confirm-password-error" />
+                                            <span id="farmer-confirm-password-error" asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                                            <div class="small mt-1" data-password-match-for="ConfirmPassword"></div>
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+                                <div class="form-check mt-4">
+                                    <input asp-for="AcceptTerms" class="form-check-input" type="checkbox" required data-val-required="Tick the box to accept the terms and the privacy policy." aria-describedby="farmer-terms-error" />
+                                    <label asp-for="AcceptTerms" class="form-check-label small text-muted"></label>
+                                    <span id="farmer-terms-error" asp-validation-for="AcceptTerms" class="text-danger small d-block"></span>
+                                </div>
+
+                                <div class="mt-4">
+                                    @await Html.PartialAsync("_LocationPicker", new MarketLinkWebsite.Models.ViewModels.LocationPickerViewModel
+                                    {
+                                        Suffix = "farmer",
+                                        Title = "Pin your farm on the map",
+                                        Hint = "Customers use this pin for pickup directions and to see how far your stall is.",
+                                        Latitude = Model.Latitude,
+                                        Longitude = Model.Longitude
+                                    })
+                                </div>
+
+                                <button type="submit" class="btn btn-brand w-100 mt-4">
+                                    Submit farmer profile <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+                                </button>
+                            </form>
+
+                            <div class="account-note small d-flex gap-2 align-items-start mt-4 p-3">
+                                <i class="bi bi-info-circle mt-1" aria-hidden="true"></i>
+                                <span>Your profile is saved with pending approval status and will remain inactive in the seller marketplace until an administrator approves it.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,16 @@
+@model ProductFormViewModel
+@{
+    ViewData["Title"] = "Edit product";
+    var isEditing = Model.Id > 0;
+}
+
+<div class="farmer-page-header">
+    <div>
+        <a class="farmer-back-link" asp-area="Farmer" asp-controller="Product" asp-action="Index"><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to products</a>
+        <div class="farmer-page-kicker mt-3">@(isEditing ? "EDIT LISTING" : "NEW LISTING")</div>
+        <h1 class="farmer-page-title">@(isEditing ? "Edit product" : "Add a product")</h1>
+        <p class="farmer-page-subtitle">Keep your listing details accurate for the next market pickup.</p>
+    </div>
+</div>
+
+@await Html.PartialAsync("_ProductForm", Model)

@@ -1,0 +1,133 @@
+@model MarketLinkWebsite.Controllers.CustomerOrdersViewModel
+@{
+    ViewData["Title"] = "Your orders";
+}
+@await Html.PartialAsync("_CustomerNav")
+
+<div class="container-xl pb-5">
+    @await Html.PartialAsync("_CustomerFlash")
+
+    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+        <div>
+            <div class="eyebrow text-uppercase fw-bold mb-1" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">Your market history</div>
+            <h1 class="display-6 fw-bold text-dark mb-2">Orders</h1>
+            <p class="text-muted mb-0">Keep track of pre-orders, pickup windows, and the farmers you supported.</p>
+        </div>
+        <a asp-controller="Product" asp-action="Index" class="btn btn-brand rounded-pill px-4" style="background: var(--ml-leaf-solid); border-color: var(--ml-accent-text);">Shop the harvest <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 bg-white h-100 p-3"><div class="small text-muted mb-2">All orders</div><div class="h3 fw-bold text-dark mb-0">@Model.TotalOrders</div></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 bg-white h-100 p-3"><div class="small text-muted mb-2">Active</div><div class="h3 fw-bold mb-0" style="color: var(--ml-accent-text);">@Model.ActiveOrderCount</div></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 bg-white h-100 p-3"><div class="small text-muted mb-2">Showing</div><div class="h3 fw-bold text-dark mb-0">@Model.FilteredCount</div></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 bg-white h-100 p-3"><div class="small text-muted mb-2">Pickup sites</div><div class="h3 fw-bold text-dark mb-0">@Model.PickupSiteCount</div></div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-5 bg-white overflow-hidden">
+        <div class="p-3 p-md-4 border-bottom d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="d-flex gap-1 flex-wrap" role="navigation" aria-label="Filter orders">
+                @foreach (var filter in new[] { "All", "Active", "Completed" })
+                {
+                    <a class="btn btn-sm rounded-pill px-3 fw-semibold @(Model.SelectedFilter == filter ? "text-white" : "btn-outline-secondary")" style="@(Model.SelectedFilter == filter ? "background:#4f772d;border-color:#4f772d;" : "")" asp-controller="Customer" asp-action="Orders" asp-route-filter="@filter" aria-current="@(Model.SelectedFilter == filter ? "page" : null)">@filter</a>
+                }
+            </div>
+            <span class="small text-muted"><i class="bi bi-calendar3 me-1" aria-hidden="true"></i>Pickup dates are shown in local market time</span>
+        </div>
+
+        @if (Model.Orders.Count == 0)
+        {
+            <div class="p-5 text-center">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 4rem; height: 4rem; background: var(--ml-sage-tint); color: var(--ml-accent-text);"><i class="bi bi-bag fs-4" aria-hidden="true"></i></div>
+                <h2 class="h5 fw-bold text-dark">No orders in this view</h2>
+                <p class="text-muted">Try another filter or explore this week’s harvest.</p>
+                <a asp-controller="Customer" asp-action="Orders" asp-route-filter="All" class="btn btn-sm btn-outline-success rounded-pill" style="border-color: var(--ml-accent-text); color: var(--ml-accent-text);">Show all orders</a>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive d-none d-md-block">
+                <table class="table align-middle mb-0">
+                    <caption class="visually-hidden">Your MarketLink orders</caption>
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4" scope="col">Order</th>
+                            <th scope="col">Items</th>
+                            <th scope="col">Pickup</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Payment</th>
+                            <th class="text-end pe-4" scope="col">Total</th>
+                            <th class="pe-4"><span class="visually-hidden">Actions</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.Orders)
+                        {
+                            <tr>
+                                <th class="ps-4" scope="row">
+                                    <div class="d-flex align-items-center gap-3">
+                                        @if (!string.IsNullOrWhiteSpace(order.ImageUrl))
+                                        {
+                                            <img src="@order.ImageUrl" class="rounded-3" style="width: 3rem; height: 3rem; object-fit: cover;" alt="" />
+                                        }
+                                        else
+                                        {
+                                            <span class="d-inline-flex align-items-center justify-content-center rounded-3 bg-light text-muted flex-shrink-0" style="width: 3rem; height: 3rem;"><i class="bi bi-basket2" aria-hidden="true"></i></span>
+                                        }
+                                        <div><a class="d-block fw-semibold text-dark text-decoration-none" asp-controller="Customer" asp-action="OrderDetails" asp-route-id="@order.Id">@order.OrderNumber</a><span class="small text-muted">Placed @order.OrderDate.ToString("MMM d, yyyy")</span></div>
+                                    </div>
+                                </th>
+                                <td><span class="d-block small text-dark text-truncate" style="max-width: 190px;">@order.ItemSummary</span><span class="small text-muted">@order.ItemCount items</span></td>
+                                <td><span class="d-block small text-dark">@order.PickupDate</span><span class="small text-muted">@order.PickupWindow</span></td>
+                                <td><span class="badge rounded-pill soft-@order.StatusClass"><i class="bi @order.StatusIcon me-1" aria-hidden="true"></i>@order.Status</span></td>
+                                <td><span class="small text-muted">@order.PaymentLabel</span></td>
+                                <td class="text-end fw-semibold text-dark">@order.Total.ToString("C2")</td>
+                                <td class="pe-4 text-end"><a asp-controller="Customer" asp-action="OrderDetails" asp-route-id="@order.Id" class="btn btn-sm btn-link" style="color: var(--ml-accent-text);" aria-label="View order @order.OrderNumber">View <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-md-none">
+                @foreach (var order in Model.Orders)
+                {
+                    <article class="p-4 border-bottom">
+                        <div class="d-flex gap-3 align-items-start mb-3">
+                            @if (!string.IsNullOrWhiteSpace(order.ImageUrl))
+                            {
+                                <img src="@order.ImageUrl" class="rounded-3" style="width: 3.5rem; height: 3.5rem; object-fit: cover;" alt="" />
+                            }
+                            else
+                            {
+                                <span class="d-inline-flex align-items-center justify-content-center rounded-3 bg-light text-muted flex-shrink-0" style="width: 3.5rem; height: 3.5rem;"><i class="bi bi-basket2" aria-hidden="true"></i></span>
+                            }
+                            <div class="flex-grow-1 min-w-0"><div class="d-flex justify-content-between gap-2"><a class="fw-bold text-dark text-decoration-none" asp-controller="Customer" asp-action="OrderDetails" asp-route-id="@order.Id">@order.OrderNumber</a><span class="fw-semibold text-dark">@order.Total.ToString("C2")</span></div><div class="small text-muted">Placed @order.OrderDate.ToString("MMM d, yyyy")</div></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3"><span class="badge rounded-pill soft-@order.StatusClass"><i class="bi @order.StatusIcon me-1" aria-hidden="true"></i>@order.Status</span><span class="small text-muted">@order.ItemCount items</span></div>
+                        <div class="small text-dark mb-1"><i class="bi bi-geo-alt me-1" style="color: var(--ml-accent-text);" aria-hidden="true"></i>@order.PickupDate · @order.PickupWindow</div>
+                        <div class="small text-muted mb-3">@order.ItemSummary</div>
+                        <a asp-controller="Customer" asp-action="OrderDetails" asp-route-id="@order.Id" class="btn btn-sm btn-outline-success rounded-pill fw-semibold" style="border-color: var(--ml-accent-text); color: var(--ml-accent-text);">View order details</a>
+                    </article>
+                }
+            </div>
+        }
+        <div class="p-3 px-md-4 bg-light border-top d-flex flex-wrap justify-content-between gap-2 small text-muted">
+            <span><i class="bi bi-info-circle me-1" aria-hidden="true"></i>Questions about an order?</span>
+            <a asp-controller="Home" asp-action="Contact" class="fw-semibold text-decoration-none" style="color: var(--ml-accent-text);">Contact support <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .min-w-0 {
+        min-width: 0;
+    }
+</style>

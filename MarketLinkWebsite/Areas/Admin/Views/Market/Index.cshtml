@@ -1,0 +1,110 @@
+@model MarketLinkWebsite.Areas.Admin.Models.MarketListViewModel
+@{
+    ViewData["Title"] = "Markets";
+}
+
+<div class="admin-page-header">
+    <div>
+        <div class="admin-page-eyebrow">Marketplace network</div>
+        <h1 class="admin-page-title">Markets</h1>
+        <p class="admin-page-subtitle">Create and maintain the local marketplaces where customers meet their farmers.</p>
+    </div>
+    <div class="admin-page-actions">
+        <a class="admin-btn admin-btn-primary" asp-area="Admin" asp-controller="Market" asp-action="Create"><i class="bi bi-plus-lg" aria-hidden="true"></i>Add market</a>
+    </div>
+</div>
+
+<section class="admin-stat-grid" aria-label="Market summary">
+    <article class="admin-stat-card">
+        <span class="admin-stat-icon metric-icon-sage" aria-hidden="true"><i class="bi bi-shop-window"></i></span>
+        <span class="admin-stat-copy"><span class="admin-stat-label">All markets</span><strong class="admin-stat-value">@Model.TotalMarkets</strong><span class="admin-stat-meta">Marketplace locations</span></span>
+    </article>
+    <article class="admin-stat-card">
+        <span class="admin-stat-icon metric-icon-blue" aria-hidden="true"><i class="bi bi-broadcast"></i></span>
+        <span class="admin-stat-copy"><span class="admin-stat-label">Active markets</span><strong class="admin-stat-value">@Model.ActiveMarkets</strong><span class="admin-stat-meta">Accepting orders</span></span>
+    </article>
+    <article class="admin-stat-card">
+        <span class="admin-stat-icon metric-icon-amber" aria-hidden="true"><i class="bi bi-star"></i></span>
+        <span class="admin-stat-copy"><span class="admin-stat-label">Featured markets</span><strong class="admin-stat-value">@Model.FeaturedMarkets</strong><span class="admin-stat-meta">Highlighted for customers</span></span>
+    </article>
+</section>
+
+<section class="admin-list-card admin-card" aria-label="Market directory">
+    <div class="admin-card-header">
+        <div><h2 class="admin-card-title">Market directory</h2><p class="admin-card-description">Manage locations, hours, and marketplace visibility</p></div>
+        <span class="admin-list-count">@Model.Markets.Count market@(Model.Markets.Count == 1 ? string.Empty : "s")</span>
+    </div>
+    <form class="admin-toolbar" asp-area="Admin" asp-controller="Market" asp-action="Index" method="get">
+        <div class="admin-toolbar-form">
+            <div class="admin-search-field">
+                <label class="visually-hidden" for="market-search">Search markets</label>
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input id="market-search" name="search" type="search" value="@Model.SearchTerm" placeholder="Search markets or managers" />
+            </div>
+            <label class="visually-hidden" for="market-status">Filter by market status</label>
+            <select class="admin-filter-select" id="market-status" name="status">
+                <option value="All markets" selected="@(Model.StatusFilter == "All markets")">All markets</option>
+                <option value="Active" selected="@(Model.StatusFilter == "Active")">Active</option>
+                <option value="Paused" selected="@(Model.StatusFilter == "Paused")">Paused</option>
+            </select>
+            <button type="submit" class="admin-btn admin-btn-soft admin-btn-sm">Filter</button>
+        </div>
+        <div class="admin-toolbar-actions"><span class="admin-inline-muted">Sort: Recently updated</span></div>
+    </form>
+
+    @if (Model.Markets.Count > 0)
+    {
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <caption class="admin-table-caption">MarketLink markets</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Market</th>
+                        <th scope="col">Products</th>
+                        <th scope="col">Orders</th>
+                        <th scope="col">Revenue</th>
+                        <th scope="col">Status</th>
+                        <th scope="col"><span class="visually-hidden">Action</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var market in Model.Markets)
+                    {
+                        <tr>
+                            <td>
+                                <div class="admin-person-cell">
+                                    <span class="admin-avatar admin-avatar-sm admin-avatar-@market.AvatarTone" aria-hidden="true">@market.Initials</span>
+                                    <span class="admin-person-copy"><strong>@market.Name</strong><small>@market.Location · @market.Hours</small></span>
+                                </div>
+                            </td>
+                            <td class="admin-table-number">@market.ProductCount</td>
+                            <td class="admin-table-number">@market.OrderCount</td>
+                            <td class="admin-table-number">@market.Revenue.ToString("C")</td>
+                            <td>
+                                <span class="admin-status status-@market.StatusTone">@market.Status</span>
+                                @if (market.IsFeatured)
+                                {
+                                    <span class="ms-1 text-warning" title="Featured market"><i class="bi bi-star-fill" aria-label="Featured market"></i></span>
+                                }
+                            </td>
+                            <td class="admin-table-action">
+                                <div class="d-flex justify-content-end align-items-center gap-2">
+                                    <a asp-area="Admin" asp-controller="Market" asp-action="Edit" asp-route-id="@market.Id" class="admin-table-action" aria-label="Edit @market.Name"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+                                    <form asp-area="Admin" asp-controller="Market" asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('Delete this market? Markets with linked orders cannot be removed.');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@market.Id" />
+                                        <button type="submit" class="admin-table-action border-0 bg-transparent p-0" aria-label="Delete @market.Name"><i class="bi bi-trash3" aria-hidden="true"></i></button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="admin-empty-state"><i class="bi bi-shop" aria-hidden="true"></i><strong>No markets found</strong><p>Try a different search or status filter.</p></div>
+    }
+</section>

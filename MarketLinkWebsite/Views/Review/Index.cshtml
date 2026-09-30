@@ -1,0 +1,104 @@
+@model MarketLinkWebsite.Controllers.ReviewListViewModel
+@{
+    ViewData["Title"] = "Community reviews";
+}
+@await Html.PartialAsync("_ReviewStyles")
+
+<div class="review-page py-4 py-md-5">
+    <div class="container-xl">
+        @if (TempData["SuccessMessage"] is string successMessage && !string.IsNullOrWhiteSpace(successMessage))
+        {
+            <div class="alert alert-success alert-dismissible fade show border-0 rounded-4 shadow-sm mb-4" role="status"><i class="bi bi-check-circle-fill me-2" aria-hidden="true"></i>@successMessage<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss message"></button></div>
+        }
+        @if (TempData["ErrorMessage"] is string errorMessage && !string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-danger alert-dismissible fade show border-0 rounded-4 shadow-sm mb-4" role="alert"><i class="bi bi-exclamation-circle-fill me-2" aria-hidden="true"></i>@errorMessage<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss message"></button></div>
+        }
+
+        <nav aria-label="Breadcrumb" class="mb-4">
+            <ol class="breadcrumb small mb-0">
+                <li class="breadcrumb-item"><a asp-controller="Customer" asp-action="Dashboard" class="text-decoration-none" style="color: var(--ml-accent-text);">My account</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Community reviews</li>
+            </ol>
+        </nav>
+
+        <section class="review-product-card p-3 p-md-4 mb-4 mb-md-5" aria-labelledby="review-product-heading">
+            <div class="d-flex flex-wrap align-items-center gap-3 gap-md-4">
+                @if (!string.IsNullOrWhiteSpace(Model.ProductImageUrl))
+                {
+                    <img src="@Model.ProductImageUrl" class="rounded-4" style="width: 5.5rem; height: 5.5rem; object-fit: cover;" alt="@Model.ProductName" />
+                }
+                else
+                {
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-4 bg-white text-muted" style="width: 5.5rem; height: 5.5rem;"><i class="bi bi-image fs-2" aria-hidden="true"></i></span>
+                }
+                <div class="flex-grow-1"><div class="eyebrow text-uppercase fw-bold mb-1" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">Community review spotlight</div><h1 id="review-product-heading" class="h3 fw-bold text-dark mb-1">@Model.ProductName</h1><div class="small text-muted"><i class="bi bi-shop me-1" style="color: var(--ml-accent-text);" aria-hidden="true"></i>@Model.ProductFarm · @Model.ProductCategory</div></div>
+                <div class="text-md-end"><div class="small text-muted mb-2">@Model.TotalReviews community reviews</div><a asp-controller="Review" asp-action="Create" asp-route-productId="@Model.ProductId" class="btn btn-brand rounded-pill px-4" style="background: var(--ml-leaf-solid); border-color: var(--ml-accent-text);"><i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Write a review</a></div>
+            </div>
+        </section>
+
+        <div class="row g-4 mb-4 mb-md-5">
+            <div class="col-lg-5">
+                <section class="review-card bg-white h-100 p-4 p-md-5" aria-labelledby="rating-summary-heading">
+                    <div class="eyebrow text-uppercase fw-bold mb-1" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">What neighbors are saying</div>
+                    <h2 id="rating-summary-heading" class="h4 fw-bold text-dark mb-4">A harvest your neighbors love</h2>
+                    <div class="d-flex align-items-end gap-3 mb-4"><div class="display-3 fw-bold text-dark lh-1">@Model.AverageRating.ToString("0.0")</div><div class="pb-1"><div class="star-button fs-5" aria-label="Average rating @Model.AverageRating out of 5">@for (var star = 1; star <= 5; star++){<i class="bi @(star <= Math.Round((double)Model.AverageRating, MidpointRounding.AwayFromZero) ? "bi-star-fill" : "bi-star")" aria-hidden="true"></i>}</div><div class="small text-muted">out of 5 stars</div></div></div>
+                    <div class="d-grid gap-2">
+                        @foreach (var breakdown in Model.RatingBreakdown)
+                        {
+                            <div class="d-flex align-items-center gap-2 small"><span class="text-muted" style="width: 2.4rem;">@breakdown.Stars ★</span><div class="progress flex-grow-1" style="height: .45rem;"><div class="progress-bar" role="progressbar" style="width: @breakdown.Percent%; background: var(--ml-amber-solid);" aria-valuenow="@breakdown.Percent" aria-valuemin="0" aria-valuemax="100"></div></div><span class="text-muted text-end" style="width: 2.4rem;">@breakdown.Count</span></div>
+                        }
+                    </div>
+                    <div class="d-flex align-items-center gap-2 mt-4 pt-3 border-top small"><i class="bi bi-hand-thumbs-up text-success" aria-hidden="true"></i><span><strong class="text-dark">@Model.RecommendedPercent%</strong> of shoppers would recommend this item</span></div>
+                </section>
+            </div>
+            <div class="col-lg-7">
+                <section class="review-card bg-white h-100 p-4 p-md-5 d-flex flex-column" aria-labelledby="review-guidance-heading">
+                    <div class="d-flex align-items-start gap-3 mb-4"><span class="d-inline-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style="width: 3rem; height: 3rem; background: var(--ml-amber-tint); color: var(--ml-accent-amber);"><i class="bi bi-chat-heart" aria-hidden="true"></i></span><div><div class="eyebrow text-uppercase fw-bold mb-1" style="color: var(--ml-accent-amber); letter-spacing: .12em; font-size: .72rem;">Your experience matters</div><h2 id="review-guidance-heading" class="h4 fw-bold text-dark mb-1">Help the next shopper choose</h2></div></div>
+                    <p class="text-muted">Share the details you wish you had before pickup: flavor, freshness, packaging, or how the farmers showed up at the market.</p>
+                    <div class="row g-3 mt-auto"><div class="col-sm-6"><div class="d-flex gap-2 small text-muted"><i class="bi bi-check2-circle flex-shrink-0" style="color: var(--ml-accent-text);" aria-hidden="true"></i><span>Keep it honest and helpful.</span></div></div><div class="col-sm-6"><div class="d-flex gap-2 small text-muted"><i class="bi bi-check2-circle flex-shrink-0" style="color: var(--ml-accent-text);" aria-hidden="true"></i><span>Protect a neighbor’s privacy.</span></div></div></div>
+                    <a asp-controller="Review" asp-action="Create" asp-route-productId="@Model.ProductId" class="btn btn-outline-success rounded-pill fw-semibold mt-4" style="border-color: var(--ml-accent-text); color: var(--ml-accent-text);">Share your experience <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+                </section>
+            </div>
+        </div>
+
+        <section aria-labelledby="reviews-heading">
+            <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-3"><div><div class="eyebrow text-uppercase fw-bold mb-1" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">From the community</div><h2 id="reviews-heading" class="h3 fw-bold text-dark mb-0">Recent reviews</h2></div><span class="small text-muted">Showing @Model.Reviews.Count of @Model.TotalReviews</span></div>
+            @if (Model.Reviews.Count == 0)
+            {
+                <div class="review-card bg-white p-5 text-center"><h3 class="h5 fw-bold text-dark">No reviews yet</h3><p class="text-muted mb-0">A shopper who has collected this item can be the first to share an experience.</p></div>
+            }
+            else
+            {
+            <div class="d-grid gap-3">
+                @foreach (var review in Model.Reviews)
+                {
+                    <article class="review-card bg-white p-4 p-md-5">
+                        <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+                            <div class="d-flex align-items-center gap-3"><span class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 2.8rem; height: 2.8rem; background: var(--ml-sage-tint); color: var(--ml-accent-text); font-weight: 800; font-size: .8rem;">@review.Initials</span><div><h3 class="h6 fw-bold text-dark mb-1">@review.ReviewerName</h3><div class="small text-muted">@review.CreatedLabel</div></div></div>
+                            <div class="star-button" aria-label="@review.Rating out of 5 stars">@for (var star = 1; star <= 5; star++){<i class="bi @(star <= review.Rating ? "bi-star-fill" : "bi-star")" aria-hidden="true"></i>}</div>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(review.Title))
+                        {
+                            <h4 class="h5 fw-bold text-dark">@review.Title</h4>
+                        }
+                        <p class="text-muted mb-3">@review.Body</p>
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 pt-3 border-top">
+                            @if (review.VerifiedPurchase){<span class="badge rounded-pill soft-success"><i class="bi bi-patch-check me-1" aria-hidden="true"></i>Verified market purchase</span>}<span></span>
+                            <div class="d-flex align-items-center gap-2">
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <form asp-controller="Review" asp-action="DeleteReview" method="post"><input type="hidden" name="id" value="@review.Id" /><input type="hidden" name="productId" value="@Model.ProductId" /><button type="submit" class="btn btn-sm btn-link text-danger text-decoration-none p-0" aria-label="Remove review by @review.ReviewerName"><i class="bi bi-shield-x me-1" aria-hidden="true"></i>Moderate</button></form>
+                                }
+                                <form asp-controller="Review" asp-action="MarkHelpful" method="post"><input type="hidden" name="id" value="@review.Id" /><input type="hidden" name="productId" value="@Model.ProductId" /><button type="submit" class="btn btn-sm btn-link text-decoration-none p-0" style="color: var(--ml-accent-text);" aria-label="Mark review by @review.ReviewerName as helpful"><i class="bi bi-hand-thumbs-up me-1" aria-hidden="true"></i>Helpful (@review.HelpfulCount)</button></form>
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+            }
+        </section>
+
+        <div class="text-center mt-5"><a asp-controller="Product" asp-action="Details" asp-route-id="@Model.ProductId" class="btn btn-outline-success rounded-pill fw-semibold px-4" style="border-color: var(--ml-accent-text); color: var(--ml-accent-text);">Back to @Model.ProductName <i class="bi bi-arrow-left ms-1" aria-hidden="true"></i></a></div>
+    </div>
+</div>

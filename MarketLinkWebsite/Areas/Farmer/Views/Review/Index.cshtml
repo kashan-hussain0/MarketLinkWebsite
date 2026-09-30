@@ -1,0 +1,135 @@
+@model ReviewListViewModel
+@{
+    ViewData["Title"] = "Reviews";
+}
+
+<div class="farmer-page-header">
+    <div>
+        <div class="farmer-page-kicker">CUSTOMER LOVE</div>
+        <h1 class="farmer-page-title">Reviews</h1>
+        <p class="farmer-page-subtitle">Every note helps you grow a better farm stand for your community.</p>
+    </div>
+    <div class="farmer-page-actions">
+        <a class="farmer-btn farmer-btn-secondary" asp-area="Farmer" asp-controller="Review" asp-action="Index"><i class="bi bi-download" aria-hidden="true"></i> Refresh reviews</a>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.Notice))
+{
+    <div class="farmer-alert farmer-alert-success" role="status">
+        <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+        <span>@Model.Notice</span>
+    </div>
+}
+
+<section class="row g-4 mb-4" aria-label="Review summary">
+    <div class="col-12 col-lg-5">
+        <article class="farmer-panel farmer-rating-summary h-100">
+            <div class="farmer-rating-main">
+                <strong>@Model.AverageRating.ToString("0.0")</strong>
+                <div class="farmer-stars farmer-stars-large" aria-label="@Model.AverageRating out of 5 stars">
+                    @for (var star = 1; star <= 5; star++)
+                    {
+                        <i class="bi @(star <= Model.AverageRating ? "bi-star-fill" : "bi-star")" aria-hidden="true"></i>
+                    }
+                </div>
+                <span>Based on @Model.ReviewCount reviews</span>
+            </div>
+            <div class="farmer-rating-divider"></div>
+            <div class="farmer-rating-bars">
+                <div><span>5 <i class="bi bi-star-fill" aria-hidden="true"></i></span><div class="progress"><div class="progress-bar" style="width: @Model.FiveStarPercentage%"></div></div><small>@Model.FiveStarPercentage%</small></div>
+                <div><span>4 <i class="bi bi-star-fill" aria-hidden="true"></i></span><div class="progress"><div class="progress-bar" style="width: @Model.FourStarPercentage%"></div></div><small>@Model.FourStarPercentage%</small></div>
+                <div><span>3 <i class="bi bi-star-fill" aria-hidden="true"></i></span><div class="progress"><div class="progress-bar" style="width: @Model.ThreeStarPercentage%"></div></div><small>@Model.ThreeStarPercentage%</small></div>
+                <div><span>2 <i class="bi bi-star-fill" aria-hidden="true"></i></span><div class="progress"><div class="progress-bar" style="width: @Model.TwoStarPercentage%"></div></div><small>@Model.TwoStarPercentage%</small></div>
+                <div><span>1 <i class="bi bi-star-fill" aria-hidden="true"></i></span><div class="progress"><div class="progress-bar" style="width: @Model.OneStarPercentage%"></div></div><small>@Model.OneStarPercentage%</small></div>
+            </div>
+        </article>
+    </div>
+    <div class="col-12 col-lg-7">
+        <article class="farmer-panel farmer-review-insight h-100">
+            <div class="farmer-insight-icon"><i class="bi bi-chat-heart-fill" aria-hidden="true"></i></div>
+            <div>
+                <span class="farmer-panel-eyebrow">A NOTE FROM YOUR CUSTOMERS</span>
+                <h2>@Model.InsightTitle</h2>
+                <p>@Model.InsightText</p>
+                <div class="farmer-insight-tags"><span>Freshness</span><span>Careful packing</span><span>Farm stories</span></div>
+            </div>
+        </article>
+    </div>
+</section>
+
+<section class="farmer-panel" aria-labelledby="reviews-heading">
+    <div class="farmer-catalog-toolbar">
+        <div>
+            <span class="farmer-panel-eyebrow">FEEDBACK</span>
+            <h2 class="farmer-panel-title" id="reviews-heading">What neighbors are saying <span class="farmer-count-badge">@Model.Reviews.Count</span></h2>
+        </div>
+        <div class="farmer-filter-pills" role="navigation" aria-label="Review filters">
+            <a class="@(Model.Filter == "All reviews" ? "active" : string.Empty)" asp-area="Farmer" asp-controller="Review" asp-action="Index" asp-route-filter="All reviews">All reviews <span>@Model.ReviewCount</span></a>
+            <a class="@(Model.Filter == "With responses" ? "active" : string.Empty)" asp-area="Farmer" asp-controller="Review" asp-action="Index" asp-route-filter="With responses">With responses <span>@Model.ResponseCount</span></a>
+        </div>
+    </div>
+
+    @if (Model.Reviews.Count == 0)
+    {
+        <div class="farmer-empty-state">
+            <span class="farmer-empty-icon"><i class="bi bi-chat-heart" aria-hidden="true"></i></span>
+            <h3>No reviews in this view</h3>
+            <p>Customer feedback for your farm will appear here.</p>
+        </div>
+    }
+    else
+    {
+        <div class="farmer-review-list">
+            @foreach (var review in Model.Reviews)
+            {
+                <article class="farmer-review-item">
+                    <div class="farmer-review-person">
+                        <span class="farmer-initials farmer-initials-large">@review.CustomerInitials</span>
+                        <div><strong>@review.CustomerName</strong><span>@review.DateLabel</span></div>
+                    </div>
+                    <div class="farmer-review-body">
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                            <span class="farmer-stars" aria-label="@review.Rating out of 5 stars">
+                                @for (var star = 1; star <= 5; star++)
+                                {
+                                    <i class="bi @(star <= review.Rating ? "bi-star-fill" : "bi-star")" aria-hidden="true"></i>
+                                }
+                            </span>
+                            <span class="farmer-review-product">@review.ProductName</span>
+                            @if (review.VerifiedPurchase)
+                            {
+                                <span class="farmer-verified-pill"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> Verified purchase</span>
+                            }
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(review.Title))
+                        {
+                            <h3 class="farmer-review-title">@review.Title</h3>
+                        }
+                        <p class="farmer-review-comment">"@review.Comment"</p>
+                        @if (review.HasResponse)
+                        {
+                            <div class="farmer-review-response">
+                                <div class="farmer-review-response-label"><span class="farmer-initials farmer-initials-tiny">ML</span><strong>Response from your farm</strong></div>
+                                <p>@review.Response</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <details class="farmer-reply-details">
+                                <summary><i class="bi bi-reply" aria-hidden="true"></i> Reply to this review</summary>
+                                <form method="post" asp-area="Farmer" asp-controller="Review" asp-action="Reply" class="farmer-reply-form">
+                                    <input type="hidden" name="id" value="@review.Id" />
+                                    <label class="visually-hidden" for="reply-@review.Id">Reply to @review.CustomerName</label>
+                                    <textarea class="form-control farmer-form-control" id="reply-@review.Id" name="response" rows="3" maxlength="1000" placeholder="Write a warm, personal response..." required></textarea>
+                                    <div class="d-flex justify-content-end gap-2 mt-2"><button class="farmer-btn farmer-btn-primary" type="submit"><i class="bi bi-send" aria-hidden="true"></i> Publish response</button></div>
+                                </form>
+                            </details>
+                        }
+                    </div>
+                    <button class="farmer-more-button farmer-review-more" type="button" aria-label="More actions for review by @review.CustomerName"><i class="bi bi-three-dots" aria-hidden="true"></i></button>
+                </article>
+            }
+        </div>
+    }
+</section>

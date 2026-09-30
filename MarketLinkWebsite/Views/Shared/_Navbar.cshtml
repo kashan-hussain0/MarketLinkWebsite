@@ -1,0 +1,170 @@
+@using MarketLinkWebsite.Data
+@using MarketLinkWebsite.Models.Enums
+@using MarketLinkWebsite.Navigation
+@using Microsoft.EntityFrameworkCore
+@inject NavBarService NavBar
+@inject ApplicationDbContext NavDb
+@{
+    var nav = await NavBar.BuildAsync(User, Context.RequestAborted);
+    var navCategories = await NavDb.Categories.AsNoTracking()
+        .Where(category => category.IsActive)
+        .OrderBy(category => category.SortOrder)
+        .ThenBy(category => category.Name)
+        .Take(8)
+        .Select(category => new
+        {
+            category.Id,
+            category.Name,
+            category.ImageUrl,
+            ProductCount = category.Products.Count(product => product.IsAvailable
+                && product.Category.IsActive
+                && product.FarmerProfile.Status == MarketLinkWebsite.Models.Enums.FarmerStatus.Active
+                && product.FarmerProfile.User.IsActive)
+        })
+        .ToListAsync(Context.RequestAborted);
+    var hasCategoryImages = navCategories.Any(category => !string.IsNullOrWhiteSpace(category.ImageUrl));
+}
+<header class="site-header" id="mainNav">
+    <nav class="navbar navbar-expand-lg py-0" aria-label="Main navigation">
+        <div class="container">
+            <a class="navbar-brand market-brand" asp-controller="Home" asp-action="Index" aria-label="MarketLink home">
+                <span class="brand-mark"><img src="~/img/marketlink-logo.svg" alt="" width="40" height="40" /></span>
+                <span>Market<span>Link</span></span>
+            </a>
+
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="bi bi-list fs-2"></i>
+            </button>
+
+            <div class="collapse navbar-collapse" id="mainNavbar">
+                <ul class="navbar-nav mx-auto align-items-lg-center gap-lg-1">
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Product" asp-action="Index">Explore product</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <button class="nav-link dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Categories</button>
+                        <div class="dropdown-menu category-menu shadow border-0 p-2">
+                            <div class="dropdown-header">Shop by category</div>
+                            @if (navCategories.Count == 0)
+                            {
+                                <span class="dropdown-item-text text-muted small">No categories are published yet.</span>
+                            }
+                            else
+                            {
+                                @foreach (var category in navCategories)
+                                {
+                                    <a class="dropdown-item category-menu-item" asp-controller="Product" asp-action="Index" asp-route-category="@category.Name">
+                                        <span class="category-menu-thumb">
+                                            @if (hasCategoryImages && !string.IsNullOrWhiteSpace(category.ImageUrl))
+                                            {
+                                                <img src="@category.ImageUrl" alt="" loading="lazy" />
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-basket2" aria-hidden="true"></i>
+                                            }
+                                        </span>
+                                        <span class="category-menu-text">
+                                            <strong>@category.Name</strong>
+                                            <small>@category.ProductCount item@(category.ProductCount == 1 ? string.Empty : "s")</small>
+                                        </span>
+                                    </a>
+                                }
+                                <hr class="dropdown-divider" />
+                                <a class="dropdown-item category-menu-all" asp-controller="Product" asp-action="Index">
+                                    <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>Browse everything
+                                </a>
+                            }
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Market" asp-action="Index">Markets &amp; map</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Home" asp-action="About">How it works</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Home" asp-action="Contact">Contact us</a>
+                    </li>
+                </ul>
+
+                <div class="nav-actions d-flex align-items-center gap-2 py-3 py-lg-0">
+                    <button class="nav-icon-button" type="button" data-theme-toggle aria-label="Switch to dark theme" aria-pressed="false">
+                        <i class="bi bi-moon-stars-fill" data-theme-icon aria-hidden="true"></i>
+                    </button>
+                    <a class="cart-button" asp-controller="Cart" asp-action="Index" aria-label="@(nav.CartCount > 0 ? $"View pre-order basket with {nav.CartCount} item{(nav.CartCount == 1 ? string.Empty : "s")}" : "Pre-order basket is empty")">
+                        <i class="bi bi-basket2"></i>
+                        <span class="cart-count @(nav.CartCount == 0 ? "cart-count-empty" : string.Empty)">@nav.CartCount</span>
+                    </a>
+
+                    @if (nav.IsSignedIn)
+                    {
+                        @if (nav.IsCustomer)
+                        {
+                            <a class="cart-button position-relative" asp-controller="Customer" asp-action="Favorites" aria-label="@(nav.FavouriteCount > 0 ? $"{nav.FavouriteCount} saved item{(nav.FavouriteCount == 1 ? string.Empty : "s")}" : "No saved items yet")" data-favourite-badge-host>
+                                <i class="bi bi-heart"></i>
+                                <span class="cart-count @(nav.FavouriteCount == 0 ? "cart-count-empty" : string.Empty)" data-favourite-count>@nav.FavouriteCount</span>
+                            </a>
+                            <a class="cart-button position-relative" asp-controller="Customer" asp-action="Notifications" aria-label="Notifications">
+                                <i class="bi bi-bell"></i>
+                                @if (nav.UnreadNotificationCount > 0)
+                                {
+                                    <span class="cart-count" data-notification-count>@nav.UnreadNotificationCount</span>
+                                }
+                                else
+                                {
+                                    <span class="cart-count cart-count-empty d-none" data-notification-count>0</span>
+                                }
+                            </a>
+                        }
+
+                        <div class="nav-user-dropdown dropdown">
+                            <button class="nav-user-chip dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account menu for @nav.DisplayName">
+                                <span class="nav-user-avatar">@nav.Initials</span>
+                                <span class="nav-user-copy d-none d-lg-flex">
+                                    <strong>@nav.DisplayName</strong>
+                                    <small>@nav.RoleName</small>
+                                </span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2 nav-user-menu">
+                                <li class="nav-user-header">
+                                    <strong>@nav.DisplayName</strong>
+                                    <span>@nav.RoleName</span>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="@nav.DashboardUrl"><i class="bi bi-speedometer2"></i>@nav.DashboardLabel</a></li>
+                                @if (nav.IsCustomer)
+                                {
+                                    <li><a class="dropdown-item" asp-controller="Customer" asp-action="Orders"><i class="bi bi-bag-check"></i>My orders</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Customer" asp-action="Favorites"><i class="bi bi-heart"></i>Saved items</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Customer" asp-action="Profile"><i class="bi bi-person-gear"></i>My profile</a></li>
+                                }
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Home" asp-action="Index" data-nav-go-website>
+                                        <i class="bi bi-globe2"></i>Go to website
+                                    </a>
+                                </li>
+                                <li>
+                                    <form asp-controller="Account" asp-action="Logout" method="post" class="nav-logout-form">
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bi bi-box-arrow-right"></i>Log out
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <a class="btn btn-link login-link" asp-controller="Account" asp-action="Login">Log in</a>
+                        <a class="btn btn-market" asp-controller="Account" asp-action="Register">Join free</a>
+                    }
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>

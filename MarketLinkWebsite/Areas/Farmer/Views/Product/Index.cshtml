@@ -1,0 +1,184 @@
+﻿@model ProductListViewModel
+@{
+    ViewData["Title"] = "Products";
+}
+
+<div class="farmer-page-header">
+    <div>
+        <div class="farmer-page-kicker">CATALOG</div>
+        <h1 class="farmer-page-title">Your products</h1>
+        <p class="farmer-page-subtitle">Keep your farm stand fresh, accurate, and easy to shop.</p>
+    </div>
+    <div class="farmer-page-actions">
+        <a class="farmer-btn farmer-btn-secondary" asp-area="Farmer" asp-controller="Product" asp-action="Index" asp-route-status="Low stock">
+            <i class="bi bi-layers" aria-hidden="true"></i>
+            Check inventory
+        </a>
+        <a class="farmer-btn farmer-btn-primary" asp-area="Farmer" asp-controller="Product" asp-action="Create">
+            <i class="bi bi-plus-lg" aria-hidden="true"></i>
+            Add product
+        </a>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.Notice))
+{
+    <div class="farmer-alert farmer-alert-success" role="status">
+        <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+        <span>@Model.Notice</span>
+    </div>
+}
+
+<section class="row g-3 mb-4" aria-label="Product summary">
+    <div class="col-6 col-lg-3">
+        <div class="farmer-summary-card">
+            <span class="farmer-summary-icon farmer-tone-green"><i class="bi bi-box-seam" aria-hidden="true"></i></span>
+            <div><strong>@Model.TotalProducts</strong><span>Total products</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="farmer-summary-card">
+            <span class="farmer-summary-icon farmer-tone-blue"><i class="bi bi-broadcast" aria-hidden="true"></i></span>
+            <div><strong>@Model.ActiveProducts</strong><span>Live listings</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="farmer-summary-card">
+            <span class="farmer-summary-icon farmer-tone-amber"><i class="bi bi-exclamation-circle" aria-hidden="true"></i></span>
+            <div><strong>@Model.LowStockProducts</strong><span>Need restocking</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="farmer-summary-card">
+            <span class="farmer-summary-icon farmer-tone-purple"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></span>
+            <div><strong>@Model.LowStockProducts</strong><span>Restock alerts</span></div>
+        </div>
+    </div>
+</section>
+
+<section class="farmer-panel" aria-labelledby="catalog-heading">
+    <div class="farmer-catalog-toolbar">
+        <div>
+            <span class="farmer-panel-eyebrow">INVENTORY</span>
+            <h2 class="farmer-panel-title" id="catalog-heading">All listings <span class="farmer-count-badge">@Model.Products.Count</span></h2>
+        </div>
+        <form class="farmer-filter-form" method="get" asp-action="Index" asp-area="Farmer" role="search">
+            <div class="farmer-search-control">
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <label class="visually-hidden" for="product-search">Search products</label>
+                <input id="product-search" class="form-control" type="search" name="search" value="@Model.SearchTerm" placeholder="Search products" />
+            </div>
+            <label class="visually-hidden" for="product-status">Filter by status</label>
+            <select id="product-status" class="form-select farmer-status-select" name="status">
+                <option value="All products" selected="@(Model.StatusFilter == "All products" ? "selected" : null)">All products</option>
+                <option value="Active" selected="@(Model.StatusFilter == "Active" ? "selected" : null)">Active</option>
+                <option value="Low stock" selected="@(Model.StatusFilter == "Low stock" ? "selected" : null)">Low stock</option>
+                <option value="Drafts" selected="@(Model.StatusFilter == "Drafts" ? "selected" : null)">Drafts</option>
+                <option value="Removed" selected="@(Model.StatusFilter == "Removed" ? "selected" : null)">Removed (@Model.RemovedProducts)</option>
+            </select>
+            <button class="farmer-btn farmer-btn-secondary farmer-filter-button" type="submit"><i class="bi bi-funnel" aria-hidden="true"></i><span class="d-none d-sm-inline">Filter</span></button>
+        </form>
+    </div>
+
+    @if (Model.Products.Count == 0)
+    {
+        <div class="farmer-empty-state">
+            <span class="farmer-empty-icon"><i class="bi bi-search" aria-hidden="true"></i></span>
+            <h3>No products found</h3>
+            <p>Try a different search or clear your filters to see all of your listings.</p>
+            <a class="farmer-btn farmer-btn-secondary" asp-area="Farmer" asp-controller="Product" asp-action="Index">Clear filters</a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-3 g-xl-4 farmer-product-grid">
+            @foreach (var product in Model.Products)
+            {
+                <div class="col-12 col-md-6 col-xl-4">
+                    <article class="farmer-product-card h-100">
+                        <div class="farmer-product-image-wrap">
+                            <img class="farmer-product-image" src="@product.ImageUrl" alt="@product.Name" loading="lazy" />
+                            <div class="farmer-product-image-overlay"></div>
+                            <span class="farmer-status farmer-status-@product.StatusTone farmer-product-status"><i class="bi @(product.IsAvailable ? "bi-broadcast" : "bi-pencil")" aria-hidden="true"></i>@product.Status</span>
+                            @if (product.IsOrganic)
+                            {
+                                <span class="farmer-organic-badge"><i class="bi bi-flower1" aria-hidden="true"></i> Organic</span>
+                            }
+                            <a class="farmer-product-image-action" asp-area="Farmer" asp-controller="Product" asp-action="Details" asp-route-id="@product.Id" aria-label="View @product.Name details"><i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+                        </div>
+                        <div class="farmer-product-card-body">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <div>
+                                    <span class="farmer-product-category">@product.Category</span>
+                                    <h3 class="farmer-product-name"><a asp-area="Farmer" asp-controller="Product" asp-action="Details" asp-route-id="@product.Id">@product.Name</a></h3>
+                                </div>
+                                <strong class="farmer-product-price">@product.Price.ToString("C")</strong>
+                            </div>
+                            <p class="farmer-product-description">@product.Description</p>
+                            <div class="farmer-product-meta">
+                                <span><i class="bi bi-basket2" aria-hidden="true"></i> @product.Unit</span>
+                                <span class="@(product.Stock <= product.ReorderThreshold ? "text-warning-emphasis" : string.Empty)"><i class="bi bi-layers" aria-hidden="true"></i> @product.Stock in stock · alert at @product.ReorderThreshold</span>
+                            </div>
+                            <div class="farmer-product-card-footer">
+                                <small>@product.UpdatedLabel</small>
+                                <div class="dropdown">
+                                    <button class="farmer-actions-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Actions for @product.Name">
+                                        Actions
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2 farmer-actions-menu">
+                                        <li>
+                                            <a class="dropdown-item" asp-area="Farmer" asp-controller="Product" asp-action="Details" asp-route-id="@product.Id">
+                                                <i class="bi bi-eye" aria-hidden="true"></i> View listing
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-area="Farmer" asp-controller="Product" asp-action="Edit" asp-route-id="@product.Id">
+                                                <i class="bi bi-pencil" aria-hidden="true"></i> Edit
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-area="Farmer" asp-controller="Inventory" asp-action="Index" asp-route-id="@product.Id">
+                                                <i class="bi bi-layers" aria-hidden="true"></i> Stock &amp; weekly plan
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        @if (product.IsAvailable)
+                                        {
+                                            <li>
+                                                <form asp-area="Farmer" asp-controller="Product" asp-action="Delete" method="post"
+                                                      data-confirm="Delete @product.Name from your catalog? Past orders and reviews stay intact, and you can relist it later.">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@product.Id" />
+                                                    <button type="submit" class="dropdown-item farmer-action-danger">
+                                                        <i class="bi bi-trash3" aria-hidden="true"></i> Delete
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        }
+                                        else
+                                        {
+                                            <li>
+                                                <form asp-area="Farmer" asp-controller="Product" asp-action="Restore" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@product.Id" />
+                                                    <button type="submit" class="dropdown-item">
+                                                        <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Relist
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            }
+        </div>
+    }
+</section>
+
+<div class="farmer-list-footer">
+    <span><i class="bi bi-info-circle" aria-hidden="true"></i> Live inventory is checked whenever a shopper adds an item.</span>
+    <a asp-area="Farmer" asp-controller="Profile" asp-action="Index">Manage storefront settings <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+</div>

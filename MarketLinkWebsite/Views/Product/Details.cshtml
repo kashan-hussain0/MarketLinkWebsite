@@ -1,0 +1,373 @@
+@model ProductDetailViewModel
+@{
+    ViewData["Title"] = Model.Name;
+    var starTotal = Model.StarTotal;
+
+    // The farm that grows it and the market stall that hands it over, on one map.
+    var pickupMarkers = new List<MarketMapMarker>();
+
+    if (Model.FarmLatitude != 0 && Model.FarmLongitude != 0)
+    {
+        pickupMarkers.Add(new MarketMapMarker
+        {
+            Kind = "farmer",
+            Lat = Model.FarmLatitude,
+            Lon = Model.FarmLongitude,
+            Title = Model.FarmName,
+            Subtitle = Model.FarmAddress,
+            Image = Model.FarmImageUrl,
+            Href = $"/Farm/Index?id={Model.FarmerProfileId}",
+            Meta = new List<MarketMapFact>
+            {
+                new() { Label = "Pickup", Value = Model.FarmPickupWindows },
+                new() { Label = "Open", Value = Model.FarmOperatingDays }
+            }
+        });
+    }
+
+    if (Model.MarketLatitude != 0 && Model.MarketLongitude != 0)
+    {
+        pickupMarkers.Add(new MarketMapMarker
+        {
+            Kind = "market",
+            Lat = Model.MarketLatitude,
+            Lon = Model.MarketLongitude,
+            Title = Model.MarketName,
+            Subtitle = Model.MarketAddress,
+            Meta = new List<MarketMapFact>
+            {
+                new() { Label = "Open", Value = Model.MarketOpenTime + " to " + Model.MarketCloseTime },
+                new() { Label = "Day", Value = Model.MarketDay }
+            }
+        });
+    }
+
+    var pickupMap = new MarketMapViewModel
+    {
+        Title = pickupMarkers.Count > 1 ? "Where this comes from" : "Pickup location",
+        Subtitle = pickupMarkers.Count > 1
+            ? "The green pin is the farm, the blue pin is the market stall where you collect it."
+            : "Tap the pin for the details, then set directions to it.",
+        HeightClass = "market-map-canvas-mid",
+        Markers = pickupMarkers
+    };
+}
+
+<section class="section-block-sm">
+    <div class="container">
+        <nav class="breadcrumb-simple" aria-label="Breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Home</a><i class="bi bi-chevron-right"></i>
+            <a asp-controller="Product" asp-action="Index">Product</a><i class="bi bi-chevron-right"></i>
+            <span>@Model.Name</span>
+        </nav>
+
+        <div class="row g-4 g-xl-5">
+            <div class="col-lg-6">
+                <div class="detail-image-wrap">
+                    <img class="detail-image" src="@Model.ImageUrl" alt="@Model.Name" />
+                    <div class="detail-image-footer">
+                        <span><i class="bi bi-basket2 me-1"></i>Reserved for market pickup</span>
+                        <span><i class="bi bi-cash-coin me-1"></i>Pay at the stall</span>
+                    </div>
+                </div>
+
+                <a class="farm-seller-card" asp-controller="Farm" asp-action="Index" asp-route-id="@Model.FarmerProfileId">
+                    <span class="farm-seller-media">
+                        @if (!string.IsNullOrWhiteSpace(Model.FarmImageUrl))
+                        {
+                            <img src="@Model.FarmImageUrl" alt="@Model.FarmName" loading="lazy" />
+                        }
+                        else
+                        {
+                            <span class="farm-seller-initials">@Model.FarmInitials</span>
+                        }
+                    </span>
+                    <span class="farm-seller-body">
+                        <span class="farm-seller-eyebrow">Sold by</span>
+                        <strong class="farm-seller-name">@Model.FarmName</strong>
+                        <span class="farm-seller-owner">@Model.FarmerName</span>
+                        <span class="farm-seller-facts">
+                            @if (Model.FarmerReviewCount > 0)
+                            {
+                                <span><i class="bi bi-star-fill text-warning"></i> @Model.FarmerRating.ToString("0.0") <small>(@Model.FarmerReviewCount)</small></span>
+                            }
+                            <span><i class="bi bi-box-seam"></i> @Model.FarmProductCount items</span>
+                            @if (!string.IsNullOrWhiteSpace(Model.MarketName))
+                            {
+                                <span><i class="bi bi-shop"></i> @Model.MarketName</span>
+                            }
+                        </span>
+                    </span>
+                    <span class="farm-seller-go">View farm <i class="bi bi-arrow-right"></i></span>
+                </a>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <span class="badge rounded-pill bg-success-subtle text-success">@Model.Category</span>
+                    @if (Model.IsOrganic)
+                    {
+                        <span class="badge rounded-pill bg-success text-white"><i class="bi bi-flower1 me-1"></i>Organic</span>
+                    }
+                    @if (Model.QuantityAvailable <= 0)
+                    {
+                        <span class="badge rounded-pill bg-danger text-white"><i class="bi bi-x-circle me-1"></i>Sold out</span>
+                    }
+                    else
+                    {
+                        <span class="stock-pill"><span class="rounded-circle bg-success" style="width:7px;height:7px;"></span>@Model.QuantityAvailable available</span>
+                    }
+                </div>
+
+                <h1 class="product-detail-title">@Model.Name</h1>
+                <div class="d-flex align-items-center flex-wrap gap-3 mb-4">
+                    <a class="rating fs-6 text-decoration-none" href="#reviews">
+                        <i class="bi bi-star-fill"></i>@Model.Rating.ToString("0.0")
+                        <small>(@Model.ReviewCount reviews)</small>
+                    </a>
+                    @if (!string.IsNullOrWhiteSpace(Model.MarketName))
+                    {
+                        <span class="text-muted small"><i class="bi bi-geo-alt me-1"></i>@Model.MarketName · @Model.MarketDay</span>
+                    }
+                </div>
+
+                <p class="fs-6 lh-lg text-muted">@Model.Description</p>
+
+                <div class="d-flex align-items-end gap-2 my-4">
+                    <span class="detail-price">$@Model.Price.ToString("0.00")</span><span class="detail-price">/ @Model.Unit</span>
+                </div>
+
+                <div class="content-card p-3 mb-4">
+                    <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
+                        <div>
+                            <label class="form-label mb-2" for="detail-quantity">Quantity</label>
+                            <div class="quantity-control" data-quantity-control>
+                                <button type="button" data-quantity-decrease aria-label="Decrease quantity">&minus;</button>
+                                <input id="detail-quantity" name="quantity" form="product-add-form" type="number" value="1" min="1" max="@Math.Max(1, Model.QuantityAvailable)" aria-label="Quantity" />
+                                <button type="button" data-quantity-increase aria-label="Increase quantity">+</button>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <label class="form-label mb-2" for="detail-pickup">Pickup market</label>
+                            <select id="detail-pickup" class="form-select" aria-label="Pickup market">
+                                <option>@(string.IsNullOrWhiteSpace(Model.MarketName) ? "Market schedule pending" : $"{Model.MarketName} · {Model.MarketDay}")</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="pickup-panel mb-4" aria-labelledby="pickup-heading">
+                    <h2 class="pickup-title" id="pickup-heading"><i class="bi bi-geo-alt-fill"></i> Where you collect this</h2>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.MarketName))
+                    {
+                        <div class="pickup-stop">
+                            <span class="pickup-badge">Pickup stall</span>
+                            <div class="pickup-copy">
+                                <strong>@Model.MarketName</strong>
+                                <span><i class="bi bi-geo-alt"></i>@Model.MarketAddress</span>
+                                <span><i class="bi bi-clock"></i>@Model.MarketOpenTime to @Model.MarketCloseTime &middot; @Model.MarketDay</span>
+                            </div>
+                            <div class="d-flex flex-column gap-2 flex-shrink-0">
+                                @if (!string.IsNullOrWhiteSpace(Model.MarketDirectionsUrl))
+                                {
+                                    <a class="btn btn-sm btn-brand" href="@Model.MarketDirectionsUrl" target="_blank" rel="noopener"><i class="bi bi-sign-turn-right"></i> Directions</a>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Model.MarketMapUrl))
+                                {
+                                    <a class="btn btn-sm btn-soft" href="@Model.MarketMapUrl" target="_blank" rel="noopener"><i class="bi bi-map"></i> Map</a>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.FarmAddress) || !string.IsNullOrWhiteSpace(Model.FarmPickupWindows))
+                    {
+                        <div class="pickup-stop">
+                            <span class="pickup-badge pickup-badge-farm">The farm</span>
+                            <div class="pickup-copy">
+                                <strong>@Model.FarmName</strong>
+                                @if (!string.IsNullOrWhiteSpace(Model.FarmAddress))
+                                {
+                                    <span><i class="bi bi-geo-alt"></i>@Model.FarmAddress</span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Model.FarmOperatingDays))
+                                {
+                                    <span><i class="bi bi-calendar3"></i>Open @Model.FarmOperatingDays</span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Model.FarmPickupWindows))
+                                {
+                                    <span><i class="bi bi-clock"></i>@Model.FarmPickupWindows</span>
+                                }
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(Model.FarmMapUrl) || !string.IsNullOrWhiteSpace(Model.FarmDirectionsUrl))
+                            {
+                                <div class="d-flex flex-column gap-2 flex-shrink-0">
+                                    @if (!string.IsNullOrWhiteSpace(Model.FarmDirectionsUrl))
+                                    {
+                                        <a class="btn btn-sm btn-brand" href="@Model.FarmDirectionsUrl" target="_blank" rel="noopener"><i class="bi bi-sign-turn-right"></i> Directions</a>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(Model.FarmMapUrl))
+                                    {
+                                        <a class="btn btn-sm btn-soft" href="@Model.FarmMapUrl" target="_blank" rel="noopener"><i class="bi bi-map"></i> Map</a>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.MarketName) || !string.IsNullOrWhiteSpace(Model.FarmAddress))
+                    {
+                        <a class="pickup-farm-link" asp-controller="Farm" asp-action="Index" asp-route-id="@Model.FarmerProfileId">
+                            <i class="bi bi-shop"></i> See everything @Model.FarmName sells, their stock and full farm details
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    }
+
+                    @if (pickupMarkers.Count > 0)
+                    {
+                        <div class="mt-3">
+                            @await Html.PartialAsync("_MarketMap", pickupMap)
+                        </div>
+                    }
+                </section>
+
+                <form id="product-add-form" asp-controller="Cart" asp-action="Add" method="post" class="d-flex flex-column flex-sm-row gap-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="productId" value="@Model.Id" />
+                    <input type="hidden" name="quantity" value="1" />
+                    <button class="btn btn-market btn-lg flex-grow-1" type="submit" data-add-to-cart data-product-name="@Model.Name" disabled="@(Model.QuantityAvailable <= 0)">
+                        <i class="bi bi-basket2"></i>Add to pre-order
+                    </button>
+                    <a class="btn btn-outline-market btn-lg" asp-controller="Cart" asp-action="Checkout">Checkout</a>
+                </form>
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <form asp-controller="Favorite" asp-action="Toggle" method="post" class="mt-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="kind" value="product" />
+                        <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                        <button type="submit" class="btn btn-link text-decoration-none small" data-favorite aria-pressed="@(Model.IsFavorite ? "true" : "false")">
+                            <i class="bi @(Model.IsFavorite ? "bi-heart-fill text-danger" : "bi-heart")"></i>
+                            @(Model.IsFavorite ? "Saved to favourites" : "Save for later")
+                        </button>
+                    </form>
+                }
+
+                <div class="row g-3 mt-3">
+                    <div class="col-sm-4"><div class="text-center p-2"><i class="bi bi-patch-check text-success"></i><small class="d-block mt-1">Verified grower</small></div></div>
+                    <div class="col-sm-4"><div class="text-center p-2"><i class="bi bi-calendar2-check text-success"></i><small class="d-block mt-1">Pickup only</small></div></div>
+                    <div class="col-sm-4"><div class="text-center p-2"><i class="bi bi-cash-coin text-success"></i><small class="d-block mt-1">Pay at stall</small></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block-sm pt-4" id="reviews">
+    <div class="container">
+        <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3 mb-4">
+            <div>
+                <span class="eyebrow">Customer feedback</span>
+                <h2 class="section-title h1 mb-0">What shoppers said</h2>
+            </div>
+            @if (Model.CanReview)
+            {
+                <a class="btn btn-market" asp-controller="Review" asp-action="Create" asp-route-productId="@Model.Id">
+                    <i class="bi bi-pencil-square me-1"></i> Write a review
+                </a>
+            }
+            else if (Model.HasReviewed)
+            {
+                <span class="badge rounded-pill bg-success-subtle text-success"><i class="bi bi-check-circle me-1"></i>You reviewed this item</span>
+            }
+        </div>
+
+        @if (Model.ReviewCount == 0)
+        {
+            <div class="content-card p-4 text-center">
+                <i class="bi bi-star fs-2 text-warning"></i>
+                <h3 class="h5 mt-2">No reviews yet</h3>
+                <p class="text-muted mb-0">Once you collect this item, your honest feedback appears here.</p>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="content-card p-4 h-100">
+                        <div class="review-score">@Model.Rating.ToString("0.0")</div>
+                        <div class="text-warning mb-2">
+                            @for (var s = 1; s <= 5; s++)
+                            {
+                                <i class="bi @(s <= Math.Round((float)Model.Rating) ? "bi-star-fill" : "bi-star")"></i>
+                            }
+                        </div>
+                        <small class="text-muted">Based on @Model.ReviewCount review@(Model.ReviewCount == 1 ? string.Empty : "s")</small>
+
+                        <div class="review-bars mt-3">
+                            @for (var star = 5; star >= 1; star--)
+                            {
+                                var count = Model.StarDistribution[star];
+                                var percent = starTotal == 0 ? 0 : (int)Math.Round(count * 100m / starTotal);
+                                <div class="review-bar">
+                                    <span>@star <i class="bi bi-star-fill"></i></span>
+                                    <div class="review-bar-progress"><span style="width:@percent%"></span></div>
+                                    <span>@count</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-8">
+                    <div class="d-flex flex-column gap-3">
+                        @foreach (var review in Model.Reviews)
+                        {
+                            <article class="review-card">
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <span class="reviewer-avatar">@review.Initials</span>
+                                    <div>
+                                        <strong class="d-block small">@review.ReviewerName@(review.IsMine ? " (you)" : string.Empty)</strong>
+                                        <small class="text-muted">@review.DateLabel</small>
+                                    </div>
+                                    <span class="ms-auto text-warning">
+                                        @for (var s = 1; s <= 5; s++)
+                                        {
+                                            <i class="bi @(s <= review.Rating ? "bi-star-fill" : "bi-star")"></i>
+                                        }
+                                    </span>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(review.Title))
+                                {
+                                    <h3 class="h6 mb-1">@review.Title</h3>
+                                }
+                                <p class="mb-2 small lh-lg">@review.Body</p>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    @if (review.VerifiedPurchase)
+                                    {
+                                        <span class="badge rounded-pill bg-success-subtle text-success"><i class="bi bi-patch-check me-1"></i>Verified purchase</span>
+                                    }
+                                    <form asp-controller="Review" asp-action="MarkHelpful" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@review.Id" />
+                                        <button type="submit" class="btn btn-sm btn-soft"><i class="bi bi-hand-thumbs-up me-1"></i>Helpful (@review.HelpfulCount)</button>
+                                    </form>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(review.FarmerReply))
+                                {
+                                    <div class="farm-review-reply mt-3">
+                                        <strong>Reply from @Model.FarmName</strong>
+                                        <p class="mb-0">@review.FarmerReply</p>
+                                    </div>
+                                }
+                            </article>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>

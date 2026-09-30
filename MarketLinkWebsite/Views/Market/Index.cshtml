@@ -1,0 +1,165 @@
+@model List<MarketCardViewModel>
+@{
+    ViewData["Title"] = "Farmers markets and pickup locations";
+    var searchQuery = ViewData["SearchQuery"] as string ?? string.Empty;
+    var selectedDay = ViewData["MarketDay"] as string ?? string.Empty;
+    var selectedSort = ViewData["Sort"] as string ?? string.Empty;
+    var marketDays = ViewData["MarketDays"] as IReadOnlyList<string> ?? Array.Empty<string>();
+    var mapUrl = ViewData["MarketsMapUrl"] as string ?? string.Empty;
+    var hasLocation = ViewData["HasLocation"] is bool located && located;
+    var mapProvider = ViewData["MapProvider"] as string ?? "OpenStreetMap";
+}
+
+<section class="page-hero">
+    <div class="container position-relative" style="z-index: 2;">
+        <nav class="page-breadcrumb" aria-label="Breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Home</a><i class="bi bi-chevron-right"></i><span>Markets &amp; map</span>
+        </nav>
+        <div class="row align-items-end g-4">
+            <div class="col-lg-8">
+                <span class="eyebrow">Pickup made simple</span>
+                <h1>Find a market day that works for you</h1>
+                <p>Explore nearby markets, compare opening days and plan a direct pickup from the stalls you want to visit.</p>
+            </div>
+            <div class="col-lg-4">
+                <form class="d-flex gap-2" asp-controller="Market" asp-action="Index" method="get">
+                    <label class="visually-hidden" for="marketSearch">Search markets</label>
+                    <input id="marketSearch" class="form-control" name="searchQuery" value="@searchQuery" placeholder="Search area or market" />
+                    <button class="btn btn-market flex-shrink-0" type="submit" aria-label="Search markets"><i class="bi bi-search"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block-sm">
+    <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <span class="catalog-count"><strong>@Model.Count</strong> pickup markets found</span>
+                <span class="d-block small text-muted mt-1">Map data provided by @mapProvider</span>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                @if (!hasLocation)
+                {
+                    <button class="btn btn-sm btn-soft" type="button" data-locate-me>
+                        <i class="bi bi-crosshair" aria-hidden="true"></i> Find markets near me
+                    </button>
+                }
+                <form class="d-flex align-items-center gap-2" asp-controller="Market" asp-action="Index" method="get">
+                    <input type="hidden" name="searchQuery" value="@searchQuery" />
+                    <label class="small text-muted" for="marketSort">Sort</label>
+                    <select class="form-select" id="marketSort" name="sort" onchange="this.form.submit()">
+                        <option value="" selected="@(selectedSort == string.Empty)">Market name</option>
+                        <option value="distance" selected="@(selectedSort == "distance")">Nearest first</option>
+                        <option value="farmers" selected="@(selectedSort == "farmers")">Most farmers</option>
+                    </select>
+                    <label class="small text-muted" for="marketDay">Day</label>
+                    <select class="form-select" id="marketDay" name="marketDay" onchange="this.form.submit()">
+                        <option value="">Any day</option>
+                        @foreach (var marketDay in marketDays)
+                        {
+                            <option value="@marketDay" selected="@(string.Equals(selectedDay, marketDay, StringComparison.OrdinalIgnoreCase))">@marketDay</option>
+                        }
+                    </select>
+                </form>
+            </div>
+        </div>
+
+        @if (Model.Count > 0)
+        {
+            <div class="row g-4">
+                <div class="col-lg-5">
+                    <div class="d-grid gap-3">
+                        @foreach (var market in Model)
+                        {
+                            <partial name="_MarketCard" model="market" />
+                        }
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    @if (ViewData["PickupMap"] is MarketMapViewModel pickupMap && pickupMap.Markers.Count > 0)
+                    {
+                        @await Html.PartialAsync("_MarketMap", pickupMap)
+                    }
+                    else
+                    {
+                        <div class="content-card h-100 p-4 d-flex flex-column justify-content-center text-center">
+                            <i class="bi bi-geo-alt fs-1 text-success mb-2" aria-hidden="true"></i>
+                            <h2 class="h5">No pinned locations yet</h2>
+                            <p class="text-muted small mb-3">As soon as markets and farmers pin their spot, the pickup map appears here with directions for every stall.</p>
+                            <a class="btn btn-sm btn-soft align-self-center" asp-controller="Home" asp-action="Contact">Ask about a location</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <span class="empty-state-icon"><i class="bi bi-calendar2-x"></i></span>
+                <h2 class="h4">No markets match this view</h2>
+                <p class="mb-4">Try another market day or clear the search to see the full pickup calendar.</p>
+                <a class="btn btn-market" asp-controller="Market" asp-action="Index">Clear filters</a>
+            </div>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // The visitor has to agree to share their location once. The result is
+        // stored in a cookie, so asking again is never needed.
+        document.querySelector('[data-locate-me]')?.addEventListener('click', function () {
+            const button = this;
+            if (!navigator.geolocation) {
+                showToast('This browser cannot share your location.');
+                return;
+            }
+
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span> Locating…';
+
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    const body = new URLSearchParams({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    });
+
+                    fetch('/Geo/Save', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: body
+                    }).then(function () {
+                        window.location.href = '/Market/Index?sort=distance';
+                    }).catch(function () {
+                        window.location.reload();
+                    });
+                },
+                function () {
+                    button.disabled = false;
+                    button.innerHTML = '<i class="bi bi-crosshair" aria-hidden="true"></i> Find markets near me';
+                    showToast('Location was not shared, so distances cannot be shown.');
+                },
+                { timeout: 10000, maximumAge: 300000 });
+        });
+    </script>
+}
+
+<section class="pb-5">
+    <div class="container">
+        <div class="farmer-cta p-4 p-lg-5">
+            <div class="row align-items-center g-4 position-relative">
+                <div class="col-lg-8 farmer-cta-content">
+                    <span class="eyebrow text-white-50">Helpful pickup planning</span>
+                    <h2>Save your preferred market and never miss a harvest.</h2>
+                    <p>Sign in to save your favourite markets, pickup details and previous orders for faster weekly planning.</p>
+                </div>
+                <div class="col-lg-4 text-lg-end position-relative">
+                    <a class="btn btn-light btn-lg" asp-controller="Account" asp-action="Register">Create customer account</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

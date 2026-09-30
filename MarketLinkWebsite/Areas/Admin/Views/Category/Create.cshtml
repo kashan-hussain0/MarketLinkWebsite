@@ -1,0 +1,59 @@
+@model MarketLinkWebsite.Areas.Admin.Models.CategoryFormViewModel
+@{
+    ViewData["Title"] = "Add category";
+}
+
+<div class="admin-page-header">
+    <div>
+        <div class="admin-page-eyebrow">Catalog management</div>
+        <h1 class="admin-page-title">Add category</h1>
+        <p class="admin-page-subtitle">Create a clear home for a new group of local products.</p>
+    </div>
+    <div class="admin-page-actions"><a class="admin-btn admin-btn-secondary" asp-area="Admin" asp-controller="Category" asp-action="Index"><i class="bi bi-arrow-left" aria-hidden="true"></i>Back to categories</a></div>
+</div>
+
+<form asp-area="Admin" asp-controller="Category" asp-action="Create" method="post" class="admin-card admin-form-card" data-guard>
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="admin-validation-summary"></div>
+    <section class="admin-form-section" aria-labelledby="category-details-heading">
+        <h2 id="category-details-heading" class="admin-form-section-title">Category details</h2>
+        <p class="admin-form-section-description">A short, friendly description helps customers understand what they will find here.</p>
+        <div class="admin-form-grid">
+            <div class="admin-form-field">
+                <label asp-for="Name" class="admin-form-label" type="text" required minlength="2" maxlength="100" pattern="[A-Za-z][A-Za-z0-9 &'.\-]*" title="Start with a letter.">Category name <span class="required-mark">*</span></label>
+                <input asp-for="Name" class="admin-form-control" placeholder="e.g. Fresh product" />
+                <span asp-validation-for="Name" class="admin-field-validation"></span>
+            </div>
+            <div class="admin-form-field">
+                <label asp-for="SortOrder" class="admin-form-label">Sort order</label>
+                <input asp-for="SortOrder" class="admin-form-control" type="number" min="0" max="999" />
+                <span class="admin-form-help">Lower numbers appear first.</span>
+                <span asp-validation-for="SortOrder" class="admin-field-validation"></span>
+            </div>
+            <div class="admin-form-field admin-form-field-full">
+                <label asp-for="Description" class="admin-form-label" required minlength="10" maxlength="500" rows="4">Description</label>
+                <textarea asp-for="Description" class="admin-form-control" placeholder="e.g. Seasonal fruit, vegetables, and herbs."></textarea>
+                <span asp-validation-for="Description" class="admin-field-validation"></span>
+            </div>
+            <div class="admin-form-field admin-form-field-full">
+                <label asp-for="ImageUrl" class="admin-form-label">Category image URL</label>
+                <input asp-for="ImageUrl" class="admin-form-control" type="url" placeholder="https://..." inputmode="url" />
+                <span asp-validation-for="ImageUrl" class="admin-field-validation"></span>
+                <div class="image-preview is-hidden" data-image-preview-for="ImageUrl">
+                    <img src="" alt="" />
+                    <span class="image-preview-copy">
+                        <strong>Checking the picture</strong>
+                        <span>Paste a link to preview it.</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="admin-form-check-row mt-4">
+            <label class="admin-check-control"><input asp-for="IsActive" /> <span>Show this category to customers</span></label>
+        </div>
+    </section>
+    <div class="admin-form-actions">
+        <a class="admin-btn admin-btn-secondary" asp-area="Admin" asp-controller="Category" asp-action="Index">Cancel</a>
+        <button type="submit" class="admin-btn admin-btn-primary"><i class="bi bi-check2" aria-hidden="true"></i>Save category</button>
+    </div>
+</form>

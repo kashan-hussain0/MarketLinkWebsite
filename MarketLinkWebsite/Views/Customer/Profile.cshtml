@@ -1,0 +1,78 @@
+@model MarketLinkWebsite.Controllers.CustomerProfileViewModel
+@{
+    ViewData["Title"] = "Your profile";
+}
+@await Html.PartialAsync("_CustomerNav")
+@await Html.PartialAsync("../Account/_AccountStyles")
+
+<div class="container-xl pb-5">
+    @await Html.PartialAsync("_CustomerFlash")
+
+    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+        <div>
+            <div class="eyebrow text-uppercase fw-bold mb-1" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">Your account</div>
+            <h1 class="display-6 fw-bold text-dark mb-2">Profile</h1>
+            <p class="text-muted mb-0">Keep your contact details and market preferences up to date.</p>
+        </div>
+        <a asp-controller="Customer" asp-action="Addresses" class="btn btn-outline-success rounded-pill fw-semibold" style="border-color: var(--ml-accent-text); color: var(--ml-accent-text);"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i>Manage addresses</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-4">
+            <section class="card border-0 shadow-sm rounded-5 bg-white p-4 p-md-5 text-center h-100" aria-labelledby="profile-summary-heading">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mx-auto mb-3" style="width: 6rem; height: 6rem; background: linear-gradient(145deg, #4f772d, #90a955); color: #fff; font-size: 1.6rem; font-weight: 800;">@Model.AvatarInitials</div>
+                <h2 id="profile-summary-heading" class="h4 fw-bold text-dark mb-1">@Model.Profile.FirstName @Model.Profile.LastName</h2>
+                <p class="small text-muted mb-4">@Model.MemberSince</p>
+                <div class="row g-2 text-center border-top border-bottom py-3">
+                    <div class="col-4"><div class="h4 fw-bold text-dark mb-1">@Model.TotalOrders</div><div class="small text-muted">Orders</div></div>
+                    <div class="col-4"><div class="h4 fw-bold text-dark mb-1">@Model.SavedItems</div><div class="small text-muted">Saved</div></div>
+                    <div class="col-4"><div class="h4 fw-bold text-dark mb-1">@Model.FavoriteFarmers</div><div class="small text-muted">Farms</div></div>
+                </div>
+                <div class="d-grid gap-2 mt-4"><a asp-controller="Customer" asp-action="Orders" class="btn btn-sm btn-outline-success rounded-pill fw-semibold" style="border-color: var(--ml-accent-text); color: var(--ml-accent-text);">View order history</a><a asp-controller="Customer" asp-action="Favorites" class="btn btn-sm btn-outline-secondary rounded-pill fw-semibold">See saved favorites</a></div>
+            </section>
+        </div>
+
+        <div class="col-xl-8">
+            <section class="card border-0 shadow-sm rounded-5 bg-white p-4 p-md-5 mb-4" aria-labelledby="details-heading">
+                <div class="d-flex align-items-center gap-3 mb-4"><span class="d-inline-flex align-items-center justify-content-center rounded-3" style="width: 2.8rem; height: 2.8rem; background: var(--ml-sage-tint); color: var(--ml-accent-text);"><i class="bi bi-person" aria-hidden="true"></i></span><div><div class="eyebrow text-uppercase fw-bold mb-1" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">Personal details</div><h2 id="details-heading" class="h4 fw-bold text-dark mb-0">How we can reach you</h2></div></div>
+                <form asp-controller="Customer" asp-action="Profile" method="post" class="account-form">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3 border-0" role="alert"></div>
+                    <div class="row g-3">
+                        <div class="col-sm-6"><label asp-for="Profile.FirstName" class="form-label" type="text" required minlength="2" maxlength="50" pattern="[A-Za-z][A-Za-z'\-.]*" title="Start with a letter, then letters, spaces, hyphens or dots only." autocomplete="given-name"></label><input asp-for="Profile.FirstName" class="form-control" autocomplete="given-name" aria-describedby="profile-first-name-error" /><span id="profile-first-name-error" asp-validation-for="Profile.FirstName" class="text-danger small"></span></div>
+                        <div class="col-sm-6"><label asp-for="Profile.LastName" class="form-label" type="text" required minlength="2" maxlength="50" pattern="[A-Za-z][A-Za-z'\-.]*" title="Start with a letter, then letters, spaces, hyphens or dots only." autocomplete="family-name"></label><input asp-for="Profile.LastName" class="form-control" autocomplete="family-name" aria-describedby="profile-last-name-error" /><span id="profile-last-name-error" asp-validation-for="Profile.LastName" class="text-danger small"></span></div>
+                        <div class="col-12"><label asp-for="Profile.Email" class="form-label" type="email" required maxlength="256" spellcheck="false" autocomplete="email"></label><div class="input-group"><span class="input-group-text bg-white border-end-0" style="border-color: var(--ml-line-soft); color: var(--ml-accent-text);"><i class="bi bi-envelope" aria-hidden="true"></i></span><input asp-for="Profile.Email" class="form-control border-start-0" autocomplete="email" inputmode="email" aria-describedby="profile-email-error" /></div><span id="profile-email-error" asp-validation-for="Profile.Email" class="text-danger small"></span></div>
+                        <div class="col-12"><label asp-for="Profile.PhoneNumber" class="form-label" type="tel" required maxlength="30" pattern="\+?[0-9][0-9 \-()]{6,20}" title="Use 7 to 21 characters. Digits, spaces, brackets, plus and hyphens only." autocomplete="tel"></label><div class="input-group"><span class="input-group-text bg-white border-end-0" style="border-color: var(--ml-line-soft); color: var(--ml-accent-text);"><i class="bi bi-telephone" aria-hidden="true"></i></span><input asp-for="Profile.PhoneNumber" class="form-control border-start-0" autocomplete="tel" inputmode="tel" aria-describedby="profile-phone-error" /></div><span id="profile-phone-error" asp-validation-for="Profile.PhoneNumber" class="text-danger small"></span></div>
+                    </div>
+                    <div class="d-flex flex-wrap justify-content-end gap-2 mt-4 pt-3 border-top"><a asp-controller="Customer" asp-action="Dashboard" class="btn btn-light rounded-pill px-4">Cancel</a><button type="submit" class="btn btn-brand rounded-pill px-4">Save profile</button></div>
+                </form>
+            </section>
+
+            <section class="card border-0 shadow-sm rounded-5 bg-white p-4 p-md-5" aria-labelledby="saved-address-heading">
+                <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4"><div><div class="eyebrow text-uppercase fw-bold mb-1" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">Pickup shortcuts</div><h2 id="saved-address-heading" class="h4 fw-bold text-dark mb-1">Your saved addresses</h2><p class="small text-muted mb-0">Add or remove a familiar pickup location for faster checkout.</p></div><a asp-controller="Customer" asp-action="Addresses" class="btn btn-sm btn-outline-success rounded-pill fw-semibold" style="border-color: var(--ml-accent-text); color: var(--ml-accent-text);">Manage address book</a></div>
+                <div class="row g-3">
+                    @foreach (var address in Model.Addresses)
+                    {
+                        <div class="col-md-6"><div class="address-preview rounded-4 p-3 h-100"><div class="d-flex align-items-center justify-content-between mb-2"><span class="fw-bold text-dark"><i class="bi bi-geo-alt me-1" style="color: var(--ml-accent-text);" aria-hidden="true"></i>@address.Label</span>@if (address.IsDefault){<span class="badge rounded-pill soft-success">Default</span>}</div><div class="small text-dark">@address.Recipient</div><div class="small text-muted">@address.AddressLine<br />@address.City, @address.Region @address.PostalCode</div></div></div>
+                    }
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+<style>
+    .address-preview {
+        background: #f7faf6;
+        border: 1px solid #dce8d9;
+    }
+
+[data-theme="dark"] .address-preview {
+    background: var(--ml-surface-2);
+    border-color: var(--ml-line-soft);
+}
+
+[data-theme="dark"] .address-preview .text-dark,
+[data-theme="dark"] .address-preview .fw-bold {
+    color: var(--ml-ink) !important;
+}
+</style>

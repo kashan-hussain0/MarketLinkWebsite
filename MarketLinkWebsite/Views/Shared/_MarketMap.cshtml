@@ -1,0 +1,46 @@
+@model MarketMapViewModel
+@{
+    var markers = System.Text.Json.JsonSerializer.Serialize(Model.Markers ?? new List<MarketMapMarker>(), new System.Text.Json.JsonSerializerOptions
+    {
+        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    });
+    var height = Model.HeightClass;
+}
+
+<section class="market-map" data-market-map data-markers="@markers">
+    <div class="market-map-head">
+        <div>
+            <h2 class="h5 fw-bold mb-1">@Model.Title</h2>
+            <p class="text-muted small mb-0">@Model.Subtitle</p>
+        </div>
+        <div class="market-map-tools">
+            @if ((Model.Markers ?? new List<MarketMapMarker>()).Any(m => m.Kind == "market"))
+            {
+                <button type="button" class="market-map-toggle" data-map-toggle="market" aria-pressed="true">
+                    <span class="market-map-swatch market-map-swatch-market" aria-hidden="true"></span>Markets
+                </button>
+            }
+            @if ((Model.Markers ?? new List<MarketMapMarker>()).Any(m => m.Kind == "farmer"))
+            {
+                <button type="button" class="market-map-toggle" data-map-toggle="farmer" aria-pressed="true">
+                    <span class="market-map-swatch market-map-swatch-farmer" aria-hidden="true"></span>Farmer stalls
+                </button>
+            }
+            <button type="button" class="market-map-toggle" data-map-locate>
+                <i class="bi bi-crosshair" aria-hidden="true"></i><span>Near me</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="market-map-body">
+        <div class="market-map-canvas" data-map-canvas role="region" aria-label="@Model.Title"></div>
+        <div class="market-map-list" data-map-list></div>
+    </div>
+
+    <p class="market-map-note">
+        <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+        Tap a marker or a name to see the stall, then use the directions button for the exact pickup point.
+        Map tiles by OpenStreetMap contributors.
+    </p>
+</section>

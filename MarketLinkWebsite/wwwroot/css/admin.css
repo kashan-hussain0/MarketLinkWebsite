@@ -1,0 +1,40 @@
+/* Legacy admin utility entry point. Area-specific dashboard styles live in admin-dashboard.css. */
+.admin-legacy-surface {
+    border: 1px solid #dfe6df;
+    border-radius: 1rem;
+    background: #fff;
+}
+
+.admin-form-hint {
+    margin: 0.35rem 0 0;
+    color: var(--ml-muted, #6b7a6c);
+    font-size: 0.78rem;
+    line-height: 1.5;
+}
+
+.admin-form-control[type="file"] {
+    padding: 0.55rem 0.7rem;
+}
+
+.admin-form-control[type="file"]::file-selector-button {
+    margin-right: 0.75rem;
+    padding: 0.4rem 0.85rem;
+    border: 1px solid var(--ml-border, #d4e0d2);
+    border-radius: 0.6rem;
+    background: #eef4ec;
+    color: #2f5d2a;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.admin-form-control[type="file"]::file-selector-button:hover {
+    background: #dfeadb;
+}
+
+[data-theme="dark"] .admin-form-control[type="file"]::file-selector-button {
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.08);
+    color: #c3d99a;
+}

@@ -1,0 +1,62 @@
+@{
+    ViewData["Title"] = "Join MarketLink";
+}
+@await Html.PartialAsync("_AccountStyles")
+
+<div class="account-page py-4 py-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-9">
+                <div class="text-center mb-4 mb-md-5">
+                    <a class="d-inline-flex align-items-center gap-2 text-decoration-none mb-3" asp-controller="Home" asp-action="Index" aria-label="MarketLink home">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded-3 text-white" style="width: 2.6rem; height: 2.6rem; background: var(--ml-leaf-solid);"><i class="bi bi-shop-window" aria-hidden="true"></i></span>
+                        <span class="fs-5 fw-bold" style="color: var(--ml-ink-strong);">Market<span style="color: var(--ml-accent-text);">Link</span></span>
+                    </a>
+                    <div class="eyebrow text-uppercase fw-bold mb-2" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">Choose your MarketLink path</div>
+                    <h1 class="display-6 fw-bold text-dark mb-3">How will you join the market?</h1>
+                    <p class="lead text-muted mx-auto" style="max-width: 620px;">Shop the weekly harvest or share your own work with neighbors. Choose the account type that matches how you participate.</p>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm rounded-5 bg-white overflow-hidden">
+                            <div class="p-4 p-md-5 h-100 d-flex flex-column">
+                                <div class="d-flex align-items-center justify-content-between mb-4">
+                                    <div class="d-inline-flex align-items-center justify-content-center rounded-4" style="width: 3.5rem; height: 3.5rem; background: var(--ml-sage-tint); color: var(--ml-accent-text);"><i class="bi bi-basket2 fs-4" aria-hidden="true"></i></div>
+                                    <span class="badge rounded-pill" style="background: var(--ml-sage-tint); color: var(--ml-accent-text);">For shoppers</span>
+                                </div>
+                                <h2 class="fw-bold text-dark mb-2">I’m here to shop local</h2>
+                                <p class="text-muted mb-4">Pre-order fresh products, meet the people who grow it, and keep every pickup in one place.</p>
+                                <ul class="list-unstyled text-muted small d-grid gap-3 mb-4">
+                                    <li><i class="bi bi-check-circle-fill me-2" style="color: var(--ml-accent-text);" aria-hidden="true"></i>Browse the weekly harvest</li>
+                                    <li><i class="bi bi-check-circle-fill me-2" style="color: var(--ml-accent-text);" aria-hidden="true"></i>Save favorite farms and items</li>
+                                    <li><i class="bi bi-check-circle-fill me-2" style="color: var(--ml-accent-text);" aria-hidden="true"></i>Track orders and pickup windows</li>
+                                </ul>
+                                <a asp-controller="Account" asp-action="Register" class="btn btn-brand mt-auto">Create customer account <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm rounded-5 bg-white overflow-hidden">
+                            <div class="p-4 p-md-5 h-100 d-flex flex-column">
+                                <div class="d-flex align-items-center justify-content-between mb-4">
+                                    <div class="d-inline-flex align-items-center justify-content-center rounded-4" style="width: 3.5rem; height: 3.5rem; background: var(--ml-amber-tint-alt); color: var(--ml-amber-ink-alt);"><i class="bi bi-tree fs-4" aria-hidden="true"></i></div>
+                                    <span class="badge rounded-pill" style="background: var(--ml-amber-tint-alt); color: var(--ml-amber-ink-alt);">For growers</span>
+                                </div>
+                                <h2 class="fw-bold text-dark mb-2">I grow or make something good</h2>
+                                <p class="text-muted mb-4">Introduce your farm or kitchen to a community that values thoughtful, local food.</p>
+                                <ul class="list-unstyled text-muted small d-grid gap-3 mb-4">
+                                    <li><i class="bi bi-check-circle-fill me-2" style="color: var(--ml-accent-amber);" aria-hidden="true"></i>Build a warm seller profile</li>
+                                    <li><i class="bi bi-check-circle-fill me-2" style="color: var(--ml-accent-amber);" aria-hidden="true"></i>Share your harvest and story</li>
+                                    <li><i class="bi bi-check-circle-fill me-2" style="color: var(--ml-accent-amber);" aria-hidden="true"></i>Meet repeat local shoppers</li>
+                                </ul>
+                                <a asp-controller="Account" asp-action="FarmerRegister" class="btn w-100 mt-auto fw-semibold rounded-3 py-2 text-white" style="background: var(--ml-amber-tint-alt); border-color: var(--ml-amber-ink-alt);">Join as a farmer <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-center small text-muted mt-4 mb-0">Already have an account? <a asp-controller="Account" asp-action="Login" class="fw-semibold" style="color: var(--ml-accent-text);">Log in</a></p>
+            </div>
+        </div>
+    </div>
+</div>

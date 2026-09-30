@@ -1,0 +1,94 @@
+@model MarketLinkWebsite.Controllers.VerifyCodeForm
+@{
+    ViewData["Title"] = "Enter your code";
+}
+@await Html.PartialAsync("_AccountStyles")
+
+<div class="account-page py-4 py-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6 col-xl-5">
+                <div class="account-card bg-white p-4 p-sm-5 text-center">
+                    <a class="d-inline-flex align-items-center gap-2 text-decoration-none mb-5" asp-controller="Home" asp-action="Index" aria-label="MarketLink home">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded-3 text-white" style="width: 2.6rem; height: 2.6rem; background: var(--ml-leaf-solid);"><i class="bi bi-shop-window" aria-hidden="true"></i></span>
+                        <span class="fs-5 fw-bold" style="color: var(--ml-ink-strong);">Market<span style="color: var(--ml-accent-text);">Link</span></span>
+                    </a>
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-4" style="width: 4.5rem; height: 4.5rem; background: var(--ml-sage-tint); color: var(--ml-accent-text);">
+                        <i class="bi bi-envelope-paper fs-2" aria-hidden="true"></i>
+                    </div>
+                    <div class="eyebrow text-uppercase fw-bold mb-2" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">Account recovery</div>
+                    <h1 class="fw-bold text-dark mb-2">Check your email</h1>
+                    <p class="text-muted mb-4">
+                        We sent a verification code to <strong class="text-dark">@Model.Email</strong>.
+                        It is good for ten minutes and can only be used once.
+                    </p>
+
+                    @if (TempData["SuccessMessage"] is string sentMessage && !string.IsNullOrWhiteSpace(sentMessage))
+                    {
+                        <div class="alert alert-success d-flex align-items-start gap-2 border-0 rounded-3 text-start" role="status">
+                            <i class="bi bi-check-circle-fill mt-1" aria-hidden="true"></i>
+                            <span>@sentMessage</span>
+                        </div>
+                    }
+
+                    @if (ViewData["ErrorMessage"] is string codeError && !string.IsNullOrWhiteSpace(codeError))
+                    {
+                        <div class="alert alert-danger d-flex align-items-start gap-2 border-0 rounded-3 text-start" role="alert">
+                            <i class="bi bi-exclamation-circle-fill mt-1" aria-hidden="true"></i>
+                            <span>@codeError</span>
+                        </div>
+                    }
+
+                    <form asp-controller="Account" asp-action="VerifyCode" method="post" class="account-form text-start">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3 border-0" role="alert"></div>
+                        <input asp-for="Email" type="hidden" />
+                        <div class="mb-3">
+                            <label asp-for="Code" class="form-label"></label>
+                            <input asp-for="Code"
+                                   class="form-control text-center fw-bold"
+                                   style="letter-spacing: .12em; font-size: 1.15rem; padding-left: .12em;"
+                                   autocomplete="one-time-code"
+                                   maxlength="64"
+                                   placeholder="Enter the code"
+                                   aria-describedby="verify-code-help verify-code-error" />
+                            <div id="verify-code-help" class="form-text">Type the code exactly as it appears in the email.</div>
+                            <span id="verify-code-error" asp-validation-for="Code" class="text-danger small"></span>
+                        </div>
+                        <button type="submit" class="btn btn-brand w-100">
+                            Check my code <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+                        </button>
+                    </form>
+
+                    <div class="account-divider my-4">Did not get it?</div>
+                    <form asp-controller="Account" asp-action="ForgotPassword" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="Email" value="@Model.Email" />
+                        <button type="submit" class="btn btn-outline-success w-100 fw-semibold rounded-3 py-2" style="border-color: var(--ml-accent-text); color: var(--ml-accent-text);">
+                            Send a new code
+                        </button>
+                    </form>
+
+                    <p class="small text-muted mt-4 mb-0"><a class="fw-semibold" asp-controller="Account" asp-action="Login" style="color: var(--ml-accent-text);">Return to log in</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var field = document.getElementById('Code');
+            if (!field) return;
+
+            field.focus();
+
+            // A pasted code arrives with odd spacing or dashes, so the tidying is
+            // left to the server rather than guessed at here.
+            field.addEventListener('input', function () {
+                var cleaned = field.value.replace(/\s+/g, ' ').trim();
+                if (cleaned !== field.value) field.value = cleaned;
+            });
+        })();
+    </script>
+}

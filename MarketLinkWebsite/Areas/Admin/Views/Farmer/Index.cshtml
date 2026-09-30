@@ -1,0 +1,204 @@
+@model MarketLinkWebsite.Areas.Admin.Models.FarmerListViewModel
+@{
+    ViewData["Title"] = "Farmers";
+}
+
+<div class="admin-page-header">
+    <div>
+        <div class="admin-page-eyebrow">Community</div>
+        <h1 class="admin-page-title">Farmers</h1>
+        <p class="admin-page-subtitle">Manage the growers who bring local food and thoughtful products to MarketLink.</p>
+    </div>
+    <div class="admin-page-actions">
+        <a class="admin-btn admin-btn-secondary" asp-area="Admin" asp-controller="Farmer" asp-action="Approvals">
+            <i class="bi bi-person-check" aria-hidden="true"></i>
+            Review applications
+        </a>
+    </div>
+</div>
+
+<section class="admin-stat-grid" aria-label="Farmer summary">
+    <article class="admin-stat-card">
+        <span class="admin-stat-icon metric-icon-sage" aria-hidden="true"><i class="bi bi-people"></i></span>
+        <span class="admin-stat-copy"><span class="admin-stat-label">Total farmers</span><strong class="admin-stat-value">@Model.TotalFarmers</strong><span class="admin-stat-meta">Across the marketplace</span></span>
+    </article>
+    <article class="admin-stat-card">
+        <span class="admin-stat-icon metric-icon-blue" aria-hidden="true"><i class="bi bi-person-check"></i></span>
+        <span class="admin-stat-copy"><span class="admin-stat-label">Active farmers</span><strong class="admin-stat-value">@Model.ActiveFarmers</strong><span class="admin-stat-meta">Currently selling</span></span>
+    </article>
+    <article class="admin-stat-card">
+        <span class="admin-stat-icon metric-icon-amber" aria-hidden="true"><i class="bi bi-hourglass-split"></i></span>
+        <span class="admin-stat-copy"><span class="admin-stat-label">Pending review</span><strong class="admin-stat-value">@Model.PendingFarmers</strong><span class="admin-stat-meta">Needs your attention</span></span>
+    </article>
+</section>
+
+<section class="admin-list-card admin-card" aria-label="Farmer directory">
+    <div class="admin-card-header">
+        <div><h2 class="admin-card-title">Farmer directory</h2><p class="admin-card-description">Search and manage your local productsr network</p></div>
+        <span class="admin-list-count">@Model.Farmers.Count of @Model.TotalFarmers farmers</span>
+    </div>
+    <form class="admin-toolbar" asp-area="Admin" asp-controller="Farmer" asp-action="Index" method="get">
+        @Html.AntiForgeryToken()
+        <div class="admin-toolbar-form">
+            <div class="admin-search-field">
+                <label class="visually-hidden" for="farmer-search">Search farmers</label>
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input id="farmer-search" name="search" type="search" value="@Model.SearchTerm" placeholder="Search by name, farm, or location" />
+            </div>
+            <label class="visually-hidden" for="farmer-status">Filter by status</label>
+            <select class="admin-filter-select" id="farmer-status" name="status">
+                <option value="All farmers" selected="@(Model.StatusFilter == "All farmers")">All farmers</option>
+                <option value="Approved" selected="@(Model.StatusFilter == "Approved")">Approved</option>
+                <option value="Pending" selected="@(Model.StatusFilter == "Pending")">Pending</option>
+                <option value="Paused" selected="@(Model.StatusFilter == "Paused")">Paused</option>
+                <option value="Rejected" selected="@(Model.StatusFilter == "Rejected")">Rejected</option>
+            </select>
+            <button type="submit" class="admin-btn admin-btn-soft admin-btn-sm">Filter</button>
+        </div>
+        <div class="admin-toolbar-actions">
+            <button type="submit" asp-area="Admin" asp-controller="Farmer" asp-action="Export" class="admin-btn admin-btn-secondary admin-btn-sm" title="Export farmer list"><i class="bi bi-download" aria-hidden="true"></i><span class="d-none d-sm-inline">Export</span></button>
+        </div>
+    </form>
+
+    @if (Model.Farmers.Count > 0)
+    {
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <caption class="admin-table-caption">MarketLink farmers</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Farmer</th>
+                        <th scope="col">Location</th>
+                        <th scope="col">Products</th>
+                        <th scope="col">Rating</th>
+                        <th scope="col">Customer reviews</th>
+                        <th scope="col">Status</th>
+                        <th scope="col"><span class="visually-hidden">Action</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var farmer in Model.Farmers)
+                    {
+                        <tr>
+                            <td>
+                                <div class="admin-person-cell">
+                                    <span class="admin-avatar admin-avatar-sm admin-avatar-@farmer.AvatarTone" aria-hidden="true">@farmer.Initials</span>
+                                    <span class="admin-person-copy"><strong>@farmer.Name</strong><small>@farmer.FarmName</small></span>
+                                </div>
+                            </td>
+                            <td class="admin-table-muted">@farmer.Location</td>
+                            <td class="admin-table-number">@farmer.ProductCount</td>
+                            <td><span class="admin-table-number">@farmer.Rating.ToString("0.0") <i class="bi bi-star-fill text-warning" aria-hidden="true"></i></span></td>
+                            <td>
+                                @if (farmer.ReviewCount == 0)
+                                {
+                                    <span class="admin-table-muted">No reviews yet</span>
+                                }
+                                else
+                                {
+                                    <div class="admin-review-cell">
+                                        <span class="admin-review-count">
+                                            @farmer.ReviewCount review@(farmer.ReviewCount == 1 ? string.Empty : "s")
+                                            @if (farmer.UnansweredReviewCount > 0)
+                                            {
+                                                <span class="admin-review-pending">@farmer.UnansweredReviewCount awaiting reply</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="admin-review-pending admin-review-pending-done">all answered</span>
+                                            }
+                                        </span>
+                                        <span class="admin-review-latest">
+                                            <span class="text-warning">
+                                                @for (var star = 1; star <= 5; star++)
+                                                {
+                                                    <i class="bi @(star <= farmer.LatestReviewRating ? "bi-star-fill" : "bi-star")" aria-hidden="true"></i>
+                                                }
+                                            </span>
+                                            “@farmer.LatestReviewText” <small>@farmer.LatestReviewLabel</small>
+                                        </span>
+                                    </div>
+                                }
+                            </td>
+                            <td><span class="admin-status status-@farmer.StatusTone">@farmer.Status</span></td>
+                            <td class="admin-table-action">
+                                <details class="position-relative">
+                                    <summary class="admin-table-action" aria-label="Manage @farmer.FarmName"><i class="bi bi-three-dots" aria-hidden="true"></i></summary>
+                                    <div class="card p-2 position-absolute end-0 mt-1 admin-farmer-menu" style="min-width: 280px; z-index: 3;">
+
+                                        <a class="admin-farmer-menu-item" asp-area="" asp-controller="Farm" asp-action="Index" asp-route-id="@farmer.Id" target="_blank" rel="noopener">
+                                            <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>View public farm page
+                                        </a>
+
+                                        <a class="admin-farmer-menu-item" asp-area="Admin" asp-controller="Moderation" asp-action="Index" asp-route-search="@farmer.FarmName">
+                                            <i class="bi bi-shield-check" aria-hidden="true"></i>Moderate listings
+                                        </a>
+
+                                        @if (farmer.Status == "Approved")
+                                        {
+                                            <hr class="dropdown-divider" />
+                                            <form asp-area="Admin" asp-controller="Farmer" asp-action="Suspend" method="post" class="mt-2">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="Id" value="@farmer.Id" />
+                                                <label class="form-label small" for="farmer-reason-@farmer.Id">Suspension reason</label>
+                                                <textarea id="farmer-reason-@farmer.Id" name="Reason" class="form-control form-control-sm mb-2" maxlength="300" required></textarea>
+                                                <button type="submit" class="admin-btn admin-btn-secondary admin-btn-sm w-100">
+                                                    <i class="bi bi-pause-circle" aria-hidden="true"></i>Suspend farmer
+                                                </button>
+                                            </form>
+                                        }
+                                        else if (farmer.Status == "Paused")
+                                        {
+                                            <hr class="dropdown-divider" />
+                                            <form asp-area="Admin" asp-controller="Farmer" asp-action="Reactivate" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@farmer.Id" />
+                                                <button type="submit" class="admin-btn admin-btn-secondary admin-btn-sm w-100">
+                                                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>Reactivate farmer
+                                                </button>
+                                            </form>
+                                        }
+                                        else if (farmer.Status == "Pending")
+                                        {
+                                            <hr class="dropdown-divider" />
+                                            <a class="admin-farmer-menu-item" asp-area="Admin" asp-controller="Farmer" asp-action="Approvals">
+                                                <i class="bi bi-clipboard-check" aria-hidden="true"></i>Review application
+                                            </a>
+                                        }
+
+                                        <hr class="dropdown-divider" />
+                                        <form asp-area="Admin" asp-controller="Farmer" asp-action="Delete" method="post" class="mt-2"
+                                              data-confirm="Remove @farmer.FarmName permanently? This also deletes every product, stock record and review belonging to the farm.">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="Id" value="@farmer.Id" />
+                                            <label class="form-label small text-danger" for="farmer-delete-@farmer.Id">
+                                                <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>Remove farmer permanently
+                                            </label>
+                                            <input id="farmer-delete-@farmer.Id" name="Confirmation" class="form-control form-control-sm mb-2" placeholder="Type DELETE to confirm" maxlength="10" required />
+                                            <input name="Reason" class="form-control form-control-sm mb-2" placeholder="Reason (optional)" maxlength="300" />
+                                            <button type="submit" class="admin-btn admin-btn-danger admin-btn-sm w-100">
+                                                <i class="bi bi-trash3" aria-hidden="true"></i>Delete farmer
+                                            </button>
+                                        </form>
+                                    </div>
+                                </details>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="admin-pagination">
+            <span>Showing 1-@Model.Farmers.Count of @Model.TotalFarmers farmers</span>
+            <div class="admin-pagination-buttons" aria-label="Pagination">
+                <button type="button" class="admin-page-button" disabled aria-label="Previous page"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+                <button type="button" class="admin-page-button admin-page-button-active" aria-current="page">1</button>
+                <button type="button" class="admin-page-button" disabled aria-label="Next page"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="admin-empty-state"><i class="bi bi-search" aria-hidden="true"></i><strong>No farmers found</strong><p>Try a different name, farm, or location.</p></div>
+    }
+</section>

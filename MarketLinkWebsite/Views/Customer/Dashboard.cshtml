@@ -1,0 +1,284 @@
+@model MarketLinkWebsite.Controllers.CustomerDashboardViewModel
+@{
+    ViewData["Title"] = "Customer dashboard";
+    var featuredProgress = Model.FeaturedOrder.Status switch
+    {
+        "Pending" => 15,
+        "Accepted" => 35,
+        "Preparing" => 55,
+        "Ready for pickup" => 80,
+        _ => 0
+    };
+}
+@await Html.PartialAsync("_CustomerNav")
+
+<div class="container-xl pb-5">
+    @await Html.PartialAsync("_CustomerFlash")
+
+    <section class="customer-welcome rounded-5 p-4 p-md-5 mb-4 mb-md-5 position-relative overflow-hidden" aria-labelledby="welcome-heading">
+        <div class="position-relative" style="z-index: 1;">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                <span class="badge rounded-pill px-3 py-2" style="background: rgba(255,255,255,.17); color: #fff;"><i class="bi bi-sun me-1" aria-hidden="true"></i> Your local market</span>
+                <span class="small" style="color: rgba(255,255,255,.7);">@Model.MemberSince</span>
+            </div>
+            <h1 id="welcome-heading" class="display-6 fw-bold text-white mb-2">@Model.Greeting, @Model.FirstName.</h1>
+            <p class="lead mb-4" style="max-width: 600px; color: rgba(255,255,255,.8);">The harvest is looking beautiful this week. Here is everything you need for your next local market pickup.</p>
+            <div class="d-flex flex-wrap gap-2">
+                <a asp-controller="Product" asp-action="Index" class="btn btn-light fw-semibold rounded-pill px-4">Explore this week’s harvest <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+                <a asp-controller="Customer" asp-action="Orders" class="btn btn-outline-light fw-semibold rounded-pill px-4">View my orders</a>
+            </div>
+        </div>
+        <i class="bi bi-flower1 customer-welcome-decoration" aria-hidden="true"></i>
+    </section>
+
+    <section aria-labelledby="snapshot-heading" class="mb-4 mb-md-5">
+        <div class="d-flex align-items-end justify-content-between mb-3">
+            <div>
+                <div class="eyebrow text-uppercase fw-bold mb-1" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">Your market snapshot</div>
+                <h2 id="snapshot-heading" class="h4 fw-bold text-dark mb-0">At a glance</h2>
+            </div>
+            <span class="small text-muted d-none d-sm-inline"><i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>Updated just now</span>
+        </div>
+        <div class="row g-3">
+            <div class="col-6 col-xl-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4 bg-white p-3 p-md-4">
+                    <div class="d-flex align-items-start justify-content-between mb-3">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded-3" style="width: 2.6rem; height: 2.6rem; background: var(--ml-sage-tint); color: var(--ml-accent-text);"><i class="bi bi-bag-check" aria-hidden="true"></i></span>
+                        <span class="small fw-semibold" style="color: var(--ml-accent-text);">Active</span>
+                    </div>
+                    <div class="display-6 fw-bold text-dark lh-1">@Model.ActiveOrderCount</div>
+                    <div class="small text-muted mt-2">Active orders</div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4 bg-white p-3 p-md-4">
+                    <div class="d-flex align-items-start justify-content-between mb-3">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded-3" style="width: 2.6rem; height: 2.6rem; background: var(--ml-amber-tint); color: var(--ml-accent-amber);"><i class="bi bi-heart" aria-hidden="true"></i></span>
+                        <span class="small fw-semibold" style="color: var(--ml-accent-amber);">Saved</span>
+                    </div>
+                    <div class="display-6 fw-bold text-dark lh-1">@Model.SavedItemCount</div>
+                    <div class="small text-muted mt-2">Favorite items</div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4 bg-white p-3 p-md-4">
+                    <div class="d-flex align-items-start justify-content-between mb-3">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded-3" style="width: 2.6rem; height: 2.6rem; background: var(--ml-teal-tint); color: var(--ml-accent-teal);"><i class="bi bi-shop" aria-hidden="true"></i></span>
+                        <span class="small fw-semibold" style="color: var(--ml-accent-teal);">Local</span>
+                    </div>
+                    <div class="display-6 fw-bold text-dark lh-1">@Model.FavoriteFarmerCount</div>
+                    <div class="small text-muted mt-2">Favorite farms</div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4 bg-white p-3 p-md-4">
+                    <div class="d-flex align-items-start justify-content-between mb-3">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded-3" style="width: 2.6rem; height: 2.6rem; background: var(--ml-purple-tint); color: var(--ml-accent-violet);"><i class="bi bi-calendar2-heart" aria-hidden="true"></i></span>
+                        <span class="small fw-semibold" style="color: var(--ml-accent-violet);">Next</span>
+                    </div>
+                    <div class="h4 fw-bold text-dark lh-1 mt-2">@(string.IsNullOrWhiteSpace(Model.NextPickupDate) ? "—" : Model.NextPickupDate)</div>
+                    <div class="small text-muted mt-2">Next pickup</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="row g-4 mb-4 mb-md-5">
+        <div class="col-lg-7">
+            @if (Model.FeaturedOrder.Id > 0)
+            {
+            <section class="card h-100 border-0 shadow-sm rounded-5 bg-white overflow-hidden" aria-labelledby="pickup-heading">
+                <div class="p-4 p-md-5 h-100 d-flex flex-column">
+                    <div class="d-flex align-items-start justify-content-between gap-3 mb-4">
+                        <div>
+                            <div class="eyebrow text-uppercase fw-bold mb-1" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">Coming up</div>
+                            <h2 id="pickup-heading" class="h4 fw-bold text-dark mb-1">Your next pickup</h2>
+                            <p class="small text-muted mb-0">A little preparation goes a long way.</p>
+                        </div>
+                        <span class="badge rounded-pill soft-success">@Model.FeaturedOrder.Status</span>
+                    </div>
+                    <div class="pickup-callout rounded-4 p-3 p-sm-4 mb-4">
+                        <div class="d-flex gap-3 align-items-start">
+                            <div class="d-inline-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style="width: 3rem; height: 3rem; background: var(--ml-leaf-solid); color: #fff;"><i class="bi bi-calendar2-week fs-5" aria-hidden="true"></i></div>
+                            <div>
+                                <div class="small text-muted mb-1">Pickup window</div>
+                                <h3 class="h5 fw-bold text-dark mb-1">@Model.NextPickupDate</h3>
+                                <div class="small text-muted">@Model.NextPickupWindow · @Model.NextPickupLocation</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="progress flex-grow-1" style="height: 0.5rem;" aria-label="Order progress: @Model.FeaturedOrder.Status">
+                            <div class="progress-bar" role="progressbar" style="width: @featuredProgress%; background: var(--ml-leaf-solid);" aria-valuenow="@featuredProgress" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <span class="small fw-semibold" style="color: var(--ml-accent-text);">@featuredProgress% ready</span>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between gap-3 mt-auto pt-3 border-top">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 2.2rem; height: 2.2rem; background: var(--ml-amber-tint-alt); color: var(--ml-amber-ink-alt);"><i class="bi bi-shop" aria-hidden="true"></i></span>
+                            <div class="small"><div class="fw-semibold text-dark">@Model.NextPickupStall</div><div class="text-muted">Bring your order number</div></div>
+                        </div>
+                        <a asp-controller="Customer" asp-action="OrderDetails" asp-route-id="@Model.FeaturedOrder.Id" class="btn btn-sm btn-outline-success fw-semibold rounded-pill px-3" style="border-color: var(--ml-accent-text); color: var(--ml-accent-text);">Details</a>
+                    </div>
+                </div>
+            </section>
+            }
+            else
+            {
+            <section class="card h-100 border-0 shadow-sm rounded-5 bg-white p-4 p-md-5 d-flex align-items-center justify-content-center text-center" aria-labelledby="pickup-heading">
+                <div><span class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 3.5rem; height: 3.5rem; background: var(--ml-sage-tint); color: var(--ml-accent-text);"><i class="bi bi-calendar2-plus fs-4" aria-hidden="true"></i></span><h2 id="pickup-heading" class="h4 fw-bold text-dark">No pickup scheduled</h2><p class="text-muted mb-4">Your next active order will appear here with its market and pickup details.</p><a asp-controller="Product" asp-action="Index" class="btn btn-brand rounded-pill px-4">Explore the harvest</a></div>
+            </section>
+            }
+        </div>
+
+        <div class="col-lg-5">
+            <section class="card h-100 border-0 shadow-sm rounded-5 bg-white p-4 p-md-5" aria-labelledby="seasonal-heading">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div>
+                        <div class="eyebrow text-uppercase fw-bold mb-1" style="color: var(--ml-accent-amber); letter-spacing: .12em; font-size: .72rem;">Picked for you</div>
+                        <h2 id="seasonal-heading" class="h4 fw-bold text-dark mb-0">Seasonal favorites</h2>
+                    </div>
+                    <a asp-controller="Customer" asp-action="Favorites" class="small fw-semibold text-decoration-none" style="color: var(--ml-accent-text);">See all</a>
+                </div>
+                @if (Model.SeasonalPicks.Count == 0)
+                {
+                    <div class="text-center py-4"><i class="bi bi-basket2 fs-2 text-muted" aria-hidden="true"></i><p class="small text-muted mt-2 mb-0">The next harvest list is being prepared.</p></div>
+                }
+                else
+                {
+                    <div class="d-grid gap-3">
+                        @foreach (var pick in Model.SeasonalPicks)
+                        {
+                            <a class="seasonal-pick d-flex align-items-center gap-3 text-decoration-none p-2 rounded-3" asp-controller="Product" asp-action="Details" asp-route-id="@pick.ProductId">
+                                @if (!string.IsNullOrWhiteSpace(pick.ImageUrl))
+                                {
+                                    <img src="@pick.ImageUrl" class="rounded-3" style="width: 3.5rem; height: 3.5rem; object-fit: cover;" alt="@pick.Name" />
+                                }
+                                else
+                                {
+                                    <span class="d-inline-flex align-items-center justify-content-center rounded-3 bg-light text-muted flex-shrink-0" style="width: 3.5rem; height: 3.5rem;"><i class="bi bi-image" aria-hidden="true"></i></span>
+                                }
+                                <span class="flex-grow-1 min-w-0">
+                                    <span class="d-block small fw-bold text-dark text-truncate">@pick.Name</span>
+                                    <span class="d-block small text-muted text-truncate">@pick.FarmName</span>
+                                </span>
+                                <span class="text-end flex-shrink-0"><span class="d-block small fw-bold" style="color: var(--ml-accent-text);">@pick.Price</span><span class="d-block" style="font-size: .65rem; color: var(--ml-accent-amber);">@pick.Badge</span></span>
+                            </a>
+                        }
+                    </div>
+                }
+            </section>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <section class="card border-0 shadow-sm rounded-5 bg-white overflow-hidden" aria-labelledby="recent-orders-heading">
+                <div class="p-4 p-md-5 pb-3 d-flex align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="eyebrow text-uppercase fw-bold mb-1" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">Your history</div>
+                        <h2 id="recent-orders-heading" class="h4 fw-bold text-dark mb-0">Recent orders</h2>
+                    </div>
+                    <a asp-controller="Customer" asp-action="Orders" class="btn btn-sm btn-outline-success rounded-pill fw-semibold" style="border-color: var(--ml-accent-text); color: var(--ml-accent-text);">View all</a>
+                </div>
+                @if (Model.RecentOrders.Count == 0)
+                {
+                    <div class="px-4 pb-4 text-center"><p class="text-muted mb-0">Your completed and upcoming orders will appear here.</p></div>
+                }
+                else
+                {
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr><th class="ps-4" scope="col">Order</th><th scope="col">Pickup</th><th scope="col">Status</th><th class="text-end pe-4" scope="col">Total</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in Model.RecentOrders)
+                            {
+                                <tr>
+                                    <th class="ps-4" scope="row">
+                                        <a class="d-block fw-semibold text-dark text-decoration-none" asp-controller="Customer" asp-action="OrderDetails" asp-route-id="@order.Id">@order.OrderNumber</a>
+                                        <span class="small text-muted">@order.OrderDate.ToString("MMM d, yyyy")</span>
+                                    </th>
+                                    <td><span class="d-block small text-dark">@order.PickupDate</span><span class="small text-muted">@order.ItemCount items</span></td>
+                                    <td><span class="badge rounded-pill soft-@order.StatusClass"><i class="bi @order.StatusIcon me-1" aria-hidden="true"></i>@order.Status</span></td>
+                                    <td class="text-end pe-4 fw-semibold text-dark">@order.Total.ToString("C2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+            </section>
+        </div>
+        <div class="col-xl-4">
+            <section class="card h-100 border-0 shadow-sm rounded-5 bg-white p-4 p-md-5" aria-labelledby="activity-heading">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div>
+                        <div class="eyebrow text-uppercase fw-bold mb-1" style="color: var(--ml-accent-teal); letter-spacing: .12em; font-size: .72rem;">Stay in the loop</div>
+                        <h2 id="activity-heading" class="h4 fw-bold text-dark mb-0">Recent activity</h2>
+                    </div>
+                    <a asp-controller="Customer" asp-action="Notifications" class="small fw-semibold text-decoration-none" style="color: var(--ml-accent-text);">All</a>
+                </div>
+                @if (Model.Activity.Count == 0)
+                {
+                    <p class="text-muted mb-0">New account and order updates will appear here.</p>
+                }
+                else
+                {
+                <div class="d-grid gap-4">
+                    @foreach (var activity in Model.Activity)
+                    {
+                        <div class="d-flex gap-3">
+                            <span class="d-inline-flex align-items-center justify-content-center rounded-3 flex-shrink-0 bg-@activity.Tone-subtle text-@activity.Tone" style="width: 2.4rem; height: 2.4rem;"><i class="bi @activity.Icon" aria-hidden="true"></i></span>
+                            <div class="min-w-0"><div class="small fw-semibold text-dark">@activity.Title</div><div class="small text-muted">@activity.Detail</div><div class="small text-muted mt-1">@activity.Time</div></div>
+                        </div>
+                    }
+                </div>
+                }
+            </section>
+        </div>
+    </div>
+</div>
+
+<style>
+    .customer-welcome {
+        background: linear-gradient(120deg, #2f5d2a 0%, #4f772d 62%, #86a85d 100%);
+        color: #fff;
+    }
+
+    .customer-welcome-decoration {
+        position: absolute;
+        right: 3%;
+        bottom: -2.5rem;
+        color: rgba(255, 255, 255, 0.12);
+        font-size: 12rem;
+        line-height: 1;
+        transform: rotate(-12deg);
+        pointer-events: none;
+    }
+
+    .pickup-callout {
+        background: #f1f6ef;
+        border: 1px solid #dce8d9;
+    }
+
+    .seasonal-pick {
+        transition: background-color 0.15s ease, transform 0.15s ease;
+    }
+
+    .seasonal-pick:hover,
+    .seasonal-pick:focus {
+        background: #f4f8f2;
+        transform: translateX(2px);
+    }
+
+    .min-w-0 {
+        min-width: 0;
+    }
+
+[data-theme="dark"] .pickup-callout {
+    background: var(--ml-sage-tint);
+    border-color: var(--ml-line-soft);
+}
+</style>

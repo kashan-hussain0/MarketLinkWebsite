@@ -1,0 +1,85 @@
+@model MarketLinkWebsite.Areas.Admin.Models.FarmerApprovalViewModel
+@{
+    ViewData["Title"] = "Farmer approvals";
+}
+
+<div class="admin-page-header">
+    <div>
+        <div class="admin-page-eyebrow">Community operations</div>
+        <h1 class="admin-page-title">Farmer approvals</h1>
+        <p class="admin-page-subtitle">Review new applications and help more local productsrs join the MarketLink community.</p>
+    </div>
+    <div class="admin-page-actions">
+        <a class="admin-btn admin-btn-secondary" asp-area="Admin" asp-controller="Farmer" asp-action="Index">
+            <i class="bi bi-people" aria-hidden="true"></i>
+            View all farmers
+        </a>
+    </div>
+</div>
+
+<div class="admin-approval-layout">
+    <section class="admin-approval-list" aria-label="Applications awaiting review">
+        @if (Model.PendingFarmers.Count > 0)
+        {
+            @foreach (var farmer in Model.PendingFarmers)
+            {
+                <article class="admin-approval-card">
+                    <span class="admin-avatar admin-avatar-lg admin-avatar-@farmer.AvatarTone" aria-hidden="true">@farmer.Initials</span>
+                    <div class="admin-approval-card-copy">
+                        <h2 class="admin-approval-name">@farmer.Name</h2>
+                        <p class="admin-approval-farm">@farmer.FarmName</p>
+                        <div class="admin-approval-meta">
+                            <span><i class="bi bi-geo-alt" aria-hidden="true"></i>@farmer.Location</span>
+                            <span><i class="bi bi-box-seam" aria-hidden="true"></i>@farmer.ProductCount products</span>
+                            <span><i class="bi bi-clock" aria-hidden="true"></i>Submitted @farmer.SubmittedLabel</span>
+                        </div>
+                    </div>
+                    <div class="admin-approval-actions">
+                        <details class="position-relative">
+                            <summary class="admin-btn admin-btn-secondary admin-btn-sm">Request changes</summary>
+                            <form asp-area="Admin" asp-controller="Farmer" asp-action="Reject" method="post" class="card p-3 position-absolute end-0 mt-2" style="min-width: 280px; z-index: 3;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="Id" value="@farmer.Id" />
+                                <label class="form-label small" for="rejection-reason-@farmer.Id">What needs to change?</label>
+                                <textarea id="rejection-reason-@farmer.Id" name="Reason" class="form-control form-control-sm mb-2" maxlength="300" minlength="3" required></textarea>
+                                <button type="submit" class="admin-btn admin-btn-secondary admin-btn-sm w-100">Send request</button>
+                            </form>
+                        </details>
+                        <form asp-area="Admin" asp-controller="Farmer" asp-action="Approve" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@farmer.Id" />
+                            <button type="submit" class="admin-btn admin-btn-primary admin-btn-sm"><i class="bi bi-check2" aria-hidden="true"></i>Approve</button>
+                        </form>
+                    </div>
+                </article>
+            }
+        }
+        else
+        {
+            <div class="admin-card admin-empty-state"><i class="bi bi-check2-circle" aria-hidden="true"></i><strong>Applications are clear</strong><p>There are no farmer applications waiting for review right now.</p></div>
+        }
+    </section>
+
+    <aside>
+        <article class="admin-card admin-side-summary-card">
+            <div class="admin-card-header mb-0">
+                <div><h2 class="admin-card-title">Review queue</h2><p class="admin-card-description">A quick look at your workload</p></div>
+            </div>
+            <div class="admin-side-summary-list">
+                <div class="admin-side-summary-item"><span>Pending applications</span><strong>@Model.PendingCount</strong></div>
+                <div class="admin-side-summary-item"><span>Approved this month</span><strong>@Model.ApprovedThisMonth</strong></div>
+                <div class="admin-side-summary-item"><span>Average review time</span><strong>@Model.AverageReviewTime hrs</strong></div>
+            </div>
+            <div class="mt-4">
+                <div class="d-flex justify-content-between mb-2 admin-inline-muted"><span>Completed this month</span><strong class="text-success">@Model.ApprovedThisMonth</strong></div>
+                <div class="admin-progress" role="progressbar" aria-label="Applications completed this month" aria-valuenow="@Model.ApprovedThisMonth" aria-valuemin="0" aria-valuemax="25"><div class="admin-progress-bar" style="width: @Math.Min(100, Model.ApprovedThisMonth * 4)%;"></div></div>
+            </div>
+        </article>
+        <article class="admin-card admin-side-summary-card">
+            <div class="admin-side-note">
+                <i class="bi bi-lightbulb" aria-hidden="true"></i>
+                <span>Applications with complete farm details are usually approved within one business day.</span>
+            </div>
+        </article>
+    </aside>
+</div>

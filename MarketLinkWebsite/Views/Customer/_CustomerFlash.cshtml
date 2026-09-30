@@ -1,0 +1,14 @@
+@if (TempData["SuccessMessage"] is string successMessage && !string.IsNullOrWhiteSpace(successMessage))
+{
+    <div class="alert alert-success alert-dismissible fade show border-0 rounded-4 shadow-sm" role="status">
+        <i class="bi bi-check-circle-fill me-2" aria-hidden="true"></i>@successMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss message"></button>
+    </div>
+}
+@if ((ViewData["ErrorMessage"] ?? TempData["ErrorMessage"]) is string errorMessage && !string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-4 shadow-sm" role="alert">
+        <i class="bi bi-exclamation-circle-fill me-2" aria-hidden="true"></i>@errorMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss message"></button>
+    </div>
+}

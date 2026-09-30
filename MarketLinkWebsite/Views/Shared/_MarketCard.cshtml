@@ -1,0 +1,46 @@
+@model MarketCardViewModel
+
+<article class="market-card h-100 reveal">
+    <div class="market-card-image">
+        @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+        {
+            <img src="@Model.ImageUrl" alt="@Model.Name" loading="lazy" />
+        }
+        else
+        {
+            <span class="market-card-image-fallback" aria-hidden="true"><i class="bi bi-shop-window"></i></span>
+        }
+        <span class="market-open-badge"><span></span>Open @Model.Day</span>
+        @if (Model.HasDistance)
+        {
+            <span class="market-distance"><i class="bi bi-geo-alt-fill"></i>@Model.DistanceLabel</span>
+        }
+    </div>
+    <div class="market-card-body">
+        <h3><a asp-controller="Market" asp-action="Details" asp-route-id="@Model.Id">@Model.Name</a></h3>
+        <p class="market-address"><i class="bi bi-geo-alt"></i>@Model.Address, @Model.City</p>
+        <div class="market-hours">
+            <span><i class="bi bi-clock"></i><strong>@Model.OpenTime – @Model.CloseTime</strong></span>
+            <span><i class="bi bi-calendar3"></i>@Model.Day</span>
+        </div>
+        <div class="market-card-stats">
+            <span><strong>@Model.FarmerCount</strong> farmers</span>
+            <span><strong>@Model.ProductCount</strong> products</span>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-soft flex-grow-1" asp-controller="Market" asp-action="Details" asp-route-id="@Model.Id">View market &amp; stalls <i class="bi bi-arrow-right"></i></a>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <form asp-controller="Favorite" asp-action="Toggle" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <input type="hidden" name="kind" value="market" />
+                    <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                    <button class="btn @(Model.IsFavorite ? "btn-danger" : "btn-outline-danger")" type="submit" data-favorite data-market-kind="market" aria-label="Save @Model.Name to favorites" aria-pressed="@(Model.IsFavorite ? "true" : "false")">
+                        <i class="bi @(Model.IsFavorite ? "bi-heart-fill" : "bi-heart")"></i>
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+</article>

@@ -1,0 +1,103 @@
+<style>
+    .review-page {
+        background:
+            radial-gradient(circle at 10% 8%, rgba(217, 235, 212, 0.62), transparent 30%),
+            #f4f7f4;
+    }
+
+    .review-card {
+        border: 1px solid #d4e0d2;
+        border-radius: 1.5rem;
+        box-shadow: 0 .75rem 2rem rgba(44, 62, 45, .05);
+    }
+
+    .review-product-card {
+        background: linear-gradient(120deg, #e8f0e6, #f7faf6);
+        border: 1px solid #d4e0d2;
+        border-radius: 1.25rem;
+    }
+
+    .review-form-card {
+        background: #fff;
+        border: 1px solid #d4e0d2;
+        border-radius: 1.5rem;
+        box-shadow: 0 1rem 2.5rem rgba(44, 62, 45, .06);
+    }
+
+    .review-form .form-label {
+        color: #2c3e2d;
+        font-size: .9rem;
+        font-weight: 650;
+    }
+
+    .review-form .form-control,
+    .review-form .form-select {
+        border-color: #d4e0d2;
+        border-radius: .8rem;
+        min-height: 3rem;
+    }
+
+    .review-form .form-control:focus,
+    .review-form .form-select:focus {
+        border-color: #4f772d;
+        box-shadow: 0 0 0 .2rem rgba(79, 119, 45, .14);
+    }
+
+    .review-form .btn-brand {
+        background: #4f772d;
+        border-color: #4f772d;
+        color: #fff;
+        font-weight: 700;
+        border-radius: .8rem;
+        min-height: 3rem;
+    }
+
+    .review-form .btn-brand:hover,
+    .review-form .btn-brand:focus {
+        background: #386641;
+        border-color: #386641;
+        color: #fff;
+    }
+
+    .rating-choice {
+        border: 1px solid #d4e0d2;
+        border-radius: .8rem;
+        padding: .7rem .8rem;
+        cursor: pointer;
+        transition: border-color .15s ease, background-color .15s ease, transform .15s ease;
+    }
+
+    .rating-choice:hover,
+    .rating-choice:focus-within {
+        border-color: #4f772d;
+        background: #f1f6ef;
+        transform: translateY(-1px);
+    }
+
+    .rating-choice input {
+        accent-color: #4f772d;
+    }
+
+    .star-button {
+        color: #d19b24;
+    }
+
+[data-theme="dark"] .review-page {
+    background: var(--ml-page) !important;
+    color: var(--ml-ink) !important;
+}
+
+[data-theme="dark"] .review-page .breadcrumb,
+[data-theme="dark"] .review-page .breadcrumb a {
+    color: var(--ml-ink-soft) !important;
+}
+
+[data-theme="dark"] .review-page .text-dark,
+[data-theme="dark"] .review-page h1,
+[data-theme="dark"] .review-page h2,
+[data-theme="dark"] .review-page h3,
+[data-theme="dark"] .review-page h4,
+[data-theme="dark"] .review-page h5 {
+    color: var(--ml-ink) !important;
+}
+</style>

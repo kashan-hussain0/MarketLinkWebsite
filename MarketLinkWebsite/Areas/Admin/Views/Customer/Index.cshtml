@@ -1,0 +1,124 @@
+@model MarketLinkWebsite.Areas.Admin.Models.CustomerListViewModel
+@{
+    ViewData["Title"] = "Customers";
+}
+
+<div class="admin-page-header">
+    <div>
+        <div class="admin-page-eyebrow">Community</div>
+        <h1 class="admin-page-title">Customers</h1>
+        <p class="admin-page-subtitle">Understand your customer community and keep every shopping experience moving forward.</p>
+    </div>
+    <div class="admin-page-actions">
+        <form asp-area="Admin" asp-controller="Customer" asp-action="Export" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="admin-btn admin-btn-secondary"><i class="bi bi-download" aria-hidden="true"></i>Export customers</button>
+        </form>
+    </div>
+</div>
+
+<section class="admin-stat-grid" aria-label="Customer summary">
+    <article class="admin-stat-card">
+        <span class="admin-stat-icon metric-icon-sage" aria-hidden="true"><i class="bi bi-people"></i></span>
+        <span class="admin-stat-copy"><span class="admin-stat-label">Total customers</span><strong class="admin-stat-value">@Model.TotalCustomers</strong><span class="admin-stat-meta">All-time registrations</span></span>
+    </article>
+    <article class="admin-stat-card">
+        <span class="admin-stat-icon metric-icon-blue" aria-hidden="true"><i class="bi bi-person-check"></i></span>
+        <span class="admin-stat-copy"><span class="admin-stat-label">Active customers</span><strong class="admin-stat-value">@Model.ActiveCustomers</strong><span class="admin-stat-meta">Active in the last 30 days</span></span>
+    </article>
+    <article class="admin-stat-card">
+        <span class="admin-stat-icon metric-icon-violet" aria-hidden="true"><i class="bi bi-person-plus"></i></span>
+        <span class="admin-stat-copy"><span class="admin-stat-label">New this month</span><strong class="admin-stat-value">@Model.NewCustomers</strong><span class="admin-stat-meta">Growing with you</span></span>
+    </article>
+</section>
+
+<section class="admin-list-card admin-card" aria-label="Customer directory">
+    <div class="admin-card-header">
+        <div><h2 class="admin-card-title">Customer directory</h2><p class="admin-card-description">A snapshot of your customer community</p></div>
+        <span class="admin-list-count">@Model.Customers.Count of @Model.TotalCustomers customers</span>
+    </div>
+    <form class="admin-toolbar" asp-area="Admin" asp-controller="Customer" asp-action="Index" method="get">
+        <div class="admin-toolbar-form">
+            <div class="admin-search-field">
+                <label class="visually-hidden" for="customer-search">Search customers</label>
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input id="customer-search" name="search" type="search" value="@Model.SearchTerm" placeholder="Search by name, email, or location" />
+            </div>
+            <label class="visually-hidden" for="customer-status">Filter by status</label>
+            <select class="admin-filter-select" id="customer-status" name="status">
+                <option value="All customers" selected="@(Model.StatusFilter == "All customers")">All customers</option>
+                <option value="Active" selected="@(Model.StatusFilter == "Active")">Active</option>
+                <option value="New" selected="@(Model.StatusFilter == "New")">New</option>
+                <option value="Inactive" selected="@(Model.StatusFilter == "Inactive")">Inactive</option>
+            </select>
+            <button type="submit" class="admin-btn admin-btn-soft admin-btn-sm">Filter</button>
+        </div>
+        <div class="admin-toolbar-actions">
+            <span class="admin-inline-muted">Updated just now</span>
+        </div>
+    </form>
+
+    @if (Model.Customers.Count > 0)
+    {
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <caption class="admin-table-caption">MarketLink customers</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Customer</th>
+                        <th scope="col">Location</th>
+                        <th scope="col">Orders</th>
+                        <th scope="col">Total spent</th>
+                        <th scope="col">Last order</th>
+                        <th scope="col">Status</th>
+                        <th scope="col"><span class="visually-hidden">Action</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var customer in Model.Customers)
+                    {
+                        <tr>
+                            <td>
+                                <div class="admin-person-cell">
+                                    <span class="admin-avatar admin-avatar-sm admin-avatar-@customer.AvatarTone" aria-hidden="true">@customer.Initials</span>
+                                    <span class="admin-person-copy"><strong>@customer.Name</strong><small>@customer.Email</small></span>
+                                </div>
+                            </td>
+                            <td class="admin-table-muted">@customer.Location</td>
+                            <td class="admin-table-number">@customer.OrderCount</td>
+                            <td class="admin-table-number">@customer.TotalSpent.ToString("C")</td>
+                            <td class="admin-table-muted">@customer.LastOrderLabel</td>
+                            <td><span class="admin-status status-@customer.StatusTone">@customer.Status</span></td>
+                            <td class="admin-table-action">
+                                <form asp-area="Admin" asp-controller="Customer" asp-action="UpdateStatus" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="Id" value="@customer.Id" />
+                                    @if (customer.IsActive)
+                                    {
+                                        <button type="submit" name="IsActive" value="false" class="admin-table-action border-0 bg-transparent" aria-label="Deactivate @customer.Name"><i class="bi bi-person-slash" aria-hidden="true"></i></button>
+                                    }
+                                    else
+                                    {
+                                        <button type="submit" name="IsActive" value="true" class="admin-table-action border-0 bg-transparent" aria-label="Activate @customer.Name"><i class="bi bi-person-check" aria-hidden="true"></i></button>
+                                    }
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="admin-pagination">
+            <span>Showing 1-@Model.Customers.Count of @Model.TotalCustomers customers</span>
+            <div class="admin-pagination-buttons" aria-label="Pagination">
+                <button type="button" class="admin-page-button" disabled aria-label="Previous page"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+                <button type="button" class="admin-page-button admin-page-button-active" aria-current="page">1</button>
+                <button type="button" class="admin-page-button" disabled aria-label="Next page"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="admin-empty-state"><i class="bi bi-person-x" aria-hidden="true"></i><strong>No customers found</strong><p>Try a different search or status filter.</p></div>
+    }
+</section>

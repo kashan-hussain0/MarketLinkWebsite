@@ -1,0 +1,289 @@
+@model MarketLinkWebsite.Areas.Admin.Models.SettingsViewModel
+@{
+    ViewData["Title"] = "Settings";
+    var mapProvider = string.Equals(Model.MapProvider, "google", StringComparison.OrdinalIgnoreCase) ? "google" : "openstreetmap";
+    var hasGoogleKey = !string.IsNullOrWhiteSpace(Model.GoogleMapsApiKey);
+}
+
+<div class="admin-page-header">
+    <div>
+        <div class="admin-page-eyebrow">System configuration</div>
+        <h1 class="admin-page-title">Settings</h1>
+        <p class="admin-page-subtitle">Platform identity, contact details, map provider and a live look at the records held for this marketplace.</p>
+    </div>
+</div>
+
+<div class="admin-settings-grid">
+    <nav class="admin-settings-nav" aria-label="Settings sections">
+        <a href="#platform"><i class="bi bi-shop-window" aria-hidden="true"></i>Platform</a>
+        <a href="#contact"><i class="bi bi-telephone" aria-hidden="true"></i>Contact details</a>
+        <a href="#map"><i class="bi bi-map" aria-hidden="true"></i>Map provider</a>
+        <a href="#assistant"><i class="bi bi-stars" aria-hidden="true"></i>Market assistant</a>
+        <a href="#records"><i class="bi bi-database" aria-hidden="true"></i>Records</a>
+        <a href="#masterdata"><i class="bi bi-tags" aria-hidden="true"></i>Master data</a>
+    </nav>
+
+    <div class="d-flex flex-column gap-3">
+        <section class="admin-card" id="platform" aria-labelledby="platform-heading">
+            <div class="admin-card-header">
+                <div><h2 class="admin-card-title" id="platform-heading">Platform</h2><p class="admin-card-description">How MarketLink introduces itself across the site.</p></div>
+            </div>
+            <form asp-area="Admin" asp-controller="Setting" asp-action="Update" method="post" class="p-4" data-guard>
+                @Html.AntiForgeryToken()
+                <div class="admin-validation-summary" asp-validation-summary="All"></div>
+
+                <div class="admin-setting-row">
+                    <div class="admin-setting-copy">
+                        <strong>Platform name</strong>
+                        <small>Shown in the browser title, the navigation bar and outgoing notifications.</small>
+                    </div>
+                    <div class="admin-setting-control">
+                        <input asp-for="PlatformName" class="admin-form-control" type="text" required minlength="2" maxlength="60" pattern="[A-Za-z][A-Za-z0-9 &'.\-]*" title="Start with a letter." placeholder="MarketLink" />
+                        <span class="admin-field-validation" asp-validation-for="PlatformName"></span>
+                    </div>
+                </div>
+
+                <div class="admin-setting-row">
+                    <div class="admin-setting-copy">
+                        <strong>Currency symbol</strong>
+                        <small>Used for every price on the storefront and in the admin console.</small>
+                    </div>
+                    <div class="admin-setting-control">
+                        <input asp-for="CurrencySymbol" class="admin-form-control" maxlength="6" />
+                    </div>
+                </div>
+
+                <div class="admin-setting-row">
+                    <div class="admin-setting-copy">
+                        <strong>Booking window</strong>
+                        <small>How many days ahead a customer may reserve a pickup slot.</small>
+                    </div>
+                    <div class="admin-setting-control">
+                        <div class="input-group">
+                            <input asp-for="MarketBookingWindowDays" class="admin-form-control" type="number" min="1" max="90" />
+                            <span class="input-group-text">days</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-setting-row">
+                    <div class="admin-setting-copy">
+                        <strong>Allow guest browsing</strong>
+                        <small>When off, visitors must create an account before they can see prices and the catalogue.</small>
+                    </div>
+                    <div class="admin-setting-control">
+                        <div class="form-check form-switch">
+                            <input asp-for="AllowGuestBrowsing" class="form-check-input" role="switch" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-setting-row">
+                    <div class="admin-setting-copy">
+                        <strong>Show sold-out items</strong>
+                        <small>Sold-out product stays visible so shoppers know it will return next week.</small>
+                    </div>
+                    <div class="admin-setting-control">
+                        <div class="form-check form-switch">
+                            <input asp-for="ShowSoldOutItems" class="form-check-input" role="switch" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-setting-row">
+                    <div class="admin-setting-copy">
+                        <strong>Announcement bar</strong>
+                        <small>The scrolling strip at the very top of every page.</small>
+                    </div>
+                    <div class="admin-setting-control">
+                        <input asp-for="AnnouncementBar" class="admin-form-control" maxlength="200" placeholder="Pay at the stall, no online fees" />
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-3">
+                    <button type="submit" class="admin-btn admin-btn-primary"><i class="bi bi-check2" aria-hidden="true"></i>Save settings</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="admin-card" id="contact" aria-labelledby="contact-heading">
+            <div class="admin-card-header">
+                <div><h2 class="admin-card-title" id="contact-heading">Contact details</h2><p class="admin-card-description">Used by the Contact Us page and by the assistant when a shopper asks how to reach support.</p></div>
+            </div>
+            <div class="p-4">
+                <div class="admin-setting-row">
+                    <div class="admin-setting-copy">
+                        <strong>Support email</strong>
+                        <small>Where the contact form and password reset messages are sent.</small>
+                    </div>
+                    <div class="admin-setting-control">
+                        <span class="admin-value-chip"><i class="bi bi-envelope" aria-hidden="true"></i>@(string.IsNullOrWhiteSpace(Model.SupportEmail) ? "Not configured" : Model.SupportEmail)</span>
+                    </div>
+                </div>
+                <div class="admin-setting-row">
+                    <div class="admin-setting-copy">
+                        <strong>Support phone</strong>
+                        <small>Static number shown on the Contact Us page.</small>
+                    </div>
+                    <div class="admin-setting-control">
+                        <span class="admin-value-chip"><i class="bi bi-telephone" aria-hidden="true"></i>@(string.IsNullOrWhiteSpace(Model.SupportPhone) ? "Not configured" : Model.SupportPhone)</span>
+                    </div>
+                </div>
+                <div class="admin-setting-row">
+                    <div class="admin-setting-copy">
+                        <strong>Team location</strong>
+                        <small>Address plus the map coordinates used for the embedded map.</small>
+                    </div>
+                    <div class="admin-setting-control text-end">
+                        <strong class="d-block">@(string.IsNullOrWhiteSpace(Model.SupportAddress) ? "Not configured" : Model.SupportAddress)</strong>
+                        <small class="text-muted">@Model.Latitude.ToString("0.0000"), @Model.Longitude.ToString("0.0000")</small>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="admin-card" id="map" aria-labelledby="map-heading">
+            <div class="admin-card-header">
+                <div><h2 class="admin-card-title" id="map-heading">Map provider</h2><p class="admin-card-description">MarketLink can draw every market and farm pin with either provider. OpenStreetMap needs no key at all.</p></div>
+            </div>
+            <div class="p-4">
+                <div class="admin-setting-row">
+                    <div class="admin-setting-copy">
+                        <strong>Active provider</strong>
+                        <small>OpenStreetMap is free and keyless. Google Maps needs a browser key that is allowed for your domain.</small>
+                    </div>
+                    <div class="admin-setting-control">
+                        <span class="admin-value-chip">
+                            <i class="bi @(mapProvider == "google" ? "bi-google" : "bi-globe2")" aria-hidden="true"></i>
+                            @(mapProvider == "google" ? "Google Maps" : "OpenStreetMap")
+                        </span>
+                    </div>
+                </div>
+                <div class="admin-setting-row">
+                    <div class="admin-setting-copy">
+                        <strong>Google Maps browser key</strong>
+                        <small>Set in <code>appsettings.json</code> under <code>Maps:GoogleApiKey</code>. Keep it out of source control by moving it to user secrets.</small>
+                    </div>
+                    <div class="admin-setting-control">
+                        @if (hasGoogleKey)
+                        {
+                            <span class="admin-value-chip"><i class="bi bi-key" aria-hidden="true"></i>Configured</span>
+                        }
+                        else
+                        {
+                            <span class="admin-value-chip"><i class="bi bi-slash-circle" aria-hidden="true"></i>Not configured</span>
+                        }
+                    </div>
+                </div>
+                <div class="admin-setting-row">
+                    <div class="admin-setting-copy">
+                        <strong>Preview</strong>
+                        <small>The embedded map uses whichever provider is active.</small>
+                    </div>
+                    <div class="admin-setting-control">
+                        <a class="admin-btn admin-btn-secondary" asp-area="" asp-controller="Market" asp-action="Index" target="_blank" rel="noopener">
+                            <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>Open market map
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="admin-card" id="assistant" aria-labelledby="assistant-heading">
+            <div class="admin-card-header">
+                <div><h2 class="admin-card-title" id="assistant-heading">Market assistant</h2><p class="admin-card-description">The assistant answers shopper questions. It works offline against the catalogue, and can be upgraded to a hosted model with a key.</p></div>
+            </div>
+            <div class="p-4">
+                <div class="admin-setting-row">
+                    <div class="admin-setting-copy">
+                        <strong>Answer source</strong>
+                        <small>Local answers come straight from this database, so they are always accurate and need no internet connection.</small>
+                    </div>
+                    <div class="admin-setting-control">
+                        <span class="admin-value-chip"><i class="bi bi-database-check" aria-hidden="true"></i>@(string.Equals(Model.AiProvider, "local", StringComparison.OrdinalIgnoreCase) ? "Local catalogue" : "Hosted model")</span>
+                    </div>
+                </div>
+                <div class="admin-setting-row">
+                    <div class="admin-setting-copy">
+                        <strong>Hosted model key</strong>
+                        <small>Set in <code>appsettings.json</code> under <code>Ai:ApiKey</code>. Leave empty to keep the local assistant.</small>
+                    </div>
+                    <div class="admin-setting-control">
+                        @if (Model.AiApiKeyPresent)
+                        {
+                            <span class="admin-value-chip"><i class="bi bi-key" aria-hidden="true"></i>Configured</span>
+                        }
+                        else
+                        {
+                            <span class="admin-value-chip"><i class="bi bi-slash-circle" aria-hidden="true"></i>Not configured</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="admin-card" id="records" aria-labelledby="records-heading">
+            <div class="admin-card-header">
+                <div><h2 class="admin-card-title" id="records-heading">Records</h2><p class="admin-card-description">A live count taken straight from the database.</p></div>
+            </div>
+            <div class="p-4">
+                <div class="admin-stat-grid">
+                    <div class="admin-mini-stat"><span>Users</span><strong>@Model.TotalUsers</strong></div>
+                    <div class="admin-mini-stat"><span>Farmers</span><strong>@Model.TotalFarmers</strong></div>
+                    <div class="admin-mini-stat"><span>Active farmers</span><strong>@Model.ActiveFarmers</strong></div>
+                    <div class="admin-mini-stat"><span>Pending farmers</span><strong>@Model.PendingFarmers</strong></div>
+                    <div class="admin-mini-stat"><span>Customers</span><strong>@Model.TotalCustomers</strong></div>
+                    <div class="admin-mini-stat"><span>Markets</span><strong>@Model.TotalMarkets</strong></div>
+                    <div class="admin-mini-stat"><span>Products</span><strong>@Model.TotalProducts</strong></div>
+                    <div class="admin-mini-stat"><span>Live products</span><strong>@Model.LiveProducts</strong></div>
+                    <div class="admin-mini-stat"><span>Orders</span><strong>@Model.TotalOrders</strong></div>
+                    <div class="admin-mini-stat"><span>Reviews</span><strong>@Model.TotalReviews</strong></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="admin-card" id="masterdata" aria-labelledby="masterdata-heading">
+            <div class="admin-card-header">
+                <div><h2 class="admin-card-title" id="masterdata-heading">Master data</h2><p class="admin-card-description">Categories, markets and platform announcements.</p></div>
+            </div>
+            <div class="p-4">
+                <div class="admin-setting-row">
+                    <div class="admin-setting-copy">
+                        <strong>Product categories</strong>
+                        <small>@Model.ActiveCategories active of @Model.TotalCategories in the catalogue.</small>
+                    </div>
+                    <div class="admin-setting-control d-flex gap-2">
+                        <a class="admin-btn admin-btn-secondary" asp-area="Admin" asp-controller="Category" asp-action="Index">Manage</a>
+                    </div>
+                </div>
+                <div class="admin-setting-row">
+                    <div class="admin-setting-copy">
+                        <strong>Markets</strong>
+                        <small>@Model.ActiveMarkets active, @Model.InactiveMarkets hidden from the storefront.</small>
+                    </div>
+                    <div class="admin-setting-control d-flex gap-2">
+                        <a class="admin-btn admin-btn-secondary" asp-area="Admin" asp-controller="Market" asp-action="Index">Manage</a>
+                    </div>
+                </div>
+                <div class="admin-setting-row">
+                    <div class="admin-setting-copy">
+                        <strong>Announcements</strong>
+                        <small>Publish a platform-wide message that appears in every customer's notification centre.</small>
+                    </div>
+                    <div class="admin-setting-control d-flex gap-2">
+                        <a class="admin-btn admin-btn-secondary" asp-area="Admin" asp-controller="Notification" asp-action="Index">Manage</a>
+                    </div>
+                </div>
+                <div class="admin-setting-row">
+                    <div class="admin-setting-copy">
+                        <strong>Platform roles</strong>
+                        <small>@string.Join(", ", Model.Roles)</small>
+                    </div>
+                    <div class="admin-setting-control d-flex gap-2">
+                        <a class="admin-btn admin-btn-secondary" asp-area="Admin" asp-controller="Customer" asp-action="Index">Accounts</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>

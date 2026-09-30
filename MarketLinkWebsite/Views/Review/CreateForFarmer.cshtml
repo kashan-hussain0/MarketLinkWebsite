@@ -1,0 +1,125 @@
+@model MarketLinkWebsite.Controllers.FarmerReviewSubmission
+@{
+    ViewData["Title"] = "Rate this farm";
+}
+
+<section class="section-block-sm">
+    <div class="container">
+        <nav class="breadcrumb-simple" aria-label="Breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Home</a><i class="bi bi-chevron-right"></i>
+            <span>Rate a farm</span>
+        </nav>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="content-card p-4 p-md-5">
+                    <span class="eyebrow">Farmer rating</span>
+                    <h1 class="h3 fw-bold mb-2">How was your pickup?</h1>
+                    <p class="text-muted">Your rating helps other shoppers choose a farm with confidence.</p>
+
+                    @if (TempData["SuccessMessage"] is string success && !string.IsNullOrWhiteSpace(success))
+                    {
+                        <div class="alert alert-success rounded-3 border-0" role="status">
+                            <i class="bi bi-check-circle-fill me-2"></i>@success
+                        </div>
+                    }
+
+                    @if (ViewData["ErrorMessage"] is string error && !string.IsNullOrWhiteSpace(error))
+                    {
+                        <div class="alert alert-danger rounded-3 border-0" role="alert">
+                            <i class="bi bi-exclamation-octagon-fill me-2"></i>@error
+                        </div>
+                    }
+
+                    @if (!Model.Options.Any(option => option.CanReview))
+                    {
+                        <div class="alert alert-warning rounded-3 border-0" role="alert">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            You have already reviewed every farm that is currently accepting reviews. Thank you for helping your neighbors choose.
+                        </div>
+                        <a class="btn btn-soft" asp-controller="Market" asp-action="Index">Browse markets</a>
+                    }
+                    else
+                    {
+                        <form asp-controller="Review" asp-action="CreateForFarmer" method="post">
+                            @Html.AntiForgeryToken()
+                            <div asp-validation-summary="All" class="alert alert-danger rounded-3 border-0" role="alert"></div>
+
+                            <div class="mb-3">
+                                <label class="form-label" asp-for="FarmerProfileId">Farm</label>
+                                <select class="form-select" asp-for="FarmerProfileId">
+                                    @foreach (var option in Model.Options)
+                                    {
+                                        if (option.CanReview)
+                                        {
+                                            <option value="@option.Id">@option.FarmName@(string.IsNullOrWhiteSpace(option.City) ? string.Empty : " · " + option.City)</option>
+                                        }
+                                    }
+                                </select>
+                                <span class="form-text">Every active farm is listed. You can review a farm whether or not you have collected from it yet.</span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" asp-for="Rating">Your rating</label>
+                                <div class="star-picker" data-star-picker>
+                                    @for (var star = 1; star <= 5; star++)
+                                    {
+                                        <label class="star-option">
+                                            <input type="radio" asp-for="Rating" value="@star" />
+                                            <i class="bi bi-star" aria-hidden="true"></i>
+                                            <span class="visually-hidden">@star star@(star == 1 ? string.Empty : "s")</span>
+                                        </label>
+                                    }
+                                </div>
+                                <span class="form-text" data-star-label>Pick a star rating</span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" asp-for="Title">Headline</label>
+                                <input class="form-control" asp-for="Title" maxlength="120" placeholder="Great product, friendly stall" />
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label" asp-for="Body">Your review</label>
+                                <textarea class="form-control" asp-for="Body" rows="5" maxlength="1000" placeholder="What did you collect? How was the pickup and the product?"></textarea>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-market px-4"><i class="bi bi-send me-1"></i>Publish review</button>
+                                <a class="btn btn-soft" asp-controller="Home" asp-action="Index">Cancel</a>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('[data-star-picker]').forEach(function (picker) {
+            var inputs = picker.querySelectorAll('input[type="radio"]');
+            var label = document.querySelector('[data-star-label]');
+
+            function paint() {
+                var chosen = picker.querySelector('input[type="radio"]:checked');
+                inputs.forEach(function (input) {
+                    var icon = input.parentElement.querySelector('i');
+                    var value = Number(input.value);
+                    if (chosen && value <= Number(chosen.value)) {
+                        icon.className = 'bi bi-star-fill';
+                    } else {
+                        icon.className = 'bi bi-star';
+                    }
+                });
+                if (chosen && label) {
+                    label.textContent = chosen.value + ' out of 5';
+                }
+            }
+
+            inputs.forEach(function (input) { input.addEventListener('change', paint); });
+            paint();
+        });
+    </script>
+}

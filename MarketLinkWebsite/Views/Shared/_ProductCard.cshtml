@@ -1,0 +1,80 @@
+@model ProductCardViewModel
+
+<article class="product-card h-100 reveal">
+    <div class="product-media">
+        <a asp-controller="Product" asp-action="Details" asp-route-id="@Model.Id" aria-label="View @Model.Name">
+            <img src="@Model.ImageUrl" alt="@Model.Name" loading="lazy" />
+        </a>
+        <div class="product-badges">
+            @if (!string.IsNullOrWhiteSpace(Model.Badge))
+            {
+                <span class="product-badge">@Model.Badge</span>
+            }
+            @if (Model.IsOrganic)
+            {
+                <span class="organic-badge"><i class="bi bi-flower1"></i> Organic</span>
+            }
+        </div>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <form asp-controller="Favorite" asp-action="Toggle" method="post" class="favorite-holder">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <input type="hidden" name="kind" value="product" />
+                <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                <button class="favorite-button @(Model.IsFavorite ? "is-active" : "")" type="submit" data-favorite aria-label="Save @Model.Name to favorites" aria-pressed="@(Model.IsFavorite ? "true" : "false")">
+                    <i class="bi @(Model.IsFavorite ? "bi-heart-fill" : "bi-heart")"></i>
+                </button>
+            </form>
+        }
+        else
+        {
+            <a class="favorite-button" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path" aria-label="Sign in to save @Model.Name">
+                <i class="bi bi-heart"></i>
+            </a>
+        }
+        @if (Model.IsFavorite)
+        {
+            <span class="favorite-label">Saved</span>
+        }
+    </div>
+
+    <div class="product-body">
+        <div class="d-flex align-items-center justify-content-between gap-2 product-meta">
+            <span>@Model.Category</span>
+            <span class="rating"><i class="bi bi-star-fill"></i>@Model.Rating.ToString("0.0") <small>(@Model.ReviewCount)</small></span>
+        </div>
+
+        <h3 class="product-title"><a asp-controller="Product" asp-action="Details" asp-route-id="@Model.Id">@Model.Name</a></h3>
+        <p class="product-description">@Model.ShortDescription</p>
+
+        <div class="farmer-row">
+            <a class="farmer-avatar" asp-controller="Farm" asp-action="Index" asp-route-id="@Model.FarmerProfileId" aria-label="View @Model.FarmName profile">@Model.FarmName.Substring(0, 1)</a>
+            <div>
+                <a class="farmer-name farmer-name-link" asp-controller="Farm" asp-action="Index" asp-route-id="@Model.FarmerProfileId">@Model.FarmName</a>
+                <small>@Model.MarketName · @Model.MarketDay</small>
+            </div>
+        </div>
+
+        <div class="product-stock-row">
+            @if (Model.HasDistance){<span><i class="bi bi-geo-alt"></i>@Model.DistanceLabel</span>}
+            <span class="stock-label"><i class="bi bi-box-seam"></i>@Model.QuantityAvailable units left</span>
+        </div>
+    </div>
+
+    <div class="product-footer">
+        <div class="product-price">
+            <strong>$@Model.Price.ToString("0.00")</strong>
+            <span>/ @Model.Unit</span>
+        </div>
+        <form asp-controller="Cart" asp-action="Add" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="productId" value="@Model.Id" />
+            <input type="hidden" name="quantity" value="1" />
+            <button class="btn btn-market btn-sm" type="submit" data-add-to-cart data-product-name="@Model.Name">
+                <i class="bi bi-plus-lg"></i>
+                <span class="d-none d-sm-inline">Pre-order</span>
+            </button>
+        </form>
+    </div>
+</article>

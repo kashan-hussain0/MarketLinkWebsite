@@ -1,0 +1,116 @@
+@{
+    var activeNav = ViewData["ActiveNav"]?.ToString() ?? "Dashboard";
+    var displayName = ViewData["CustomerDisplayName"]?.ToString() ?? "MarketLink account";
+    var initials = ViewData["CustomerInitials"]?.ToString() ?? "ML";
+    var unreadCount = ViewData["UnreadNotificationCount"] is int count ? count : 0;
+}
+<div class="customer-account-nav mb-4 mb-md-5">
+    <div class="container-xl">
+        <div class="d-flex flex-wrap align-items-center gap-3 gap-md-4 py-3 px-3 px-md-4">
+            <a class="d-flex align-items-center gap-3 text-decoration-none flex-shrink-0" asp-controller="Customer" asp-action="Dashboard" aria-label="Customer dashboard">
+                <span class="customer-avatar" aria-hidden="true">@initials</span>
+                <span class="d-none d-sm-block">
+                    <span class="d-block small text-muted">Welcome back</span>
+                    <span class="d-block fw-bold text-dark">@displayName</span>
+                </span>
+            </a>
+            <div class="vr d-none d-md-block opacity-25" aria-hidden="true"></div>
+            <nav class="customer-account-links d-flex flex-wrap gap-1 ms-md-auto" aria-label="Account sections">
+                <a class="customer-account-link @(activeNav == "Dashboard" ? "active" : "")" asp-controller="Customer" asp-action="Dashboard">Overview</a>
+                <a class="customer-account-link @(activeNav == "Orders" ? "active" : "")" asp-controller="Customer" asp-action="Orders">Orders</a>
+                <a class="customer-account-link @(activeNav == "Favorites" ? "active" : "")" asp-controller="Customer" asp-action="Favorites">Favorites</a>
+                <a class="customer-account-link @(activeNav == "SavedMarkets" ? "active" : "")" asp-controller="Customer" asp-action="Favorites">Saved markets</a>
+                <a class="customer-account-link @(activeNav == "Reviews" ? "active" : "")" asp-controller="Customer" asp-action="Reviews">Reviews</a>
+                  <a class="customer-account-link @(activeNav == "Addresses" ? "active" : "")" asp-controller="Customer" asp-action="Addresses">Addresses</a>
+                <a class="customer-account-link @(activeNav == "Profile" ? "active" : "")" asp-controller="Customer" asp-action="Profile">Profile</a>
+                <a class="customer-account-link position-relative @(activeNav == "Notifications" ? "active" : "")" asp-controller="Customer" asp-action="Notifications">
+                    Notifications
+                    @if (unreadCount > 0)
+                    {
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background: rgba(224, 108, 92, 0.18); font-size: .6rem;">@unreadCount</span>
+                    }
+                </a>
+                <form asp-controller="Account" asp-action="Logout" method="post" class="ms-md-2">
+                    <button type="submit" class="customer-account-link border-0 bg-transparent" title="Log out"><i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i><span class="d-none d-xl-inline">Log out</span></button>
+                </form>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<style>
+    .customer-account-nav {
+        background: #ffffff;
+        border: 1px solid #d4e0d2;
+        border-radius: 1.25rem;
+        box-shadow: 0 0.5rem 1.5rem rgba(44, 62, 45, 0.05);
+    }
+
+    .customer-avatar {
+        width: 2.8rem;
+        height: 2.8rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.9rem;
+        background: linear-gradient(145deg, #4f772d, #90a955);
+        color: #fff;
+        font-weight: 800;
+        font-size: 0.78rem;
+        letter-spacing: 0.03em;
+    }
+
+    .customer-account-link {
+        color: #6d7b6e;
+        border-radius: 0.7rem;
+        padding: 0.55rem 0.75rem;
+        font-size: 0.84rem;
+        font-weight: 650;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    .customer-account-link:hover,
+    .customer-account-link:focus {
+        color: #4f772d;
+        background: #f1f6ef;
+    }
+
+    .customer-account-link.active {
+        color: #386641;
+        background: #e8f0e6;
+    }
+
+[data-theme="dark"] .customer-account-nav {
+    background: var(--ml-surface);
+    border-color: var(--ml-border);
+    box-shadow: none;
+}
+
+[data-theme="dark"] .customer-account-nav .customer-account-link {
+    color: var(--ml-ink-soft);
+}
+
+[data-theme="dark"] .customer-account-nav .customer-account-link:hover {
+    color: var(--ml-accent-text);
+}
+
+[data-theme="dark"] .customer-account-nav hr {
+    background: transparent;
+    border-top-color: var(--ml-border);
+    opacity: 1;
+}
+
+[data-theme="dark"] .customer-account-link.active,
+[data-theme="dark"] .customer-account-link[aria-current="page"] {
+    background: var(--ml-surface-3);
+    border-color: var(--ml-accent-text);
+    color: var(--ml-ink);
+}
+
+[data-theme="dark"] .customer-account-link small,
+[data-theme="dark"] .customer-account-link span {
+    color: var(--ml-ink-soft);
+}
+</style>

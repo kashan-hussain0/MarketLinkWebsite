@@ -1,0 +1,225 @@
+﻿@model FarmerDashboardViewModel
+@{
+    ViewData["Title"] = "Farm dashboard";
+}
+
+<div class="farmer-page-header">
+    <div>
+        <div class="farmer-page-kicker">@Model.DateLabel</div>
+        <h1 class="farmer-page-title">@Model.Greeting, @Model.FarmerName</h1>
+        <p class="farmer-page-subtitle">Here’s what’s happening at @Model.FarmName today.</p>
+    </div>
+    <div class="farmer-page-actions">
+        <a class="farmer-btn farmer-btn-secondary" asp-area="Farmer" asp-controller="Order" asp-action="Index">
+            <i class="bi bi-box-arrow-in-down" aria-hidden="true"></i>
+            View orders
+        </a>
+        <a class="farmer-btn farmer-btn-primary" asp-area="Farmer" asp-controller="Product" asp-action="Create">
+            <i class="bi bi-plus-lg" aria-hidden="true"></i>
+            Add product
+        </a>
+    </div>
+</div>
+
+<section class="farmer-welcome-card" aria-labelledby="welcome-heading">
+    <div class="farmer-welcome-copy">
+        <span class="farmer-welcome-pill"><i class="bi bi-sun-fill" aria-hidden="true"></i> @Model.DateLabel</span>
+        <h2 id="welcome-heading">@Model.WelcomeTitle</h2>
+        <p>@Model.WelcomeMessage</p>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="farmer-btn farmer-btn-light" asp-area="Farmer" asp-controller="Product" asp-action="Index" asp-route-status="Low stock">
+                Review low stock
+                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+            </a>
+            <a class="farmer-welcome-link" asp-area="Farmer" asp-controller="Product" asp-action="Create">Add a seasonal listing</a>
+        </div>
+    </div>
+    <div class="farmer-welcome-visual" aria-hidden="true">
+        <div class="farmer-welcome-sun"></div>
+        <div class="farmer-welcome-hill farmer-welcome-hill-back"></div>
+        <div class="farmer-welcome-hill farmer-welcome-hill-front"></div>
+        <div class="farmer-welcome-crate">
+            <i class="bi bi-basket2-fill"></i>
+            <span>FRESH</span>
+        </div>
+        <div class="farmer-welcome-leaf farmer-welcome-leaf-one"><i class="bi bi-flower1"></i></div>
+        <div class="farmer-welcome-leaf farmer-welcome-leaf-two"><i class="bi bi-flower2"></i></div>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(Model.DateLabel))
+{
+    <div class="farmer-dashboard-date"><i class="bi bi-calendar3" aria-hidden="true"></i> @Model.DateLabel</div>
+}
+
+<section class="row g-3 g-xl-4 mb-4" aria-label="Farm summary">
+    @foreach (var metric in Model.Metrics)
+    {
+        <div class="col-12 col-md-4">
+            <article class="farmer-metric-card h-100">
+                <div class="farmer-metric-icon farmer-tone-@metric.Tone">
+                    <i class="bi @metric.Icon" aria-hidden="true"></i>
+                </div>
+                <div class="farmer-metric-copy">
+                    <span class="farmer-metric-label">@metric.Label</span>
+                    <strong class="farmer-metric-value">@metric.Value</strong>
+                    <span class="farmer-metric-detail">@metric.Detail</span>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(metric.Trend))
+                {
+                    <span class="farmer-metric-trend @(metric.Tone == "green" ? "positive" : string.Empty)">@metric.Trend</span>
+                }
+            </article>
+        </div>
+    }
+</section>
+
+<section class="row g-4 mb-4">
+    <div class="col-12 col-xl-8">
+        <article class="farmer-panel h-100">
+            <div class="farmer-panel-header">
+                <div>
+                    <span class="farmer-panel-eyebrow">REVENUE</span>
+                    <h2 class="farmer-panel-title">Sales this month</h2>
+                </div>
+                <div class="farmer-panel-header-actions">
+                    <span class="farmer-chart-total">@Model.RevenueTotalLabel</span>
+                    @if (!string.IsNullOrWhiteSpace(Model.RevenueChange))
+                    {
+                        <span class="farmer-positive-pill"><i class="bi bi-arrow-up-right" aria-hidden="true"></i> @Model.RevenueChange</span>
+                    }
+                    <button class="farmer-more-button" type="button" aria-label="More revenue options"><i class="bi bi-three-dots" aria-hidden="true"></i></button>
+                </div>
+            </div>
+            <div class="farmer-chart-legend">
+                <span><i class="farmer-legend-dot"></i> Sales this week</span>
+                <span class="farmer-chart-period">@Model.RevenuePeriodLabel <i class="bi bi-chevron-down" aria-hidden="true"></i></span>
+            </div>
+            <div class="farmer-revenue-chart" role="img" aria-label="Weekly sales chart">
+                <div class="farmer-chart-axis" aria-hidden="true">
+                    <span>$1k</span>
+                    <span>$750</span>
+                    <span>$500</span>
+                    <span>$250</span>
+                    <span>$0</span>
+                </div>
+                <div class="farmer-chart-plot" aria-hidden="true">
+                    <div class="farmer-chart-gridline"></div>
+                    <div class="farmer-chart-gridline"></div>
+                    <div class="farmer-chart-gridline"></div>
+                    <div class="farmer-chart-gridline"></div>
+                    <div class="farmer-chart-bars">
+                        @foreach (var point in Model.RevenuePoints)
+                        {
+                            <div class="farmer-chart-column">
+                                <div class="farmer-chart-bar-wrap">
+                                    @if (point.IsCurrent)
+                                    {
+                                        <span class="farmer-chart-tooltip">@point.Amount.ToString("C")</span>
+                                    }
+                                    <div class="farmer-chart-bar @(point.IsCurrent ? "current" : string.Empty)" style="height: @point.BarHeight%"></div>
+                                </div>
+                                <span class="farmer-chart-label @(point.IsCurrent ? "current" : string.Empty)">@point.Label</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </article>
+    </div>
+
+    <div class="col-12 col-xl-4">
+        <article class="farmer-panel h-100">
+            <div class="farmer-panel-header">
+                <div>
+                    <span class="farmer-panel-eyebrow">ACTIVITY</span>
+                    <h2 class="farmer-panel-title">What’s new</h2>
+                </div>
+                <a class="farmer-panel-link" asp-area="Farmer" asp-controller="Notification" asp-action="Index">See all</a>
+            </div>
+            <div class="farmer-activity-list">
+                @foreach (var activity in Model.Activities)
+                {
+                    <div class="farmer-activity-item">
+                        <span class="farmer-activity-icon farmer-tone-@activity.Tone"><i class="bi @activity.Icon" aria-hidden="true"></i></span>
+                        <div class="farmer-activity-copy">
+                            <strong>@activity.Title</strong>
+                            <p>@activity.Description</p>
+                            <small>@activity.TimeLabel</small>
+                            @if (!string.IsNullOrWhiteSpace(activity.ActionUrl))
+                            {
+                                <a class="farmer-panel-link d-inline-block mt-1" href="@activity.ActionUrl">Open <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="farmer-market-tip">
+                <span><i class="bi bi-lightbulb-fill" aria-hidden="true"></i></span>
+                <div>
+                    <strong>Market tip</strong>
+                    <p>Keep quantities accurate so neighbors can shop with confidence.</p>
+                </div>
+            </div>
+        </article>
+    </div>
+</section>
+
+<section class="farmer-panel farmer-orders-panel mb-4" aria-labelledby="recent-orders-heading">
+    <div class="farmer-panel-header">
+        <div>
+            <span class="farmer-panel-eyebrow">ORDERS</span>
+            <h2 class="farmer-panel-title" id="recent-orders-heading">Recent orders</h2>
+        </div>
+        <a class="farmer-btn farmer-btn-quiet" asp-area="Farmer" asp-controller="Order" asp-action="Index">
+            View all orders <i class="bi bi-arrow-right" aria-hidden="true"></i>
+        </a>
+    </div>
+
+    @if (Model.RecentOrders.Count == 0)
+    {
+        <div class="farmer-empty-state">
+            <span class="farmer-empty-icon"><i class="bi bi-bag" aria-hidden="true"></i></span>
+            <h3>No orders yet</h3>
+            <p>New orders from your farm stand will appear here.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table farmer-table align-middle mb-0">
+                <caption class="visually-hidden">Recent MarketLink orders</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Order</th>
+                        <th scope="col">Customer</th>
+                        <th scope="col">Items</th>
+                        <th scope="col">Placed</th>
+                        <th scope="col">Total</th>
+                        <th scope="col">Status</th>
+                        <th scope="col"><span class="visually-hidden">Open</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model.RecentOrders)
+                    {
+                        <tr>
+                            <td data-label="Order"><a class="farmer-order-number" asp-area="Farmer" asp-controller="Order" asp-action="Details" asp-route-id="@order.Id">@order.OrderNumber</a></td>
+                            <td data-label="Customer">
+                                <div class="farmer-person-cell">
+                                    <span class="farmer-initials">@order.CustomerInitials</span>
+                                    <span>@order.CustomerName</span>
+                                </div>
+                            </td>
+                            <td data-label="Items"><span class="farmer-table-secondary">@order.ItemSummary</span></td>
+                            <td data-label="Placed"><span class="farmer-table-secondary">@order.PlacedLabel</span></td>
+                            <td data-label="Total"><strong>@order.Total.ToString("C")</strong></td>
+                            <td data-label="Status"><span class="farmer-status farmer-status-@order.StatusTone"><i class="bi @order.StatusIcon" aria-hidden="true"></i>@order.Status</span></td>
+                            <td class="farmer-table-action"><a asp-area="Farmer" asp-controller="Order" asp-action="Details" asp-route-id="@order.Id" aria-label="View @order.OrderNumber"><i class="bi bi-chevron-right" aria-hidden="true"></i></a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

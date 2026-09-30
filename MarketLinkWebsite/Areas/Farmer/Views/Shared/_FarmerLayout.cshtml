@@ -1,0 +1,228 @@
+@{
+    var controllerName = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+    var isDashboard = string.Equals(controllerName, "Dashboard", StringComparison.OrdinalIgnoreCase);
+    var isProducts = string.Equals(controllerName, "Product", StringComparison.OrdinalIgnoreCase);
+    var isInventory = string.Equals(controllerName, "Inventory", StringComparison.OrdinalIgnoreCase);
+    var isInsights = string.Equals(controllerName, "Insights", StringComparison.OrdinalIgnoreCase);
+    var isOrders = string.Equals(controllerName, "Order", StringComparison.OrdinalIgnoreCase);
+    var isPickupSlots = string.Equals(controllerName, "PickupSlot", StringComparison.OrdinalIgnoreCase);
+    var isReviews = string.Equals(controllerName, "Review", StringComparison.OrdinalIgnoreCase);
+    var isProfile = string.Equals(controllerName, "Profile", StringComparison.OrdinalIgnoreCase);
+    var isNotifications = string.Equals(controllerName, "Notification", StringComparison.OrdinalIgnoreCase);
+    var farmName = ViewData["FarmerFarmName"] as string ?? "Your farm";
+    var ownerName = ViewData["FarmerOwnerName"] as string ?? "Farmer";
+    var ownerInitials = ViewData["FarmerOwnerInitials"] as string ?? "ML";
+    var farmInitials = ViewData["FarmerFarmInitials"] as string ?? "ML";
+    var productCount = ViewData["FarmerProductCount"] is int productCountValue ? productCountValue : 0;
+    var pendingOrderCount = ViewData["FarmerPendingOrderCount"] is int pendingOrderCountValue ? pendingOrderCountValue : 0;
+    var reviewCount = ViewData["FarmerReviewCount"] is int reviewCountValue ? reviewCountValue : 0;
+    var unreadCount = ViewData["FarmerUnreadNotificationCount"] is int unreadCountValue ? unreadCountValue : 0;
+    var lowStockCount = ViewData["FarmerLowStockCount"] is int lowStockCountValue ? lowStockCountValue : 0;
+}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="MarketLink farmer workspace" />
+    <title>@(ViewData["Title"] ?? "Farmer workspace") · MarketLink</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" media="print" onload="this.media='all'" />
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" /></noscript>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/farmer-dashboard.css" asp-append-version="true" />
+    <script>
+        (function () {
+            try {
+                var stored = localStorage.getItem('marketlink-theme');
+                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', stored || (prefersDark ? 'dark' : 'light'));
+            } catch (error) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+</head>
+<body class="farmer-body">
+    <div class="farmer-app-shell">
+        <aside id="farmerSidebar" class="farmer-sidebar offcanvas-lg offcanvas-start" tabindex="-1" aria-labelledby="farmerSidebarLabel">
+            <div class="farmer-sidebar-inner">
+                <div class="farmer-brand-row">
+                    <a class="farmer-brand" asp-area="Farmer" asp-controller="Dashboard" asp-action="Index" aria-label="MarketLink farmer dashboard">
+                        <span class="farmer-brand-mark"><img src="~/img/marketlink-logo.svg" alt="" width="38" height="38" /></span>
+                        <span class="farmer-brand-name">Market<span>Link</span></span>
+                    </a>
+                    <button type="button" class="btn-close btn-close-white d-lg-none" data-bs-dismiss="offcanvas" data-bs-target="#farmerSidebar" aria-label="Close navigation"></button>
+                </div>
+
+                <div id="farmerSidebarLabel" class="farmer-workspace-label">FARMER WORKSPACE</div>
+                <div class="farmer-farm-switcher">
+                    <div class="farmer-farm-avatar">@farmInitials</div>
+                    <div class="min-w-0">
+                        <div class="farmer-farm-name text-truncate">@farmName</div>
+                        <div class="farmer-farm-status"><span class="farmer-status-dot"></span> @(ViewData["FarmerStatus"]?.ToString() == "Active" ? "Stall verified" : "Profile review")</div>
+                    </div>
+                    <i class="bi bi-chevron-down ms-auto" aria-hidden="true"></i>
+                </div>
+
+                <nav class="farmer-nav" aria-label="Farmer workspace navigation">
+                    <div class="farmer-nav-heading">OVERVIEW</div>
+                    <a class="farmer-nav-link @(isDashboard ? "active" : string.Empty)" asp-area="Farmer" asp-controller="Dashboard" asp-action="Index" aria-current="@(isDashboard ? "page" : null)">
+                        <i class="bi bi-grid-1x2-fill" aria-hidden="true"></i>
+                        <span>Dashboard</span>
+                    </a>
+
+                    <div class="farmer-nav-heading mt-4">MANAGE YOUR FARM</div>
+                    <a class="farmer-nav-link @(isProducts ? "active" : string.Empty)" asp-area="Farmer" asp-controller="Product" asp-action="Index" aria-current="@(isProducts ? "page" : null)">
+                        <i class="bi bi-box-seam" aria-hidden="true"></i>
+                        <span>Products</span>
+                        <span class="farmer-nav-count">@productCount</span>
+                    </a>
+                    <a class="farmer-nav-link @(isInventory ? "active" : string.Empty)" asp-area="Farmer" asp-controller="Inventory" asp-action="Index" aria-current="@(isInventory ? "page" : null)">
+                        <i class="bi bi-layers" aria-hidden="true"></i>
+                        <span>Inventory</span>
+                        @if (lowStockCount > 0)
+                        {
+                            <span class="farmer-nav-count farmer-nav-count-warm">@lowStockCount</span>
+                        }
+                    </a>
+                    <a class="farmer-nav-link @(isInsights ? "active" : string.Empty)" asp-area="Farmer" asp-controller="Insights" asp-action="Index" aria-current="@(isInsights ? "page" : null)">
+                        <i class="bi bi-graph-up-arrow" aria-hidden="true"></i>
+                        <span>Sales &amp; insights</span>
+                    </a>
+                    <a class="farmer-nav-link @(isPickupSlots ? "active" : string.Empty)" asp-area="Farmer" asp-controller="PickupSlot" asp-action="Index" aria-current="@(isPickupSlots ? "page" : null)">
+                        <i class="bi bi-clock" aria-hidden="true"></i>
+                        <span>Pickup slots</span>
+                    </a>
+                    <a class="farmer-nav-link @(isOrders ? "active" : string.Empty)" asp-area="Farmer" asp-controller="Order" asp-action="Index" aria-current="@(isOrders ? "page" : null)">
+                        <i class="bi bi-bag" aria-hidden="true"></i>
+                        <span>Orders</span>
+                        <span class="farmer-nav-count farmer-nav-count-alert">@pendingOrderCount</span>
+                    </a>
+                    <a class="farmer-nav-link @(isReviews ? "active" : string.Empty)" asp-area="Farmer" asp-controller="Review" asp-action="Index" aria-current="@(isReviews ? "page" : null)">
+                        <i class="bi bi-star" aria-hidden="true"></i>
+                        <span>Reviews</span>
+                        <span class="farmer-nav-count">@reviewCount</span>
+                    </a>
+
+                    <div class="farmer-nav-heading mt-4">ACCOUNT</div>
+                    <a class="farmer-nav-link @(isProfile ? "active" : string.Empty)" asp-area="Farmer" asp-controller="Profile" asp-action="Index" aria-current="@(isProfile ? "page" : null)">
+                        <i class="bi bi-person" aria-hidden="true"></i>
+                        <span>Farm profile</span>
+                    </a>
+                    <a class="farmer-nav-link @(isNotifications ? "active" : string.Empty)" asp-area="Farmer" asp-controller="Notification" asp-action="Index" aria-current="@(isNotifications ? "page" : null)">
+                        <i class="bi bi-bell" aria-hidden="true"></i>
+                        <span>Notifications</span>
+                        @if (unreadCount > 0)
+                        {
+                            <span class="farmer-nav-dot" aria-label="@unreadCount unread notifications"></span>
+                        }
+                    </a>
+                </nav>
+
+                <div class="farmer-sidebar-bottom">
+                    <div class="farmer-help-card">
+                        <span class="farmer-help-icon"><i class="bi bi-headset" aria-hidden="true"></i></span>
+                        <div>
+                            <strong>Need a hand?</strong>
+                            <span>Our farm team is here.</span>
+                        </div>
+                        <a href="mailto:hello@marketlink.local" aria-label="Email the MarketLink farm team"><i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+                    </div>
+                    <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                        @Html.AntiForgeryToken()
+                        <button class="farmer-logout-link" type="submit"><i class="bi bi-box-arrow-left" aria-hidden="true"></i><span>Sign out</span></button>
+                    </form>
+                </div>
+            </div>
+        </aside>
+
+        <div class="farmer-main-column">
+            <header class="farmer-topbar">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="farmer-menu-button d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#farmerSidebar" aria-controls="farmerSidebar" aria-label="Open navigation">
+                        <i class="bi bi-list" aria-hidden="true"></i>
+                    </button>
+                    <a class="farmer-mobile-brand d-lg-none" asp-area="Farmer" asp-controller="Dashboard" asp-action="Index" aria-label="MarketLink farmer dashboard">
+                        <span class="farmer-brand-mark"><img src="~/img/marketlink-logo.svg" alt="" width="38" height="38" /></span>
+                        <span class="farmer-brand-name">Market<span>Link</span></span>
+                    </a>
+                </div>
+                <div class="farmer-topbar-search d-none d-md-flex" role="search">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <input type="search" class="form-control" aria-label="Search your farm workspace" placeholder="Search your workspace" />
+                    <kbd>⌘ K</kbd>
+                </div>
+                <div class="farmer-topbar-actions">
+                    <button class="farmer-icon-button" type="button" data-theme-toggle aria-label="Switch to dark theme" aria-pressed="false">
+                        <i class="bi bi-moon-stars-fill" data-theme-icon aria-hidden="true"></i>
+                    </button>
+                    <a class="farmer-icon-button" asp-area="Farmer" asp-controller="Notification" asp-action="Index" aria-label="View notifications">
+                        <i class="bi bi-bell" aria-hidden="true"></i>
+                        @if (unreadCount > 0)
+                        {
+                            <span class="farmer-notification-badge">@unreadCount</span>
+                        }
+                    </a>
+                    <div class="farmer-topbar-divider" aria-hidden="true"></div>
+                    <div class="dropdown">
+                        <button class="farmer-user-menu dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account menu for @ownerName">
+                            <span class="farmer-user-avatar">@ownerInitials</span>
+                            <span class="farmer-user-copy d-none d-sm-flex">
+                                <strong>@ownerName</strong>
+                                <small>@farmName</small>
+                            </span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2 farmer-user-dropdown">
+                            <li class="nav-user-header">
+                                <strong>@ownerName</strong>
+                                <span>@farmName</span>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" asp-area="Farmer" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-speedometer2"></i>Farm overview</a></li>
+                            <li><a class="dropdown-item" asp-area="Farmer" asp-controller="Profile" asp-action="Index"><i class="bi bi-person-gear"></i>Farm profile</a></li>
+                            <li><a class="dropdown-item" asp-area="Farmer" asp-controller="Notification" asp-action="Index"><i class="bi bi-bell"></i>Notifications</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="Index">
+                                    <i class="bi bi-globe2"></i>Go to website
+                                </a>
+                            </li>
+                            <li>
+                                <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="nav-logout-form">
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="bi bi-box-arrow-right"></i>Log out
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <main class="farmer-content">
+                @RenderBody()
+            </main>
+
+            <footer class="farmer-footer">
+                <span>© @DateTime.Now.Year MarketLink</span>
+                <span class="farmer-footer-dot" aria-hidden="true">•</span>
+                <span>Built for independent local farmers</span>
+                <a href="mailto:hello@marketlink.local">Need help?</a>
+            </footer>
+        </div>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/lib/leaflet/leaflet.js"></script>
+    <script src="~/js/market-map.js" asp-append-version="true"></script>
+    <script src="~/js/location-picker.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

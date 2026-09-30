@@ -1,0 +1,130 @@
+@model MarketLinkWebsite.Areas.Admin.Models.NotificationListViewModel
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div class="admin-page-header">
+    <div>
+        <div class="admin-page-eyebrow">Workspace updates</div>
+        <h1 class="admin-page-title">Notifications</h1>
+        <p class="admin-page-subtitle">Keep an eye on approvals, marketplace activity, and the signals that need your attention.</p>
+    </div>
+    <div class="admin-page-actions">
+        @if (Model.UnreadCount > 0)
+        {
+            <form asp-area="Admin" asp-controller="Notification" asp-action="MarkAllRead" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="admin-btn admin-btn-secondary"><i class="bi bi-check2-all" aria-hidden="true"></i>Mark all as read</button>
+            </form>
+        }
+    </div>
+</div>
+
+<section class="admin-stat-grid" aria-label="Notification summary">
+    <article class="admin-stat-card"><span class="admin-stat-icon metric-icon-sage" aria-hidden="true"><i class="bi bi-bell"></i></span><span class="admin-stat-copy"><span class="admin-stat-label">All notifications</span><strong class="admin-stat-value">@Model.TotalCount</strong><span class="admin-stat-meta">In this workspace</span></span></article>
+    <article class="admin-stat-card"><span class="admin-stat-icon metric-icon-coral" aria-hidden="true"><i class="bi bi-circle-fill"></i></span><span class="admin-stat-copy"><span class="admin-stat-label">Unread</span><strong class="admin-stat-value">@Model.UnreadCount</strong><span class="admin-stat-meta">Need your attention</span></span></article>
+    <article class="admin-stat-card"><span class="admin-stat-icon metric-icon-blue" aria-hidden="true"><i class="bi bi-info-circle"></i></span><span class="admin-stat-copy"><span class="admin-stat-label">System updates</span><strong class="admin-stat-value">@Model.SystemCount</strong><span class="admin-stat-meta">Marketplace insights</span></span></article>
+</section>
+
+<div class="admin-notification-layout">
+    <section class="admin-card admin-notification-feed" aria-label="Notification feed">
+        <div class="admin-card-header">
+            <div><h2 class="admin-card-title">Your notification feed</h2><p class="admin-card-description">Newest updates appear first.</p></div>
+            <form asp-area="Admin" asp-controller="Notification" asp-action="Index" method="get" class="d-flex align-items-center gap-2">
+                <label class="visually-hidden" for="notification-filter">Filter notifications</label>
+                <select class="admin-filter-select" id="notification-filter" name="filter">
+                    @if (Model.Filter == "All notifications")
+                    {
+                        <option value="All notifications" selected>All notifications</option>
+                    }
+                    else
+                    {
+                        <option value="All notifications">All notifications</option>
+                    }
+                    @if (Model.Filter == "Unread")
+                    {
+                        <option value="Unread" selected>Unread</option>
+                    }
+                    else
+                    {
+                        <option value="Unread">Unread</option>
+                    }
+                    @if (Model.Filter == "Read")
+                    {
+                        <option value="Read" selected>Read</option>
+                    }
+                    else
+                    {
+                        <option value="Read">Read</option>
+                    }
+                </select>
+                <button type="submit" class="admin-btn admin-btn-soft admin-btn-sm">Filter</button>
+            </form>
+        </div>
+
+        @if (Model.Notifications.Count > 0)
+        {
+            @foreach (var notification in Model.Notifications)
+            {
+                <article class="admin-notification-feed-item @(notification.IsRead ? string.Empty : "is-unread")">
+                    <span class="admin-notification-feed-icon tone-@notification.Tone" aria-hidden="true"><i class="bi @notification.Icon"></i></span>
+                    <div class="admin-notification-feed-copy">
+                        <h2 class="admin-notification-feed-title">@notification.Title @if (!notification.IsRead) { <span class="admin-unread-dot" aria-label="Unread"></span> }</h2>
+                        <p class="admin-notification-feed-message">@notification.Message</p>
+                        <div class="admin-notification-feed-meta"><span>@notification.TimeLabel</span>@if (!string.IsNullOrWhiteSpace(notification.ActionUrl)) { <a href="@notification.ActionUrl">Open update</a> }</div>
+                    </div>
+                    <div class="admin-notification-actions">
+                        @if (!notification.IsRead)
+                        {
+                            <form asp-area="Admin" asp-controller="Notification" asp-action="MarkRead" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@notification.Id" />
+                                <button type="submit" class="admin-btn admin-btn-secondary admin-btn-sm">Mark read</button>
+                            </form>
+                        }
+                    </div>
+                </article>
+            }
+        }
+        else
+        {
+            <div class="admin-empty-state"><i class="bi bi-bell-slash" aria-hidden="true"></i><strong>No notifications here</strong><p>Try another filter to see more workspace updates.</p></div>
+        }
+    </section>
+
+    <aside class="admin-card admin-notification-side">
+        <h2>Publish announcement</h2>
+        <p>Send a persisted notification to active marketplace members.</p>
+        <form asp-area="Admin" asp-controller="Notification" asp-action="Announce" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="admin-validation-summary"></div>
+            <div class="mb-3">
+                <label asp-for="Announcement.Title" class="admin-form-label">Title</label>
+                <input asp-for="Announcement.Title" class="admin-form-control" maxlength="150" />
+                <span asp-validation-for="Announcement.Title" class="admin-field-validation"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Announcement.Message" class="admin-form-label">Message</label>
+                <textarea asp-for="Announcement.Message" class="admin-form-control" maxlength="500" rows="4"></textarea>
+                <span asp-validation-for="Announcement.Message" class="admin-field-validation"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Announcement.Audience" class="admin-form-label">Audience</label>
+                <select asp-for="Announcement.Audience" class="admin-filter-select w-100">
+                    <option>All active users</option>
+                    <option>Customers</option>
+                    <option>Farmers</option>
+                    <option>Administrators</option>
+                </select>
+                <span asp-validation-for="Announcement.Audience" class="admin-field-validation"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Announcement.ActionUrl" class="admin-form-label">Local action URL</label>
+                <input asp-for="Announcement.ActionUrl" class="admin-form-control" placeholder="/Customer/Orders" />
+                <span asp-validation-for="Announcement.ActionUrl" class="admin-field-validation"></span>
+            </div>
+            <button type="submit" class="admin-btn admin-btn-primary w-100"><i class="bi bi-megaphone" aria-hidden="true"></i>Publish announcement</button>
+        </form>
+        <div class="admin-side-note mt-4"><i class="bi bi-shield-check" aria-hidden="true"></i><span>Only active users in the selected Identity role receive the announcement.</span></div>
+    </aside>
+</div>

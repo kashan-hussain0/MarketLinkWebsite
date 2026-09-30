@@ -1,0 +1,129 @@
+@using MarketLinkWebsite.Controllers
+@model MarketCardViewModel
+@{
+    ViewData["Title"] = Model.Name;
+    var marketFarmers = ViewData["MarketFarmers"] as IReadOnlyList<MarketFarmerCardViewModel> ?? Array.Empty<MarketFarmerCardViewModel>();
+}
+
+<section class="page-hero">
+    <div class="container position-relative" style="z-index: 2;">
+        <nav class="page-breadcrumb" aria-label="Breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Home</a><i class="bi bi-chevron-right"></i>
+            <a asp-controller="Market" asp-action="Index">Markets</a><i class="bi bi-chevron-right"></i><span>@Model.Name</span>
+        </nav>
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="market-open-badge position-static"><span></span>Open @Model.Day</span>
+                    @if (Model.HasDistance)
+                    {
+                        <span class="badge rounded-pill bg-success-subtle text-success">@Model.DistanceLabel</span>
+                    }
+                </div>
+                <h1>@Model.Name</h1>
+                <p>@Model.Description</p>
+            </div>
+            <div class="col-lg-5">
+                @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+                {
+                    <img class="market-hero-photo" src="@Model.ImageUrl" alt="@Model.Name" loading="lazy" />
+                }
+                <div class="d-flex gap-2 flex-wrap mt-3">
+                    <a class="btn btn-market" href="@Model.DirectionsUrl" target="_blank" rel="noopener noreferrer"><i class="bi bi-sign-turn-right"></i>Get directions</a>
+                    <a class="btn btn-outline-market" asp-controller="Product" asp-action="Index" asp-route-marketLocation="@Model.Name"><i class="bi bi-basket2"></i>Browse product</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block-sm">
+    <div class="container">
+        <div class="row g-4 mb-5">
+            <div class="col-lg-7">
+                @if (ViewData["MarketPin"] is MarketMapMarker marketPin)
+                {
+                    @await Html.PartialAsync("_MarketMap", new MarketMapViewModel
+                    {
+                        Title = "Pickup point",
+                        Subtitle = "This is where you collect your pre-order at " + Model.Name + ".",
+                        HeightClass = "market-map-canvas-mid",
+                        Markers = new List<MarketMapMarker> { marketPin }
+                    })
+                }
+                else
+                {
+                    <div class="content-card h-100 p-4 d-flex flex-column justify-content-center text-center">
+                        <i class="bi bi-map fs-1 text-success mb-2" aria-hidden="true"></i>
+                        <h2 class="h5">Map coordinates are not published</h2>
+                        <p class="text-muted small mb-0">Contact the market team for pickup directions.</p>
+                    </div>
+                }
+            </div>
+            <div class="col-lg-5">
+                <div class="content-card h-100 p-4">
+                    <span class="eyebrow">Market information</span>
+                    <h2 class="h3 mb-4">Pickup details</h2>
+                    <div class="info-list">
+                        <div><i class="bi bi-geo-alt"></i><div><strong>@Model.Address</strong><small>@Model.City</small></div></div>
+                        <div><i class="bi bi-calendar3"></i><div><strong>@Model.Day market</strong><small>Recurring weekly pickup day</small></div></div>
+                        <div><i class="bi bi-clock"></i><div><strong>@Model.OpenTime – @Model.CloseTime</strong><small>Last collection 30 minutes before closing</small></div></div>
+                        <div><i class="bi bi-people"></i><div><strong>@Model.FarmerCount participating farmers</strong><small>@Model.ProductCount products currently listed</small></div></div>
+                        <div><i class="bi bi-cash-coin"></i><div><strong>Cash payment at pickup</strong><small>No online payment is collected</small></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3 mb-4">
+            <div class="section-heading mb-lg-0">
+                <span class="eyebrow">Meet the stalls</span>
+                <h2 class="section-title h1">Farmers at this market</h2>
+                <p class="section-copy">Browse participating growers and the product currently available for pickup.</p>
+            </div>
+            <a class="btn btn-soft" asp-controller="Product" asp-action="Index" asp-route-marketLocation="@Model.Name">See all market product</a>
+        </div>
+
+        @if (marketFarmers.Count > 0)
+        {
+            <div class="row g-3">
+                @foreach (var farmer in marketFarmers)
+                {
+                    <div class="col-md-6 col-xl-3">
+                        <article class="value-card h-100">
+                            <a class="stall-avatar mb-3 d-inline-grid text-decoration-none" asp-controller="Farm" asp-action="Index" asp-route-id="@farmer.Id" aria-label="View @farmer.FarmName profile">@farmer.FarmName.Substring(0, 1)</a>
+                            <h3 class="h6"><a class="farmer-name-link" asp-controller="Farm" asp-action="Index" asp-route-id="@farmer.Id">@farmer.FarmName</a></h3>
+                            <p class="small text-muted mb-2">@farmer.Description</p>
+                            <p class="small mb-2"><strong>@farmer.LiveProductCount</strong> live @(farmer.LiveProductCount == 1 ? "listing" : "listings") this week</p>
+                            <p class="small text-muted mb-3">@farmer.ProductSummary</p>
+                            <div class="d-flex justify-content-between align-items-center small">
+                                <span class="text-success fw-bold">@farmer.StallNumber</span>
+                                <span class="text-warning">★ @farmer.Rating.ToString("0.0")</span>
+                            </div>
+                            <a class="farm-view-link" asp-controller="Farm" asp-action="Index" asp-route-id="@farmer.Id">
+                                View stall &amp; weekly stock <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                            </a>
+                        </article>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <span class="empty-state-icon"><i class="bi bi-shop"></i></span>
+                <h2 class="h5">Stall details are being updated</h2>
+                <p class="mb-0">Participating growers and current product will appear here as listings are published.</p>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="pb-5">
+    <div class="container">
+        <div class="content-card p-4 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <div><h2 class="h4 mb-1">Ready to reserve from this market?</h2><p class="text-muted mb-0">Browse current stock and choose your pickup window at checkout.</p></div>
+            <a class="btn btn-market flex-shrink-0" asp-controller="Product" asp-action="Index" asp-route-marketLocation="@Model.Name">Explore this market</a>
+        </div>
+    </div>
+</section>

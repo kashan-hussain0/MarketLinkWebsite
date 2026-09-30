@@ -1,0 +1,118 @@
+@model MarketLinkWebsite.Areas.Admin.Models.ModerationListViewModel
+@{
+    ViewData["Title"] = "Moderation";
+}
+
+<div class="admin-page-header">
+    <div>
+        <div class="admin-page-eyebrow">Marketplace integrity</div>
+        <h1 class="admin-page-title">Moderation</h1>
+        <p class="admin-page-subtitle">Review customer feedback and keep unsuitable products out of the public catalog.</p>
+    </div>
+</div>
+
+<section class="admin-stat-grid" aria-label="Moderation summary">
+    <article class="admin-stat-card">
+        <span class="admin-stat-icon metric-icon-sage" aria-hidden="true"><i class="bi bi-chat-square-text"></i></span>
+        <span class="admin-stat-copy"><span class="admin-stat-label">Published reviews</span><strong class="admin-stat-value">@Model.ReviewCount</strong><span class="admin-stat-meta">Across products and farmers</span></span>
+    </article>
+    <article class="admin-stat-card">
+        <span class="admin-stat-icon metric-icon-amber" aria-hidden="true"><i class="bi bi-eye-slash"></i></span>
+        <span class="admin-stat-copy"><span class="admin-stat-label">Hidden products</span><strong class="admin-stat-value">@Model.HiddenProductCount</strong><span class="admin-stat-meta">Not visible to customers</span></span>
+    </article>
+    <article class="admin-stat-card">
+        <span class="admin-stat-icon metric-icon-blue" aria-hidden="true"><i class="bi bi-patch-check"></i></span>
+        <span class="admin-stat-copy"><span class="admin-stat-label">Verified reviews</span><strong class="admin-stat-value">@Model.VerifiedReviewCount</strong><span class="admin-stat-meta">Linked to marketplace orders</span></span>
+    </article>
+</section>
+
+<section class="admin-card admin-list-card" aria-label="Moderation search">
+    <form class="admin-toolbar" asp-area="Admin" asp-controller="Moderation" asp-action="Index" method="get">
+        <div class="admin-toolbar-form w-100">
+            <div class="admin-search-field">
+                <label class="visually-hidden" for="moderation-search">Search moderation queue</label>
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input id="moderation-search" name="search" type="search" value="@Model.SearchTerm" placeholder="Search reviews, products, or farmers" />
+            </div>
+            <button type="submit" class="admin-btn admin-btn-soft admin-btn-sm">Search</button>
+        </div>
+    </form>
+</section>
+
+<div class="admin-approval-layout">
+    <section class="admin-approval-list" aria-label="Review moderation queue">
+        <div class="d-flex align-items-center justify-content-between">
+            <div><h2 class="admin-card-title">Review queue</h2><p class="admin-card-description">Newest reviews appear first.</p></div>
+            <span class="admin-list-count">@Model.Reviews.Count shown</span>
+        </div>
+        @if (Model.Reviews.Count > 0)
+        {
+            @foreach (var review in Model.Reviews)
+            {
+                <article class="admin-approval-card">
+                    <span class="admin-avatar admin-avatar-lg admin-avatar-sage" aria-hidden="true"><i class="bi bi-chat-left-text"></i></span>
+                    <div class="admin-approval-card-copy">
+                        <h2 class="admin-approval-name">@(string.IsNullOrWhiteSpace(review.Title) ? review.Target : review.Title)</h2>
+                        <p class="admin-approval-farm">@review.Target · @review.Author</p>
+                        <p class="mb-2">@review.Comment</p>
+                        <div class="admin-approval-meta">
+                            <span><i class="bi bi-star-fill text-warning" aria-hidden="true"></i>@review.Rating / 5</span>
+                            <span><i class="bi bi-clock" aria-hidden="true"></i>@review.TimeLabel</span>
+                            @if (review.VerifiedPurchase)
+                            {
+                                <span><i class="bi bi-patch-check" aria-hidden="true"></i>Verified purchase</span>
+                            }
+                            @if (review.HasFarmerReply)
+                            {
+                                <span><i class="bi bi-reply" aria-hidden="true"></i>Farmer replied</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="admin-approval-actions">
+                        <form asp-area="Admin" asp-controller="Moderation" asp-action="DeleteReview" method="post" onsubmit="return confirm('Remove this review permanently?');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@review.Id" />
+                            <button type="submit" class="admin-btn admin-btn-secondary admin-btn-sm"><i class="bi bi-trash3" aria-hidden="true"></i>Remove</button>
+                        </form>
+                    </div>
+                </article>
+            }
+        }
+        else
+        {
+            <div class="admin-card admin-empty-state"><i class="bi bi-check2-circle" aria-hidden="true"></i><strong>No reviews found</strong><p>Try a different search term.</p></div>
+        }
+    </section>
+
+    <aside>
+        <article class="admin-card admin-side-summary-card">
+            <div class="admin-card-header mb-0">
+                <div><h2 class="admin-card-title">Catalog products</h2><p class="admin-card-description">Hide or restore marketplace visibility</p></div>
+            </div>
+            <div class="admin-side-summary-list">
+                @foreach (var product in Model.Products)
+                {
+                    <div class="admin-side-summary-item align-items-start">
+                        <div>
+                            <strong>@product.Name</strong>
+                            <small class="d-block text-secondary">@product.FarmerName · @product.CategoryName · @product.Price.ToString("C")</small>
+                            <form asp-area="Admin" asp-controller="Moderation" asp-action="SetProductAvailability" method="post" class="mt-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="Id" value="@product.Id" />
+                                <input type="hidden" name="IsAvailable" value="@((!product.IsAvailable).ToString().ToLowerInvariant())" />
+                                <button type="submit" class="admin-btn admin-btn-secondary admin-btn-sm">@(product.IsAvailable ? "Hide" : "Restore")</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+                @if (Model.Products.Count == 0)
+                {
+                    <div class="admin-empty-state py-4"><i class="bi bi-box-seam" aria-hidden="true"></i><strong>No products found</strong></div>
+                }
+            </div>
+        </article>
+        <article class="admin-card admin-side-summary-card">
+            <div class="admin-side-note"><i class="bi bi-shield-check" aria-hidden="true"></i><span>Removal and visibility changes are persisted and written to the audit log.</span></div>
+        </article>
+    </aside>
+</div>

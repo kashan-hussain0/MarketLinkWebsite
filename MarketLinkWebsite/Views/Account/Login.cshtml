@@ -1,0 +1,125 @@
+@model MarketLinkWebsite.Controllers.LoginForm
+@{
+    ViewData["Title"] = "Log in";
+}
+@await Html.PartialAsync("_AccountStyles")
+
+<div class="account-page py-4 py-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-10 col-lg-11">
+                <div class="account-card bg-white">
+                    <div class="row g-0">
+                        <div class="col-lg-5 account-visual p-4 p-md-5 d-flex flex-column">
+                            <a class="d-inline-flex align-items-center gap-2 text-white text-decoration-none mb-auto" asp-controller="Home" asp-action="Index" aria-label="MarketLink home">
+                                <span class="account-brand-mark"><i class="bi bi-shop-window fs-4" aria-hidden="true"></i></span>
+                                <span class="fs-5 fw-bold">Market<span class="fw-light">Link</span></span>
+                            </a>
+                            <div class="py-5 my-4 position-relative" style="z-index: 1;">
+                                <div class="eyebrow mb-3">Good food, close to home</div>
+                                <h1 class="display-6 fw-bold text-white lh-sm mb-3">Welcome back to your local market.</h1>
+                                <p class="lead mb-4" style="color: rgba(255,255,255,.78);">Pick up where you left off, discover what is fresh, and keep your favorite growers close.</p>
+                                <div class="d-grid gap-3">
+                                    <div class="account-feature">
+                                        <i class="bi bi-basket2" aria-hidden="true"></i>
+                                        <span>Pre-order the week’s best harvest with confidence.</span>
+                                    </div>
+                                    <div class="account-feature">
+                                        <i class="bi bi-shop" aria-hidden="true"></i>
+                                        <span>Support independent farms and market makers.</span>
+                                    </div>
+                                    <div class="account-feature">
+                                        <i class="bi bi-heart" aria-hidden="true"></i>
+                                        <span>Save favorites and get pickup reminders.</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="small position-relative" style="z-index: 1; color: rgba(255,255,255,.62);">
+                                <i class="bi bi-shield-check me-1" aria-hidden="true"></i>
+                                A simpler way to shop local.
+                            </div>
+                        </div>
+
+                        <div class="col-lg-7 p-4 p-sm-5">
+                            <div class="mb-4">
+                                <a class="d-inline-flex align-items-center small fw-semibold text-decoration-none mb-4" asp-controller="Home" asp-action="Index" style="color: var(--ml-accent-text);">
+                                    <i class="bi bi-arrow-left me-2" aria-hidden="true"></i>
+                                    Back to MarketLink
+                                </a>
+                                <div class="eyebrow text-uppercase fw-bold mb-2" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">Your market account</div>
+                                <h2 class="fw-bold text-dark mb-2">Log in to MarketLink</h2>
+                                <p class="text-muted mb-0">Access your orders, saved favorites, and pickup details.</p>
+                            </div>
+
+                            @if (TempData["SuccessMessage"] is string successMessage && !string.IsNullOrWhiteSpace(successMessage))
+                            {
+                                <div class="alert alert-success d-flex align-items-start gap-2 border-0 rounded-3" role="status">
+                                    <i class="bi bi-check-circle-fill mt-1" aria-hidden="true"></i>
+                                    <span>@successMessage</span>
+                                </div>
+                            }
+
+                            @if (TempData["ErrorMessage"] is string tempErrorMessage && !string.IsNullOrWhiteSpace(tempErrorMessage))
+                            {
+                                <div class="alert alert-danger d-flex align-items-start gap-2 border-0 rounded-3" role="alert">
+                                    <i class="bi bi-exclamation-octagon-fill mt-1" aria-hidden="true"></i>
+                                    <span>@tempErrorMessage</span>
+                                </div>
+                            }
+
+                            @if (ViewData["ErrorMessage"] is string errorMessage && !string.IsNullOrWhiteSpace(errorMessage))
+                            {
+                                <div class="alert alert-danger d-flex align-items-start gap-2 border-0 rounded-3" role="alert">
+                                    <i class="bi bi-exclamation-circle-fill mt-1" aria-hidden="true"></i>
+                                    <span>@errorMessage</span>
+                                </div>
+                            }
+
+                            <form asp-controller="Account" asp-action="Login" method="post" class="account-form">
+                                <input asp-for="ReturnUrl" type="hidden" />
+                                <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3 border-0" role="alert"></div>
+                                <div class="mb-3">
+                                    <label asp-for="Email" class="form-label"></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0" style="border-color: var(--ml-line-soft); color: var(--ml-accent-text);"><i class="bi bi-envelope" aria-hidden="true"></i></span>
+                                        <input asp-for="Email" class="form-control border-start-0" autocomplete="username" inputmode="email" placeholder="you@example.com" aria-describedby="login-email-error" />
+                                    </div>
+                                    <span id="login-email-error" asp-validation-for="Email" class="text-danger small"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <label asp-for="Password" class="form-label"></label>
+                                        <a class="small fw-semibold text-decoration-none" asp-controller="Account" asp-action="ForgotPassword">Forgot password?</a>
+                                    </div>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0" style="border-color: var(--ml-line-soft); color: var(--ml-accent-text);"><i class="bi bi-lock" aria-hidden="true"></i></span>
+                                        <input asp-for="Password" class="form-control border-start-0 border-end-0" autocomplete="current-password" placeholder="Enter your password" aria-describedby="login-password-error" data-password-input />
+                                        <button class="btn btn-outline-secondary border-start-0 bg-white password-toggle" type="button" data-password-toggle aria-label="Show password" aria-pressed="false">
+                                            <i class="bi bi-eye" aria-hidden="true" data-password-icon></i>
+                                        </button>
+                                    </div>
+                                    <span id="login-password-error" asp-validation-for="Password" class="text-danger small"></span>
+                                </div>
+                                <div class="form-check mb-4">
+                                    <input asp-for="RememberMe" class="form-check-input" type="checkbox" />
+                                    <label asp-for="RememberMe" class="form-check-label small text-muted"></label>
+                                </div>
+                                <button type="submit" class="btn btn-brand w-100 mb-4">
+                                    Log in <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+                                </button>
+                            </form>
+
+                            <div class="account-divider mb-4">New to MarketLink?</div>
+                            <a asp-controller="Account" asp-action="Register" class="btn btn-outline-success w-100 fw-semibold rounded-3 py-2" style="border-color: var(--ml-accent-text); color: var(--ml-accent-text);">
+                                Create a customer account
+                            </a>
+                            <p class="small text-muted text-center mt-4 mb-0">
+                                Are you a farmer? <a asp-controller="Account" asp-action="FarmerRegister" class="fw-semibold" style="color: var(--ml-accent-text);">Join as a seller</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

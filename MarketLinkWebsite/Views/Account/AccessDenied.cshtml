@@ -1,0 +1,43 @@
+@{
+    ViewData["Title"] = "Access denied";
+}
+@await Html.PartialAsync("_AccountStyles")
+
+<div class="account-page py-4 py-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-9 col-lg-7 col-xl-6">
+                <div class="account-card bg-white p-4 p-sm-5 text-center">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-4" style="width: 5rem; height: 5rem; background: var(--ml-amber-tint); color: var(--ml-accent-amber);">
+                        <i class="bi bi-shield-lock fs-1" aria-hidden="true"></i>
+                    </div>
+                    <div class="eyebrow text-uppercase fw-bold mb-2" style="color: var(--ml-accent-amber); letter-spacing: .12em; font-size: .72rem;">A small detour</div>
+                    @if (ViewData["CustomerOrderNotice"] is true)
+                    {
+                        <h1 class="fw-bold text-dark mb-3">Customer account required to place an order</h1>
+                        <p class="text-muted mb-4">
+                            You are signed in as a <strong>@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value.ToLowerInvariant() ?? "staff")</strong> account.
+                            Administration and farmer accounts manage the marketplace; they do not place customer reservations.
+                            Please log out and sign in with a customer account to reserve from a stall.
+                        </p>
+                        <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-brand px-4" style="background: var(--ml-leaf-solid); border-color: var(--ml-accent-text); color: #fff;">Use a customer account</a>
+                            <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-success px-4" style="border-color: var(--ml-accent-text); color: var(--ml-accent-text);">Back to basket</a>
+                        </div>
+                        <p class="small text-muted mt-4 mb-0">Need a customer account? <a asp-controller="Account" asp-action="Register" class="fw-semibold" style="color: var(--ml-accent-text);">Create one free</a>.</p>
+                    }
+                    else
+                    {
+                        <h1 class="fw-bold text-dark mb-3">This area is not available to you</h1>
+                        <p class="text-muted mb-4">You do not have permission to view this page. If you think that is a mistake, return to your account or explore the public market.</p>
+                        <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                            <a asp-controller="Home" asp-action="Index" class="btn btn-brand px-4" style="background: var(--ml-leaf-solid); border-color: var(--ml-accent-text); color: #fff;">Return home</a>
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-outline-success px-4" style="border-color: var(--ml-accent-text); color: var(--ml-accent-text);">Log in</a>
+                        </div>
+                        <p class="small text-muted mt-4 mb-0">Need help? <a asp-controller="Home" asp-action="Contact" class="fw-semibold" style="color: var(--ml-accent-text);">Contact MarketLink support</a>.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

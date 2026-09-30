@@ -1,0 +1,78 @@
+@model MarketLinkWebsite.Controllers.ReorderPreview
+@{
+    ViewData["Title"] = "Reorder " + Model.OrderNumber;
+}
+
+<section class="section-block-sm">
+    <div class="container">
+        <nav class="breadcrumb-simple" aria-label="Breadcrumb">
+            <a asp-controller="Customer" asp-action="Orders">My orders</a><i class="bi bi-chevron-right"></i>
+            <span>Reorder @Model.OrderNumber</span>
+        </nav>
+
+        <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3 mb-4">
+            <div>
+                <span class="eyebrow">Quick reorder</span>
+                <h1 class="section-title mb-0">Reorder @Model.OrderNumber</h1>
+                <p class="section-copy mb-0">Placed @Model.PlacedLabel. Put the same items back in your basket.</p>
+            </div>
+            <a class="btn btn-soft" asp-controller="Customer" asp-action="OrderDetails" asp-route-id="@Model.Id">Back to order</a>
+        </div>
+
+        <div class="content-card p-4 mb-4">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <caption class="visually-hidden">Items in order @Model.OrderNumber</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Item</th>
+                            <th scope="col">Ordered</th>
+                            <th scope="col">Available now</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var line in Model.Lines)
+                        {
+                            <tr>
+                                <td><strong class="d-block">@line.ProductName</strong></td>
+                                <td>@line.Quantity</td>
+                                <td>
+                                    @if (line.Available >= line.Quantity)
+                                    {
+                                        <span class="badge rounded-pill bg-success-subtle text-success"><i class="bi bi-check-circle me-1"></i>@line.Available in stock</span>
+                                    }
+                                    else if (line.Available > 0)
+                                    {
+                                        <span class="badge rounded-pill bg-warning-subtle text-warning"><i class="bi bi-exclamation-triangle me-1"></i>Only @line.Available left</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge rounded-pill bg-danger-subtle text-danger"><i class="bi bi-x-circle me-1"></i>Sold out</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @if (Model.ReorderableCount == 0)
+        {
+            <div class="alert alert-warning rounded-3 border-0 mb-4" role="alert">
+                <i class="bi bi-info-circle-fill me-2"></i>Every item from this order is currently sold out. Browse the catalogue for what is in season instead.
+            </div>
+        }
+
+        <div class="d-flex flex-wrap gap-2">
+            <form asp-controller="CustomerReorder" asp-action="Add" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <button type="submit" class="btn btn-market px-4" disabled="@(Model.ReorderableCount == 0)">
+                    <i class="bi bi-basket2 me-1"></i>Add available items to my basket
+                </button>
+            </form>
+            <a class="btn btn-soft" asp-controller="Customer" asp-action="Orders">Cancel</a>
+        </div>
+    </div>
+</section>

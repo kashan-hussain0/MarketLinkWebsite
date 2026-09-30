@@ -1,0 +1,116 @@
+﻿@model OrderListViewModel
+@{
+    ViewData["Title"] = "Orders";
+}
+
+<div class="farmer-page-header">
+    <div>
+        <div class="farmer-page-kicker">ORDER DESK</div>
+        <h1 class="farmer-page-title">Orders</h1>
+        <p class="farmer-page-subtitle">Prepare each order with care and keep your pickup table moving.</p>
+    </div>
+    <div class="farmer-page-actions">
+        <span class="farmer-last-sync"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Updated just now</span>
+        <a class="farmer-btn farmer-btn-secondary" asp-area="Farmer" asp-controller="Order" asp-action="Index"><i class="bi bi-download" aria-hidden="true"></i> Export</a>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.Notice))
+{
+    <div class="farmer-alert farmer-alert-success" role="status">
+        <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+        <span>@Model.Notice</span>
+    </div>
+}
+
+<section class="row g-3 mb-4" aria-label="Order summary">
+    <div class="col-6 col-lg-3">
+        <a class="farmer-summary-card farmer-summary-link" asp-area="Farmer" asp-controller="Order" asp-action="Index">
+            <span class="farmer-summary-icon farmer-tone-green"><i class="bi bi-bag-check" aria-hidden="true"></i></span>
+            <div><strong>@Model.TotalOrders</strong><span>All orders</span></div>
+        </a>
+    </div>
+    <div class="col-6 col-lg-3">
+        <a class="farmer-summary-card farmer-summary-link" asp-area="Farmer" asp-controller="Order" asp-action="Index" asp-route-status="New">
+            <span class="farmer-summary-icon farmer-tone-amber"><i class="bi bi-stars" aria-hidden="true"></i></span>
+            <div><strong>@Model.NewOrders</strong><span>New orders</span></div>
+        </a>
+    </div>
+    <div class="col-6 col-lg-3">
+        <a class="farmer-summary-card farmer-summary-link" asp-area="Farmer" asp-controller="Order" asp-action="Index" asp-route-status="Preparing">
+            <span class="farmer-summary-icon farmer-tone-blue"><i class="bi bi-box-seam" aria-hidden="true"></i></span>
+            <div><strong>@Model.ToPrepare</strong><span>To prepare</span></div>
+        </a>
+    </div>
+    <div class="col-6 col-lg-3">
+        <a class="farmer-summary-card farmer-summary-link" asp-area="Farmer" asp-controller="Order" asp-action="Index" asp-route-status="Ready">
+            <span class="farmer-summary-icon farmer-tone-purple"><i class="bi bi-check2-circle" aria-hidden="true"></i></span>
+            <div><strong>@Model.ReadyForPickup</strong><span>Ready for pickup</span></div>
+        </a>
+    </div>
+</section>
+
+<section class="farmer-panel" aria-labelledby="orders-heading">
+    <div class="farmer-catalog-toolbar">
+        <div>
+            <span class="farmer-panel-eyebrow">FULFILLMENT</span>
+            <h2 class="farmer-panel-title" id="orders-heading">All orders <span class="farmer-count-badge">@Model.Orders.Count</span></h2>
+        </div>
+        <div class="farmer-filter-pills" role="navigation" aria-label="Filter orders by status">
+            <a class="@(Model.StatusFilter == "All orders" ? "active" : string.Empty)" asp-area="Farmer" asp-controller="Order" asp-action="Index">All <span>@Model.TotalOrders</span></a>
+            <a class="@(Model.StatusFilter == "New" ? "active" : string.Empty)" asp-area="Farmer" asp-controller="Order" asp-action="Index" asp-route-status="New">New <span>@Model.NewOrders</span></a>
+            <a class="@(Model.StatusFilter == "Accepted" ? "active" : string.Empty)" asp-area="Farmer" asp-controller="Order" asp-action="Index" asp-route-status="Accepted">Accepted <span>@Model.AcceptedOrders</span></a>
+            <a class="@(Model.StatusFilter == "Preparing" ? "active" : string.Empty)" asp-area="Farmer" asp-controller="Order" asp-action="Index" asp-route-status="Preparing">Preparing <span>@Model.ToPrepare</span></a>
+            <a class="@(Model.StatusFilter == "Ready" ? "active" : string.Empty)" asp-area="Farmer" asp-controller="Order" asp-action="Index" asp-route-status="Ready">Ready <span>@Model.ReadyForPickup</span></a>
+            <a class="@(Model.StatusFilter == "Completed" ? "active" : string.Empty)" asp-area="Farmer" asp-controller="Order" asp-action="Index" asp-route-status="Completed">Completed <span>@Model.CompletedOrders</span></a>
+        </div>
+    </div>
+
+    @if (Model.Orders.Count == 0)
+    {
+        <div class="farmer-empty-state">
+            <span class="farmer-empty-icon"><i class="bi bi-bag" aria-hidden="true"></i></span>
+            <h3>No orders in this view</h3>
+            <p>New orders will appear here as neighbors check out from your farm stand.</p>
+            <a class="farmer-btn farmer-btn-secondary" asp-area="Farmer" asp-controller="Order" asp-action="Index">View all orders</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table farmer-table farmer-orders-table align-middle mb-0">
+                <caption class="visually-hidden">Orders for your farm</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Order</th>
+                        <th scope="col">Customer</th>
+                        <th scope="col">Items</th>
+                        <th scope="col">Pickup window</th>
+                        <th scope="col">Total</th>
+                        <th scope="col">Status</th>
+                        <th scope="col"><span class="visually-hidden">Open</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model.Orders)
+                    {
+                        <tr>
+                            <td data-label="Order"><a class="farmer-order-number" asp-area="Farmer" asp-controller="Order" asp-action="Details" asp-route-id="@order.Id">@order.OrderNumber</a><small class="farmer-table-subline">@order.PlacedLabel</small></td>
+                            <td data-label="Customer"><div class="farmer-person-cell"><span class="farmer-initials">@order.CustomerInitials</span><span><strong>@order.CustomerName</strong><small class="farmer-table-subline">@order.CustomerLocation</small></span></div></td>
+                            <td data-label="Items"><span class="farmer-table-secondary">@order.ItemSummary</span><small class="farmer-table-subline">@order.ItemCount @(order.ItemCount == 1 ? "item" : "items")</small></td>
+                            <td data-label="Pickup window"><span class="farmer-table-secondary">@order.PickupWindow</span></td>
+                            <td data-label="Total"><strong>@order.Total.ToString("C")</strong><small class="farmer-table-subline">@order.OwnSubtotal.ToString("C") from your farm</small></td>
+                            <td data-label="Status"><span class="farmer-status farmer-status-@order.StatusTone"><i class="bi @order.StatusIcon" aria-hidden="true"></i>@order.Status</span></td>
+                            <td class="farmer-table-action"><a asp-area="Farmer" asp-controller="Order" asp-action="Details" asp-route-id="@order.Id" aria-label="View @order.OrderNumber"><i class="bi bi-chevron-right" aria-hidden="true"></i></a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+<div class="farmer-list-footer">
+    <span><i class="bi bi-lightbulb-fill" aria-hidden="true"></i> Orders are grouped by pickup window so your team can pack efficiently.</span>
+    <a asp-area="Farmer" asp-controller="Profile" asp-action="Index">Update pickup details <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+</div>

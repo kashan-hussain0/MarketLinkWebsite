@@ -1,0 +1,114 @@
+@model MarketLinkWebsite.Areas.Admin.Models.OrderListViewModel
+@{
+    ViewData["Title"] = "Order records";
+    var fulfillmentStatuses = new[] { "Pending", "Accepted", "Preparing", "Ready for pickup", "Completed", "Declined", "Cancelled" };
+    var peakDay = Model.DailyCounts.Count == 0 ? 1 : Math.Max(1, Model.DailyCounts.Max(row => row.Count));
+    const int TrackHeightPx = 150;
+}
+
+<div class="admin-page-header">
+    <div>
+        <div class="admin-page-eyebrow">Records</div>
+        <h1 class="admin-page-title">Order records</h1>
+        <p class="admin-page-subtitle">A read-only log of every pre-order. Approving, declining and cancelling a reservation is handled by the farmer who owns the products.</p>
+    </div>
+    <div class="admin-page-actions">
+        <a class="admin-btn admin-btn-secondary" asp-area="Admin" asp-controller="Report" asp-action="Index"><i class="bi bi-bar-chart-line" aria-hidden="true"></i>View reports</a>
+    </div>
+</div>
+
+<section class="admin-order-summary-strip" aria-label="Order summary">
+    <article class="admin-order-summary-card"><span class="admin-order-summary-icon" aria-hidden="true"><i class="bi bi-bag-check"></i></span><div><span class="admin-order-summary-label">Orders this month</span><p class="admin-order-summary-value">@Model.TotalOrders</p></div></article>
+    <article class="admin-order-summary-card"><span class="admin-order-summary-icon" aria-hidden="true"><i class="bi bi-calendar-day"></i></span><div><span class="admin-order-summary-label">Orders today</span><p class="admin-order-summary-value">@Model.OrdersToday</p></div></article>
+    <article class="admin-order-summary-card"><span class="admin-order-summary-icon" aria-hidden="true"><i class="bi bi-hourglass-split"></i></span><div><span class="admin-order-summary-label">With the farmers</span><p class="admin-order-summary-value">@Model.AwaitingFulfillment</p></div></article>
+    <article class="admin-order-summary-card"><span class="admin-order-summary-icon" aria-hidden="true"><i class="bi bi-wallet2"></i></span><div><span class="admin-order-summary-label">Revenue this month</span><p class="admin-order-summary-value">@Model.RevenueThisMonth.ToString("C0")</p></div></article>
+</section>
+
+<section class="admin-card admin-card mb-4" aria-label="Daily order volume">
+    <div class="admin-card-header">
+        <div><h2 class="admin-card-title">Orders received per day</h2><p class="admin-card-description">Last 14 days, so volume can be reviewed without opening every order.</p></div>
+    </div>
+    <div class="admin-daily-bars" style="--admin-chart-track:@TrackHeightPx px;">
+        @foreach (var day in Model.DailyCounts)
+        {
+            var fill = peakDay == 0
+                ? (day.Count > 0 ? 6 : 2)
+                : (int)Math.Round(day.Count * (double)TrackHeightPx / peakDay);
+            <div class="admin-daily-bar" title="@day.Day.ToString("MMM d, yyyy"): @day.Count order@(day.Count == 1 ? string.Empty : "s")">
+                <span class="admin-daily-bar-track">
+                    <span class="admin-daily-bar-fill" style="height:@Math.Clamp(fill, 2, TrackHeightPx)px;"></span>
+                </span>
+                <span class="admin-daily-bar-value">@day.Count</span>
+                <span class="admin-daily-bar-label">@day.Day.ToString("ddd")</span>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="admin-list-card admin-card" aria-label="Order directory">
+    <div class="admin-card-header">
+        <div><h2 class="admin-card-title">All orders</h2><p class="admin-card-description">Who ordered, which farmer supplied it, and what was purchased.</p></div>
+        <span class="admin-list-count">@Model.Orders.Count order@(Model.Orders.Count == 1 ? string.Empty : "s") shown</span>
+    </div>
+    <form class="admin-toolbar" asp-area="Admin" asp-controller="Order" asp-action="Index" method="get">
+        <div class="admin-toolbar-form">
+            <div class="admin-search-field">
+                <label class="visually-hidden" for="order-search">Search orders</label>
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input id="order-search" name="search" type="search" value="@Model.SearchTerm" placeholder="Order, customer, farmer or product" />
+            </div>
+            <label class="visually-hidden" for="order-status">Filter by fulfillment status</label>
+            <select class="admin-filter-select" id="order-status" name="status">
+                <option value="All orders" selected="@(Model.StatusFilter == "All orders")">All orders</option>
+                @foreach (var status in fulfillmentStatuses)
+                {
+                    <option value="@status" selected="@(Model.StatusFilter == status)">@status</option>
+                }
+            </select>
+            <button type="submit" class="admin-btn admin-btn-soft admin-btn-sm">Filter</button>
+        </div>
+        <div class="admin-toolbar-actions"><span class="admin-inline-muted">Sorted by newest</span></div>
+    </form>
+
+    @if (Model.Orders.Count > 0)
+    {
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <caption class="admin-table-caption">MarketLink order records</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Order</th>
+                        <th scope="col">Customer</th>
+                        <th scope="col">Placed</th>
+                        <th scope="col">Farmer</th>
+                        <th scope="col">Purchased</th>
+                        <th scope="col">Total</th>
+                        <th scope="col">Payment</th>
+                        <th scope="col">Status</th>
+                        <th scope="col"><span class="visually-hidden">Open</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model.Orders)
+                    {
+                        <tr>
+                            <td><a class="admin-order-number" asp-area="Admin" asp-controller="Order" asp-action="Details" asp-route-id="@order.Id">@order.OrderNumber</a><small class="d-block admin-table-muted mt-1">@order.DeliveryLabel</small></td>
+                            <td><div class="admin-person-cell"><span class="admin-avatar admin-avatar-sm admin-avatar-@order.CustomerTone" aria-hidden="true">@order.CustomerInitials</span><span class="admin-person-copy"><strong>@order.CustomerName</strong><small>Customer</small></span></div></td>
+                            <td class="admin-table-muted">@order.PlacedLabel</td>
+                            <td><span class="admin-table-farmer"><i class="bi bi-tree" aria-hidden="true"></i>@(string.IsNullOrWhiteSpace(order.Farmers) ? "—" : order.Farmers)</span></td>
+                            <td><span class="admin-table-items">@order.Items</span></td>
+                            <td class="admin-table-number">@order.Total.ToString("C")</td>
+                            <td><span class="admin-status status-@order.PaymentTone">@order.PaymentStatus</span></td>
+                            <td><span class="admin-status status-@order.FulfillmentTone">@order.FulfillmentStatus</span></td>
+                            <td class="admin-table-action"><a asp-area="Admin" asp-controller="Order" asp-action="Details" asp-route-id="@order.Id" aria-label="View @order.OrderNumber"><i class="bi bi-arrow-up-right" aria-hidden="true"></i></a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="admin-empty-state"><i class="bi bi-bag" aria-hidden="true"></i><strong>No orders found</strong><p>Try a different search or status filter.</p></div>
+    }
+</section>

@@ -1,0 +1,108 @@
+@model MarketLinkWebsite.Areas.Admin.Models.MarketFormViewModel
+@{
+    ViewData["Title"] = "Add market";
+}
+
+<div class="admin-page-header">
+    <div>
+        <div class="admin-page-eyebrow">Marketplace network</div>
+        <h1 class="admin-page-title">Add a market</h1>
+        <p class="admin-page-subtitle">Set up a welcoming marketplace for local farmers and their customers.</p>
+    </div>
+    <div class="admin-page-actions">
+        <a class="admin-btn admin-btn-secondary" asp-area="Admin" asp-controller="Market" asp-action="Index"><i class="bi bi-arrow-left" aria-hidden="true"></i>Back to markets</a>
+    </div>
+</div>
+
+<form asp-area="Admin" asp-controller="Market" asp-action="Create" method="post" enctype="multipart/form-data" class="admin-card admin-form-card">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="admin-validation-summary"></div>
+
+    <section class="admin-form-section" aria-labelledby="market-basics-heading">
+        <h2 id="market-basics-heading" class="admin-form-section-title">Market basics</h2>
+        <p class="admin-form-section-description">Give customers a clear picture of what this marketplace offers.</p>
+        <div class="admin-form-grid">
+            <div class="admin-form-field admin-form-field-full">
+                <label asp-for="Name" class="admin-form-label">Market name <span class="required-mark">*</span></label>
+                <input asp-for="Name" class="admin-form-control" placeholder="e.g. Riverside Farmers Market" autocomplete="organization" />
+                <span asp-validation-for="Name" class="admin-field-validation"></span>
+            </div>
+            <div class="admin-form-field admin-form-field-full">
+                <label asp-for="Description" class="admin-form-label">Description <span class="required-mark">*</span></label>
+                <textarea asp-for="Description" class="admin-form-control" placeholder="Tell customers what makes this market special"></textarea>
+                <span asp-validation-for="Description" class="admin-field-validation"></span>
+            </div>
+            <div class="admin-form-field admin-form-field-full">
+                <label asp-for="Photo" class="admin-form-label">Upload a market picture</label>
+                <input asp-for="Photo" class="admin-form-control" type="file" accept="image/*" data-max-bytes="8388608" />
+                <p class="admin-form-hint">JPG, PNG, GIF, BMP or WEBP up to 8 MB. Uploading a picture is easier than pasting a web address.</p>
+                <span asp-validation-for="Photo" class="admin-field-validation"></span>
+            </div>
+            <div class="admin-form-field admin-form-field-full">
+                <label asp-for="ImageUrl" class="admin-form-label">Or paste an image URL</label>
+                <input asp-for="ImageUrl" class="admin-form-control" type="url" placeholder="https://..." inputmode="url" maxlength="300" />
+                <p class="admin-form-hint">Leave this empty if you uploaded a picture above.</p>
+                <span asp-validation-for="ImageUrl" class="admin-field-validation"></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-form-section" aria-labelledby="market-location-heading">
+        <h2 id="market-location-heading" class="admin-form-section-title">Location</h2>
+        <p class="admin-form-section-description">This information helps customers find the market.</p>
+        <div class="admin-form-grid">
+            <div class="admin-form-field admin-form-field-full">
+                <label asp-for="Address" class="admin-form-label">Street address <span class="required-mark">*</span></label>
+                <input asp-for="Address" class="admin-form-control" placeholder="100 Market Street" autocomplete="street-address" />
+                <span asp-validation-for="Address" class="admin-field-validation"></span>
+            </div>
+            <div class="admin-form-field">
+                <label asp-for="City" class="admin-form-label">City <span class="required-mark">*</span></label>
+                <input asp-for="City" class="admin-form-control" placeholder="Portland" autocomplete="address-level2" />
+                <span asp-validation-for="City" class="admin-field-validation"></span>
+            </div>
+        <div class="admin-form-field admin-form-field-full mt-3">
+            @await Html.PartialAsync("_LocationPicker", new MarketLinkWebsite.Models.ViewModels.LocationPickerViewModel
+            {
+                Suffix = "market",
+                Title = "Pin this market on the map",
+                Hint = "Customers see this pin on the market map and use it for directions.",
+                Latitude = Model.Latitude == 0m ? null : Model.Latitude,
+                Longitude = Model.Longitude == 0m ? null : Model.Longitude
+            })
+        </div>
+        </div>
+    </section>
+
+    <section class="admin-form-section" aria-labelledby="market-operations-heading">
+        <h2 id="market-operations-heading" class="admin-form-section-title">Operating details</h2>
+        <p class="admin-form-section-description">Set the hours and visibility customers will see.</p>
+        <div class="admin-form-grid admin-form-grid-three">
+            <div class="admin-form-field admin-form-field-full">
+                <label asp-for="OperatingDays" class="admin-form-label">Operating days <span class="required-mark">*</span></label>
+                <input asp-for="OperatingDays" class="admin-form-control" placeholder="Saturday and Sunday" />
+                <span asp-validation-for="OperatingDays" class="admin-field-validation"></span>
+            </div>
+            <div class="admin-form-field">
+                <label asp-for="OpenTime" class="admin-form-label">Opens <span class="required-mark">*</span></label>
+                <input asp-for="OpenTime" class="admin-form-control" type="time" />
+                <span asp-validation-for="OpenTime" class="admin-field-validation"></span>
+            </div>
+            <div class="admin-form-field">
+                <label asp-for="CloseTime" class="admin-form-label">Closes <span class="required-mark">*</span></label>
+                <input asp-for="CloseTime" class="admin-form-control" type="time" />
+                <span asp-validation-for="CloseTime" class="admin-field-validation"></span>
+            </div>
+        </div>
+        <div asp-validation-summary="ModelOnly" class="admin-validation-summary"></div>
+        <div class="admin-form-check-row mt-4">
+            <label class="admin-check-control"><input asp-for="IsActive" /> <span>Market is active</span></label>
+            <label class="admin-check-control"><input asp-for="IsFeatured" /> <span>Feature this market</span></label>
+        </div>
+    </section>
+
+    <div class="admin-form-actions">
+        <a class="admin-btn admin-btn-secondary" asp-area="Admin" asp-controller="Market" asp-action="Index">Cancel</a>
+        <button type="submit" class="admin-btn admin-btn-primary"><i class="bi bi-check2" aria-hidden="true"></i>Save market</button>
+    </div>
+</form>

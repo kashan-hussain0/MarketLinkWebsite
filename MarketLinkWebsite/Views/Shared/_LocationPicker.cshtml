@@ -1,0 +1,50 @@
+@model LocationPickerViewModel
+@{
+    var latId = "Latitude-" + Model.Suffix;
+    var lonId = "Longitude-" + Model.Suffix;
+    var lat = Model.Latitude.HasValue ? Model.Latitude.Value.ToString("0.######", System.Globalization.CultureInfo.InvariantCulture) : string.Empty;
+    var lon = Model.Longitude.HasValue ? Model.Longitude.Value.ToString("0.######", System.Globalization.CultureInfo.InvariantCulture) : string.Empty;
+
+    // The map is drawn by Leaflet from tiles, so there is no third party page to
+    // load inside a frame. That is what used to fail with a connection error.
+    var start = Model.Latitude.HasValue && Model.Longitude.HasValue
+        ? Model.Latitude.Value.ToString("0.######", System.Globalization.CultureInfo.InvariantCulture) + "," + Model.Longitude.Value.ToString("0.######", System.Globalization.CultureInfo.InvariantCulture)
+        : "33.6844,73.0479";
+}
+
+<div class="location-picker" data-location-picker data-start="@start" data-suffix="@Model.Suffix">
+    <div class="location-picker-head">
+        <div>
+            <strong class="d-block">@Model.Title</strong>
+            <small class="text-muted">@Model.Hint</small>
+        </div>
+        <button type="button" class="btn btn-sm btn-brand" data-location-detect>
+            <i class="bi bi-crosshair me-1" aria-hidden="true"></i>Use my current location
+        </button>
+    </div>
+
+    <div class="location-picker-map" data-location-canvas role="region" aria-label="@Model.Title map"></div>
+
+    <p class="location-picker-note">
+        Tap the map to drop the pin, or use the button above to fill it from this device.
+    </p>
+
+    <div class="location-picker-status small" data-location-status role="status" aria-live="polite"></div>
+
+    <div class="row g-2">
+        <div class="col-sm-6">
+            <label class="form-label small fw-semibold" for="@latId">Latitude</label>
+            <input type="text" inputmode="decimal" class="form-control" id="@latId" name="Latitude" value="@lat"
+                   placeholder="33.684400" autocomplete="off" data-location-lat />
+        </div>
+        <div class="col-sm-6">
+            <label class="form-label small fw-semibold" for="@lonId">Longitude</label>
+            <input type="text" inputmode="decimal" class="form-control" id="@lonId" name="Longitude" value="@lon"
+                   placeholder="73.047900" autocomplete="off" data-location-lon />
+        </div>
+    </div>
+
+    <p class="form-text mb-0">
+        Optional. Sharing your location lets MarketLink show the markets, farmers and products closest to you.
+    </p>
+</div>

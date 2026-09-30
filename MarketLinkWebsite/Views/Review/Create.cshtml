@@ -1,0 +1,82 @@
+@model MarketLinkWebsite.Controllers.ReviewSubmission
+@{
+    ViewData["Title"] = "Share a review";
+}
+@await Html.PartialAsync("_ReviewStyles")
+
+<div class="review-page py-4 py-md-5">
+    <div class="container-xl">
+        @if (ViewData["ErrorMessage"] is string errorMessage && !string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-danger alert-dismissible fade show border-0 rounded-4 shadow-sm mb-4" role="alert"><i class="bi bi-exclamation-circle-fill me-2" aria-hidden="true"></i>@errorMessage<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss message"></button></div>
+        }
+
+        <nav aria-label="Breadcrumb" class="mb-4">
+            <ol class="breadcrumb small mb-0">
+                <li class="breadcrumb-item"><a asp-controller="Customer" asp-action="Dashboard" class="text-decoration-none" style="color: var(--ml-accent-text);">My account</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Review" asp-action="Index" asp-route-productId="@Model.ProductId" class="text-decoration-none" style="color: var(--ml-accent-text);">Reviews</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Write a review</li>
+            </ol>
+        </nav>
+
+        <div class="row justify-content-center">
+            <div class="col-xl-10">
+                <div class="text-center mb-4 mb-md-5"><div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 4.3rem; height: 4.3rem; background: var(--ml-amber-tint); color: var(--ml-accent-amber);"><i class="bi bi-pencil-heart fs-2" aria-hidden="true"></i></div><div class="eyebrow text-uppercase fw-bold mb-2" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">Give a little love</div><h1 class="display-6 fw-bold text-dark mb-2">Share your MarketLink experience</h1><p class="lead text-muted mx-auto" style="max-width: 650px;">A thoughtful review helps a neighbor choose with confidence and helps a local grower keep going.</p></div>
+
+                <div class="row g-4 align-items-start">
+                    <div class="col-lg-7">
+                        <section class="review-form-card p-4 p-md-5" aria-labelledby="review-form-heading">
+                            <div class="d-flex align-items-center gap-3 mb-4"><span class="d-inline-flex align-items-center justify-content-center rounded-3" style="width: 2.8rem; height: 2.8rem; background: var(--ml-sage-tint); color: var(--ml-accent-text);"><i class="bi bi-chat-square-heart" aria-hidden="true"></i></span><div><div class="eyebrow text-uppercase fw-bold mb-1" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">Your review</div><h2 id="review-form-heading" class="h4 fw-bold text-dark mb-0">Tell us about the experience</h2></div></div>
+                            <form asp-controller="Review" asp-action="Create" method="post" class="review-form">
+                                <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3 border-0" role="alert"></div>
+                                <div class="mb-4">
+                                    <label asp-for="ProductId" class="form-label"></label>
+                                    <select asp-for="ProductId" class="form-select" aria-describedby="review-product-help review-product-error" disabled="@(Model.EligibleProducts.Count == 0 ? "disabled" : null)">
+                                        <option value="">Choose an eligible item</option>
+                                        @foreach (var product in Model.EligibleProducts)
+                                        {
+                                            <option value="@product.ProductId">@product.ProductName · @product.FarmName</option>
+                                        }
+                                    </select>
+                                    <div id="review-product-help" class="form-text">@Model.EligibilityMessage</div>
+                                    <span id="review-product-error" asp-validation-for="ProductId" class="text-danger small"></span>
+                                </div>
+
+                                <fieldset class="mb-4">
+                                    <legend class="form-label mb-2">Your rating</legend>
+                                    <div class="row g-2">
+                                        @for (var rating = 1; rating <= 5; rating++)
+                                        {
+                                            <div class="col"><div class="rating-choice d-flex align-items-center gap-2 h-100"><input class="form-check-input m-0" type="radio" asp-for="Rating" id="rating-@rating" value="@rating" /><label for="rating-@rating" class="small fw-semibold text-dark mb-0 w-100 d-flex align-items-center justify-content-center gap-1"><span>@rating</span><i class="bi bi-star-fill text-warning" aria-hidden="true"></i><span class="visually-hidden">out of 5</span></label></div></div>
+                                        }
+                                    </div>
+                                    <span asp-validation-for="Rating" class="text-danger small"></span>
+                                </fieldset>
+
+                                <div class="mb-4"><label asp-for="Title" class="form-label"></label><input asp-for="Title" class="form-control" placeholder="Give your review a short headline" maxlength="100" /><span asp-validation-for="Title" class="text-danger small"></span></div>
+                                <div class="mb-4"><label asp-for="Body" class="form-label" required minlength="10" maxlength="1000"></label><textarea asp-for="Body" class="form-control" rows="6" placeholder="What did you notice about the quality, freshness, or pickup experience?" aria-describedby="review-body-help review-body-error"></textarea><div id="review-body-help" class="form-text">A few thoughtful sentences are perfect. Please do not share private contact details.</div><span id="review-body-error" asp-validation-for="Body" class="text-danger small"></span></div>
+
+                                <div class="pt-3 border-top">
+                                    <div class="d-flex align-items-start gap-3"><span class="d-inline-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style="width: 2.6rem; height: 2.6rem; background: var(--ml-sage-tint); color: var(--ml-accent-text);"><i class="bi bi-patch-check" aria-hidden="true"></i></span><div><div class="fw-semibold text-dark">Publishing as @Model.ReviewerName</div><div class="small text-muted">Your verified-purchase status is derived from the completed order on the server.</div></div></div>
+                                </div>
+
+                                <div class="d-flex flex-wrap justify-content-end gap-2 mt-4 pt-4 border-top"><a asp-controller="Review" asp-action="Index" asp-route-productId="@Model.ProductId" class="btn btn-light rounded-pill px-4">Cancel</a><button type="submit" class="btn btn-brand rounded-pill px-4" disabled="@(Model.EligibleProducts.Count == 0 ? "disabled" : null)">Publish review <i class="bi bi-send ms-1" aria-hidden="true"></i></button></div>
+                            </form>
+                        </section>
+                    </div>
+                    <div class="col-lg-5">
+                        <aside class="review-product-card p-4 p-md-5 mb-4" aria-labelledby="review-guidance-title">
+                            @if (!string.IsNullOrWhiteSpace(Model.ProductName))
+                            {
+                                <div class="small text-muted mb-1">Reviewing</div><h2 class="h5 fw-bold text-dark mb-4">@Model.ProductName</h2><div class="small text-muted mb-4"><i class="bi bi-shop me-1" style="color: var(--ml-accent-text);" aria-hidden="true"></i>@Model.FarmName</div>
+                            }
+                            <div class="d-flex align-items-center gap-3 mb-4"><span class="d-inline-flex align-items-center justify-content-center rounded-3" style="width: 2.8rem; height: 2.8rem; background: var(--ml-leaf-solid); color: #fff;"><i class="bi bi-lightbulb" aria-hidden="true"></i></span><h2 id="review-guidance-title" class="h5 fw-bold text-dark mb-0">A helpful review has…</h2></div>
+                            <div class="d-grid gap-3 small text-muted"><div class="d-flex gap-2"><i class="bi bi-check2-circle flex-shrink-0" style="color: var(--ml-accent-text);" aria-hidden="true"></i><span>A clear rating that matches your experience.</span></div><div class="d-flex gap-2"><i class="bi bi-check2-circle flex-shrink-0" style="color: var(--ml-accent-text);" aria-hidden="true"></i><span>Specific details another shopper can use.</span></div><div class="d-flex gap-2"><i class="bi bi-check2-circle flex-shrink-0" style="color: var(--ml-accent-text);" aria-hidden="true"></i><span>Kind words for the people behind the market.</span></div><div class="d-flex gap-2"><i class="bi bi-x-circle flex-shrink-0" style="color: var(--ml-accent-amber);" aria-hidden="true"></i><span>No personal details or private conversations.</span></div></div>
+                        </aside>
+                        <div class="account-note rounded-4 p-3 d-flex gap-2 align-items-start small"><i class="bi bi-info-circle mt-1" aria-hidden="true"></i><span>Only customers who have completed an order can publish a review. Administrators can remove reviews that violate marketplace guidelines.</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

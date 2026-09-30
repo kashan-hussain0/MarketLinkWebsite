@@ -1,0 +1,175 @@
+@model List<ProductCardViewModel>
+@{
+    ViewData["Title"] = "Explore this week's local harvest";
+    var searchQuery = ViewData["SearchQuery"] as string ?? string.Empty;
+    var selectedCategory = ViewData["SelectedCategory"] as string ?? "All products";
+    var selectedMarket = ViewData["MarketLocation"] as string ?? string.Empty;
+    var selectedDay = ViewData["MarketDay"] as string ?? string.Empty;
+    var selectedSort = ViewData["Sort"] as string ?? string.Empty;
+    var maxPrice = ViewData["MaxPrice"] as decimal?;
+    var categories = ViewData["Categories"] as IReadOnlyList<string> ?? Array.Empty<string>();
+    var markets = ViewData["Markets"] as IReadOnlyList<string> ?? Array.Empty<string>();
+    var marketDays = ViewData["MarketDays"] as IReadOnlyList<string> ?? Array.Empty<string>();
+    var maxCatalogPrice = Convert.ToDecimal(ViewData["MaxCatalogPrice"] ?? 20);
+    var priceCeiling = Math.Max(20, maxCatalogPrice);
+    var nextMarketLabel = ViewData["NextMarketLabel"] as string ?? "Check the market calendar";
+}
+
+<section class="page-hero">
+    <div class="container position-relative" style="z-index: 2;">
+        <nav class="page-breadcrumb" aria-label="Breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Home</a><i class="bi bi-chevron-right"></i><span>Explore product</span>
+        </nav>
+        <div class="row align-items-end g-4">
+            <div class="col-lg-8">
+                <span class="eyebrow">Direct from growers</span>
+                <h1>Fresh product catalogue</h1>
+                <p>Explore this week's availability, compare local farms and reserve products for a convenient market pickup.</p>
+            </div>
+            <div class="col-lg-4">
+                <div class="d-flex align-items-center gap-3 p-3 rounded-4 bg-white border shadow-sm">
+                    <span class="float-icon"><i class="bi bi-calendar2-week"></i></span>
+                    <div><span class="d-block small text-muted">Next market</span><strong>@nextMarketLabel</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block-sm">
+    <div class="container">
+        <form class="catalog-toolbar" asp-controller="Product" asp-action="Index" method="get">
+            <div class="catalog-count"><strong>@Model.Count</strong> products available</div>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <input type="hidden" name="searchQuery" value="@searchQuery" />
+                <input type="hidden" name="category" value="@(selectedCategory == "All products" ? "" : selectedCategory)" />
+                <input type="hidden" name="marketLocation" value="@selectedMarket" />
+                <input type="hidden" name="marketDay" value="@selectedDay" />
+                <label class="small text-muted" for="catalogSort">Sort by</label>
+                <select class="form-select form-select-sm" id="catalogSort" name="sort" onchange="this.form.submit()">
+                    <option value="" selected="@(selectedSort == string.Empty)">Recommended</option>
+                    <option value="rating" selected="@(selectedSort == "rating")">Top rated</option>
+                    <option value="price-low" selected="@(selectedSort == "price-low")">Price: low to high</option>
+                    <option value="price-high" selected="@(selectedSort == "price-high")">Price: high to low</option>
+                </select>
+            </div>
+        </form>
+
+        <div class="row g-4">
+            <aside class="col-lg-3">
+                <form class="filter-panel" asp-controller="Product" asp-action="Index" method="get">
+                    <div class="filter-title"><span><i class="bi bi-sliders me-2"></i>Filters</span><a class="small" asp-controller="Product" asp-action="Index">Reset</a></div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="filterSearch">Search</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                            <input class="form-control border-start-0" id="filterSearch" name="searchQuery" value="@searchQuery" placeholder="Product or farm" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="filterCategory">Category</label>
+                        <select class="form-select" id="filterCategory" name="category">
+                            <option value="">All categories</option>
+                            @foreach (var categoryName in categories)
+                            {
+                                <option value="@categoryName" selected="@(string.Equals(selectedCategory, categoryName, StringComparison.OrdinalIgnoreCase))">@categoryName</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="filterMarket">Market</label>
+                        <select class="form-select" id="filterMarket" name="marketLocation">
+                            <option value="">All markets</option>
+                            @foreach (var marketName in markets)
+                            {
+                                <option value="@marketName" selected="@(string.Equals(selectedMarket, marketName, StringComparison.OrdinalIgnoreCase))">@marketName</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="filterDay">Market day</label>
+                        <select class="form-select" id="filterDay" name="marketDay">
+                            <option value="">Any day</option>
+                            @foreach (var marketDay in marketDays)
+                            {
+                                <option value="@marketDay" selected="@(string.Equals(selectedDay, marketDay, StringComparison.OrdinalIgnoreCase))">@marketDay</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between"><label class="form-label" for="filterPrice">Maximum price</label><span class="range-value">Up to $@priceCeiling.ToString("0.##")</span></div>
+                        <input class="form-range mt-2" type="range" id="filterPrice" name="maxPrice" min="0" max="@priceCeiling.ToString("0.##")" step="1" value="@(maxPrice ?? priceCeiling)" />
+                        <div class="d-flex justify-content-between small text-muted"><span>$0</span><span>$@priceCeiling.ToString("0.##")+</span></div>
+                    </div>
+
+                    <button class="btn btn-market w-100" type="submit">Apply filters</button>
+                </form>
+            </aside>
+
+            <div class="col-lg-9">
+                @if (Model.Count > 0)
+                {
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge rounded-pill text-bg-light border text-dark">@selectedCategory</span>
+                            @if (!string.IsNullOrWhiteSpace(searchQuery))
+                            {
+                                <span class="badge rounded-pill bg-success-subtle text-success">Results for “@searchQuery”</span>
+                            }
+                        </div>
+                        <span class="small text-muted">Availability updated for this market cycle</span>
+                    </div>
+
+                    <div class="product-grid catalog-product-grid">
+                        @foreach (var product in Model)
+                        {
+                            <form id="add-product-@product.Id" asp-controller="Cart" asp-action="Add" method="post" class="d-none">
+                                <input type="hidden" name="productId" value="@product.Id" />
+                                <input type="hidden" name="quantity" value="1" />
+                            </form>
+                            <partial name="_ProductCard" model="product" />
+                        }
+                    </div>
+
+                    <nav class="mt-5" aria-label="Catalogue pages">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                            <li class="page-item active" aria-current="page"><span class="page-link">1</span></li>
+                            <li class="page-item disabled"><span class="page-link">2</span></li>
+                            <li class="page-item disabled"><span class="page-link">Next</span></li>
+                        </ul>
+                    </nav>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <span class="empty-state-icon"><i class="bi bi-search-heart"></i></span>
+                        <h2 class="h4">No matching product found</h2>
+                        <p class="mb-4">Try a different category, market day or a broader search.</p>
+                        <a class="btn btn-market" asp-controller="Product" asp-action="Index">Clear all filters</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('[data-add-to-cart]').forEach(function (button) {
+            const card = button.closest('.product-card');
+            const detailsLink = card?.querySelector('a[href*="/Product/Details/"]');
+            const match = detailsLink?.href.match(/\/Product\/Details\/(\d+)/i);
+            const form = match ? document.getElementById(`add-product-${match[1]}`) : null;
+            if (form) {
+                button.type = 'submit';
+                button.setAttribute('form', form.id);
+            }
+        });
+    </script>
+}

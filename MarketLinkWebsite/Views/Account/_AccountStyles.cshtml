@@ -1,0 +1,270 @@
+<style>.account-page {
+        min-height: calc(100vh - 76px);
+        background:
+            radial-gradient(circle at 8% 12%, rgba(217, 235, 212, 0.72), transparent 32%),
+            radial-gradient(circle at 92% 88%, rgba(232, 240, 230, 0.9), transparent 35%),
+            #f4f7f4;
+    }
+
+    .account-card {
+        border: 1px solid #d4e0d2;
+        border-radius: 1.5rem;
+        box-shadow: 0 1.5rem 4rem rgba(44, 62, 45, 0.09);
+        overflow: hidden;
+    }
+
+    .account-visual {
+        background: linear-gradient(145deg, #2f5d2a 0%, #4f772d 58%, #7da45c 100%);
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .account-visual::after {
+        content: "";
+        position: absolute;
+        width: 22rem;
+        height: 22rem;
+        right: -9rem;
+        bottom: -10rem;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 50%;
+        box-shadow: 0 0 0 2.5rem rgba(255, 255, 255, 0.06), 0 0 0 5rem rgba(255, 255, 255, 0.045);
+        pointer-events: none;
+    }
+
+    .account-visual .eyebrow {
+        color: #d8ebd4;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+
+    .account-brand-mark {
+        width: 3rem;
+        height: 3rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.9rem;
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    .account-feature {
+        display: flex;
+        gap: 0.85rem;
+        align-items: flex-start;
+        color: rgba(255, 255, 255, 0.88);
+    }
+
+    .account-feature i {
+        color: #d8ebd4;
+        font-size: 1.1rem;
+        margin-top: 0.1rem;
+    }
+
+    .account-form .form-label {
+        color: #2c3e2d;
+        font-size: 0.9rem;
+        font-weight: 650;
+    }
+
+    .account-form .form-control,
+    .account-form .form-select {
+        border-color: #d4e0d2;
+        border-radius: 0.8rem;
+        min-height: 3rem;
+        color: #2c3e2d;
+    }
+
+    .account-form .form-control:focus,
+    .account-form .form-select:focus {
+        border-color: #4f772d;
+        box-shadow: 0 0 0 0.22rem rgba(79, 119, 45, 0.14);
+    }
+
+    .account-form .form-control::placeholder {
+        color: #98a59a;
+    }
+
+    .account-form .btn-brand {
+        background: #4f772d;
+        border-color: #4f772d;
+        color: #fff;
+        font-weight: 700;
+        border-radius: 0.85rem;
+        min-height: 3rem;
+    }
+
+    .account-form .btn-brand:hover,
+    .account-form .btn-brand:focus {
+        background: #386641;
+        border-color: #386641;
+        color: #fff;
+    }
+
+    .account-form .form-check-input:checked {
+        background-color: #4f772d;
+        border-color: #4f772d;
+    }
+
+    .account-form .form-check-input:focus {
+        border-color: #4f772d;
+        box-shadow: 0 0 0 0.2rem rgba(79, 119, 45, 0.15);
+    }
+
+    .account-divider {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: #8a988c;
+        font-size: 0.78rem;
+    }
+
+    .account-divider::before,
+    .account-divider::after {
+        content: "";
+        height: 1px;
+        flex: 1;
+        background: #e1e9df;
+    }
+
+    .account-note {
+        background: #f7faf6;
+        border: 1px solid #dce8d9;
+        color: #526653;
+        border-radius: 0.9rem;
+    }
+/* ---------- Dark theme ---------- */
+[data-theme="dark"] .account-page {
+    background: var(--ml-page) !important;
+    color: var(--ml-ink) !important;
+}
+
+[data-theme="dark"] .account-card,
+[data-theme="dark"] .account-page .card {
+    background: var(--ml-surface) !important;
+    border-color: var(--ml-border) !important;
+    color: var(--ml-ink) !important;
+    box-shadow: none;
+}
+
+[data-theme="dark"] .account-card h1,
+[data-theme="dark"] .account-card h2,
+[data-theme="dark"] .account-card h3,
+[data-theme="dark"] .account-page h1,
+[data-theme="dark"] .account-page h2 {
+    color: var(--ml-ink) !important;
+}
+
+[data-theme="dark"] .account-card p,
+[data-theme="dark"] .account-card small,
+[data-theme="dark"] .account-page p,
+[data-theme="dark"] .account-page small,
+[data-theme="dark"] .account-page .text-muted {
+    color: var(--ml-muted) !important;
+}
+
+[data-theme="dark"] .account-card .form-control,
+[data-theme="dark"] .account-card .form-select,
+[data-theme="dark"] .account-page .form-control,
+[data-theme="dark"] .account-page .form-select {
+    background: var(--ml-surface-2) !important;
+    border-color: var(--ml-border) !important;
+    color: var(--ml-ink) !important;
+}
+
+[data-theme="dark"] .account-card .form-control:focus,
+[data-theme="dark"] .account-page .form-control:focus {
+    background: var(--ml-surface-2) !important;
+    border-color: var(--ml-leaf) !important;
+    box-shadow: 0 0 0 0.2rem rgba(142, 211, 124, 0.2) !important;
+}
+
+[data-theme="dark"] .account-card .form-check-input {
+    background-color: var(--ml-surface-2) !important;
+    border-color: var(--ml-border) !important;
+}
+
+[data-theme="dark"] .account-card .form-check-input:checked {
+    background-color: var(--ml-leaf) !important;
+    border-color: var(--ml-leaf) !important;
+}
+
+[data-theme="dark"] .account-card hr,
+[data-theme="dark"] .account-page hr {
+    background: transparent !important;
+    border-top: 1px solid var(--ml-border) !important;
+    opacity: 1;
+}
+
+[data-theme="dark"] .account-note {
+    background: var(--ml-surface-2) !important;
+    border-color: var(--ml-border) !important;
+    color: var(--ml-ink-soft) !important;
+}
+
+[data-theme="dark"] .account-form .btn-brand {
+    background: #8ed37c;
+    border-color: #8ed37c;
+    color: #10200f;
+}
+
+[data-theme="dark"] .account-form .btn-brand:hover,
+[data-theme="dark"] .account-form .btn-brand:focus,
+[data-theme="dark"] .account-form .btn-brand:focus-visible {
+    background: #a3e093;
+    border-color: #a3e093;
+    color: #10200f;
+}
+
+[data-theme="dark"] .account-page a:not(.btn) {
+    color: var(--ml-accent-text);
+}
+
+[data-theme="dark"] .account-page a:not(.btn):hover {
+    color: var(--ml-ink);
+}
+
+[data-theme="dark"] .account-visual {
+    background: var(--ml-forest) !important;
+    color: var(--ml-ink) !important;
+}
+
+[data-theme="dark"] .account-visual h1,
+[data-theme="dark"] .account-visual h2,
+[data-theme="dark"] .account-visual p,
+[data-theme="dark"] .account-visual span,
+[data-theme="dark"] .account-visual li {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .account-visual .text-white-50,
+[data-theme="dark"] .account-visual .text-white-70 {
+    color: rgba(255, 255, 255, 0.74) !important;
+}
+
+/* The visual panel is a dark gradient in both themes, so its own light
+   eyebrow stays as it is. Only the card side needs a readable accent. */
+.account-card .eyebrow,
+.account-card .eyebrow.text-uppercase {
+    color: #2f4a1a;
+}
+
+[data-theme="dark"] .account-card .eyebrow,
+[data-theme="dark"] .account-card .eyebrow.text-uppercase {
+    color: #8ed37c;
+}
+
+.account-card a.d-inline-flex.align-items-center,
+.account-card a.fw-semibold {
+    color: #2f4a1a;
+}
+
+[data-theme="dark"] .account-card a.d-inline-flex.align-items-center,
+[data-theme="dark"] .account-card a.fw-semibold {
+    color: #8ed37c;
+}
+</style>

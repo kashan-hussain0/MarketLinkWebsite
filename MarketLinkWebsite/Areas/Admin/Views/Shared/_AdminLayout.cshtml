@@ -1,0 +1,219 @@
+@using MarketLinkWebsite.Data
+@using MarketLinkWebsite.Models.Entities
+@using MarketLinkWebsite.Models.Enums
+@using System.Security.Claims
+@inject ApplicationDbContext AdminDb
+@{
+    var requestPath = Context.Request.Path.Value ?? string.Empty;
+    var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var admin = string.IsNullOrWhiteSpace(adminId) ? null : await AdminDb.Users.AsNoTracking().FirstOrDefaultAsync(user => user.Id == adminId);
+    var sidebarCounts = await AdminDb.FarmerProfiles
+        .Where(profile => profile.Status == FarmerStatus.PendingApproval)
+        .Select(_ => 1)
+        .CountAsync();
+    var pendingFarmerCount = sidebarCounts;
+    var activeOrderCount = await AdminDb.Orders.CountAsync(order => order.Status == OrderStatus.Pending || order.Status == OrderStatus.Accepted || order.Status == OrderStatus.Preparing || order.Status == OrderStatus.ReadyForPickup);
+    var unreadNotificationCount = string.IsNullOrWhiteSpace(adminId) ? 0 : await AdminDb.Notifications.CountAsync(notification => notification.UserId == adminId && !notification.IsRead);
+    var adminName = admin is null ? "Administrator" : $"{admin.FirstName} {admin.LastName}".Trim();
+    var adminInitials = admin is null ? "A" : string.Concat(string.IsNullOrWhiteSpace(admin.FirstName) ? string.Empty : admin.FirstName[..1], string.IsNullOrWhiteSpace(admin.LastName) ? string.Empty : admin.LastName[..1]).ToUpperInvariant();
+    string Active(string token) => requestPath.Contains(token, StringComparison.OrdinalIgnoreCase) ? " active" : string.Empty;
+}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MarketLink Admin</title>
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true" rel="stylesheet" />
+    <link href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" asp-append-version="true" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" media="print" onload="this.media='all'" />
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" /></noscript>
+    <link rel="stylesheet" href="~/css/admin-dashboard.css" asp-append-version="true" />
+    <script>
+        (function () {
+            try {
+                var stored = localStorage.getItem('marketlink-theme');
+                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', stored || (prefersDark ? 'dark' : 'light'));
+            } catch (error) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+</head>
+<body class="admin-body">
+    <a class="admin-skip-link" href="#admin-main">Skip to main content</a>
+    <div class="admin-shell">
+        <aside class="admin-sidebar" aria-label="Admin navigation">
+            <div class="admin-sidebar-inner">
+                <div class="admin-brand-row">
+                    <a class="admin-brand" asp-area="Admin" asp-controller="Dashboard" asp-action="Index" aria-label="MarketLink admin home">
+                        <span class="admin-brand-mark"><img src="~/img/marketlink-logo.svg" alt="" width="38" height="38" /></span>
+                        <span class="admin-brand-copy">
+                            <span class="admin-brand-name">MarketLink</span>
+                            <span class="admin-brand-subtitle">Admin workspace</span>
+                        </span>
+                    </a>
+                </div>
+
+                <div class="admin-workspace-switcher dropdown">
+                    <button class="admin-workspace-switcher-btn" type="button" id="adminWorkspaceButton"
+                            data-bs-toggle="dropdown" aria-expanded="false" aria-controls="adminWorkspaceMenu">
+                        <span class="admin-workspace-icon" aria-hidden="true"><i class="bi bi-grid-1x2-fill"></i></span>
+                        <span class="admin-workspace-copy">
+                            <span class="admin-workspace-label">Workspace</span>
+                            <strong>Marketplace</strong>
+                        </span>
+                        <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                    </button>
+                    <div class="admin-workspace-menu dropdown-menu" id="adminWorkspaceMenu" role="menu" aria-labelledby="adminWorkspaceButton">
+                        <a class="admin-workspace-option is-current" role="menuitem" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                            <i class="bi bi-speedometer2" aria-hidden="true"></i>
+                            <span>Admin console<small>Farmers, markets and reports</small></span>
+                        </a>
+                        <a class="admin-workspace-option" role="menuitem" asp-area="" asp-controller="Home" asp-action="Index">
+                            <i class="bi bi-globe2" aria-hidden="true"></i>
+                            <span>Public website<small>Browse the marketplace</small></span>
+                        </a>
+                        <a class="admin-workspace-option" role="menuitem" asp-area="" asp-controller="Product" asp-action="Index">
+                            <i class="bi bi-basket2" aria-hidden="true"></i>
+                            <span>Product catalogue<small>Search and filter products</small></span>
+                        </a>
+                        <a class="admin-workspace-option" role="menuitem" asp-area="" asp-controller="Market" asp-action="Index">
+                            <i class="bi bi-map" aria-hidden="true"></i>
+                            <span>Market map<small>OpenStreetMap locations</small></span>
+                        </a>
+                    </div>
+                </div>
+
+                <nav class="admin-nav" aria-label="Primary">
+                    <p class="admin-nav-heading">Workspace</p>
+                    <a class="admin-nav-link@(Active("Dashboard"))" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                        <i class="bi bi-grid-1x2" aria-hidden="true"></i><span>Overview</span>
+                    </a>
+                    <a class="admin-nav-link@(Active("Farmer"))" asp-area="Admin" asp-controller="Farmer" asp-action="Index">
+                        <i class="bi bi-people" aria-hidden="true"></i><span>Farmers</span>@if (pendingFarmerCount > 0) { <span class="admin-nav-count">@pendingFarmerCount</span> }
+                    </a>
+                    <a class="admin-nav-link@(Active("Customer"))" asp-area="Admin" asp-controller="Customer" asp-action="Index">
+                        <i class="bi bi-person-heart" aria-hidden="true"></i><span>Customers</span>
+                    </a>
+                    <a class="admin-nav-link@(Active("Market"))" asp-area="Admin" asp-controller="Market" asp-action="Index">
+                        <i class="bi bi-shop-window" aria-hidden="true"></i><span>Markets</span>
+                    </a>
+                    <a class="admin-nav-link@(Active("Category"))" asp-area="Admin" asp-controller="Category" asp-action="Index">
+                        <i class="bi bi-tags" aria-hidden="true"></i><span>Categories</span>
+                    </a>
+
+                    <p class="admin-nav-heading admin-nav-heading-spaced">Operations</p>
+                    <a class="admin-nav-link@(Active("Order"))" asp-area="Admin" asp-controller="Order" asp-action="Index">
+                        <i class="bi bi-bag-check" aria-hidden="true"></i><span>Orders</span>@if (activeOrderCount > 0) { <span class="admin-nav-count admin-nav-count-warm">@activeOrderCount</span> }
+                    </a>
+                    <a class="admin-nav-link@(Active("Moderation"))" asp-area="Admin" asp-controller="Moderation" asp-action="Index">
+                        <i class="bi bi-shield-check" aria-hidden="true"></i><span>Moderation</span>
+                    </a>
+                    <a class="admin-nav-link@(Active("Report"))" asp-area="Admin" asp-controller="Report" asp-action="Index">
+                        <i class="bi bi-bar-chart-line" aria-hidden="true"></i><span>Reports</span>
+                    </a>
+                    <a class="admin-nav-link@(Active("Notification"))" asp-area="Admin" asp-controller="Notification" asp-action="Index">
+                        <i class="bi bi-bell" aria-hidden="true"></i><span>Notifications</span>@if (unreadNotificationCount > 0) { <span class="admin-nav-count admin-nav-count-alert">@unreadNotificationCount</span> }
+                    </a>
+                </nav>
+
+                <div class="admin-sidebar-bottom">
+                    <a class="admin-nav-link admin-nav-link-muted@(Active("Setting"))" asp-area="Admin" asp-controller="Setting" asp-action="Index">
+                        <i class="bi bi-gear" aria-hidden="true"></i><span>Settings</span>
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <div class="admin-content-shell">
+            <header class="admin-topbar">
+                <div class="admin-topbar-left">
+                    <div class="admin-breadcrumb" aria-label="Breadcrumb">
+                        <span>Admin</span><i class="bi bi-chevron-right" aria-hidden="true"></i><strong>@ViewData["Title"]</strong>
+                    </div>
+                </div>
+                <div class="admin-topbar-actions">
+                    <form class="admin-top-search" asp-area="Admin" asp-controller="Customer" asp-action="Index" method="get" role="search">
+                        <label class="visually-hidden" for="admin-search">Search customers</label>
+                        <i class="bi bi-search" aria-hidden="true"></i>
+                        <input id="admin-search" name="search" type="search" placeholder="Search customers" />
+                        <kbd>Ctrl K</kbd>
+                    </form>
+                    <a class="admin-icon-button" asp-area="Admin" asp-controller="Notification" asp-action="Index" aria-label="View notifications">
+                        <i class="bi bi-bell" aria-hidden="true"></i>@if (unreadNotificationCount > 0) { <span class="admin-notification-dot" aria-hidden="true"></span> }
+                    </a>
+                    @await Html.PartialAsync("_ThemeToggle")
+                    <div class="dropdown">
+                        <button class="admin-profile-chip dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account menu for @adminName">
+                            <span class="admin-avatar admin-avatar-sage">@adminInitials</span>
+                            <span class="admin-profile-copy"><strong>@adminName</strong><small>Administrator</small></span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2 admin-profile-menu">
+                            <li class="admin-profile-menu-header">
+                                <strong>@adminName</strong>
+                                <span>@(admin?.Email ?? "")</span>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-speedometer2"></i>Admin overview</a></li>
+                            <li><a class="dropdown-item" asp-area="Admin" asp-controller="Notification" asp-action="Index"><i class="bi bi-bell"></i>Notifications</a></li>
+                            <li><a class="dropdown-item" asp-area="Admin" asp-controller="Report" asp-action="Index"><i class="bi bi-bar-chart-line"></i>Reports</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="Index">
+                                    <i class="bi bi-globe2"></i>Go to website
+                                </a>
+                            </li>
+                            <li>
+                                <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="admin-logout-form">
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="bi bi-box-arrow-right"></i>Log out
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <main id="admin-main" class="admin-main">
+                @if (TempData["Success"] is string successMessage)
+                {
+                    <div class="admin-alert admin-alert-success" role="status">
+                        <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                        <span>@successMessage</span>
+                        <span class="ms-auto admin-alert-meta">Updated</span>
+                    </div>
+                }
+                @if (TempData["Error"] is string errorMessage)
+                {
+                    <div class="admin-alert admin-alert-danger" role="alert">
+                        <i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i>
+                        <span>@errorMessage</span>
+                        <span class="ms-auto admin-alert-meta">Updated</span>
+                    </div>
+                }
+                @RenderBody()
+            </main>
+
+            <footer class="admin-footer">
+                <span>© @DateTime.UtcNow.Year MarketLink</span>
+                <span class="admin-footer-divider" aria-hidden="true">•</span>
+                <span>Admin workspace</span>
+                <span class="ms-auto">System status <span class="status-dot status-dot-success"></span> All systems operational</span>
+            </footer>
+        </div>
+    </div>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/lib/leaflet/leaflet.js"></script>
+    <script src="~/js/market-map.js" asp-append-version="true"></script>
+    <script src="~/js/location-picker.js" asp-append-version="true"></script>
+</body>
+</html>

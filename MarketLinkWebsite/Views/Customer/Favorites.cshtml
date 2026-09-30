@@ -1,0 +1,132 @@
+@model MarketLinkWebsite.Controllers.CustomerFavoritesViewModel
+@{
+    ViewData["Title"] = "Saved favorites";
+}
+@await Html.PartialAsync("_CustomerNav")
+
+<div class="container-xl pb-5">
+    @await Html.PartialAsync("_CustomerFlash")
+
+    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+        <div>
+            <div class="eyebrow text-uppercase fw-bold mb-1" style="color: var(--ml-accent-text); letter-spacing: .12em; font-size: .72rem;">Your short list</div>
+            <h1 class="display-6 fw-bold text-dark mb-2">Saved favorites</h1>
+            <p class="text-muted mb-0">Keep the growers and goods you love one tap away.</p>
+        </div>
+        <a asp-controller="Product" asp-action="Index" class="btn btn-brand rounded-pill px-4" style="background: var(--ml-leaf-solid); border-color: var(--ml-accent-text);">Find more local goods <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mb-4" role="navigation" aria-label="Favorite sections">
+        <a class="btn btn-sm rounded-pill px-3 fw-semibold" style="background: var(--ml-leaf-solid); border-color: var(--ml-accent-text); color: #fff;" href="#saved-items"><i class="bi bi-basket2 me-1" aria-hidden="true"></i>Saved items (@Model.Products.Count)</a>
+        <a class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold" href="#saved-farms"><i class="bi bi-shop me-1" aria-hidden="true"></i>Saved farms (@Model.Farmers.Count)</a>
+        <a class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold" href="#saved-markets"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i>Saved markets (@Model.Markets.Count)</a>
+    </div>
+
+    <section id="saved-items" class="mb-5" aria-labelledby="saved-items-heading">
+        <div class="d-flex align-items-center justify-content-between mb-3"><h2 id="saved-items-heading" class="h4 fw-bold text-dark mb-0">Saved items</h2><span class="small text-muted">@Model.Products.Count product@(Model.Products.Count == 1 ? string.Empty : "s")</span></div>
+        <div class="row g-4">
+            @foreach (var product in Model.Products)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <article class="card h-100 border-0 shadow-sm rounded-5 bg-white overflow-hidden">
+                        <div class="position-relative">
+                            @if (!string.IsNullOrWhiteSpace(product.ImageUrl))
+                            {
+                                <img src="@product.ImageUrl" class="card-img-top" style="height: 190px; object-fit: cover;" alt="@product.Name" />
+                            }
+                            else
+                            {
+                                <div class="d-flex align-items-center justify-content-center bg-light text-muted" style="height: 190px;"><i class="bi bi-image fs-1" aria-hidden="true"></i></div>
+                            }
+                            <span class="badge position-absolute top-0 start-0 m-3 rounded-pill" style="background: var(--ml-chip); color: var(--ml-accent-text);">@product.Category</span>
+                            <form asp-controller="Customer" asp-action="RemoveFavorite" method="post" class="position-absolute top-0 end-0 m-3">
+                                <input type="hidden" name="id" value="@product.Id" />
+                                <input type="hidden" name="kind" value="product" />
+                                <button type="submit" class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center shadow-sm" style="width: 2.35rem; height: 2.35rem;" aria-label="Remove @product.Name from favorites"><i class="bi bi-heart-fill" style="color: var(--ml-accent-coral);" aria-hidden="true"></i></button>
+                            </form>
+                        </div>
+                        <div class="card-body p-4 d-flex flex-column">
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-2"><span class="small text-muted"><i class="bi bi-geo-alt me-1" style="color: var(--ml-accent-text);" aria-hidden="true"></i>@product.FarmName</span><span class="small text-muted"><i class="bi bi-star-fill me-1" style="color: var(--ml-accent-amber);" aria-hidden="true"></i>@product.Rating.ToString("0.0") (@product.ReviewCount)</span></div>
+                            <h3 class="h5 fw-bold text-dark">@product.Name</h3>
+                            <p class="small text-muted mb-3"><i class="bi bi-check2-circle me-1" style="color: var(--ml-accent-text);" aria-hidden="true"></i>@product.Availability</p>
+                            <div class="d-flex align-items-center justify-content-between gap-2 mt-auto pt-3 border-top"><div><span class="h5 fw-bold mb-0" style="color: var(--ml-accent-text);">@product.Price</span><span class="small text-muted"> @product.Unit</span></div><a asp-controller="Product" asp-action="Details" asp-route-id="@product.Id" class="btn btn-sm btn-outline-success rounded-pill fw-semibold" style="border-color: var(--ml-accent-text); color: var(--ml-accent-text);">View item</a></div>
+                        </div>
+                    </article>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section id="saved-farms" aria-labelledby="saved-farms-heading">
+        <div class="d-flex align-items-center justify-content-between mb-3"><h2 id="saved-farms-heading" class="h4 fw-bold text-dark mb-0">Saved farms</h2><span class="small text-muted">@Model.Farmers.Count farm@(Model.Farmers.Count == 1 ? string.Empty : "s")</span></div>
+        <div class="row g-4">
+            @foreach (var farmer in Model.Farmers)
+            {
+                <div class="col-md-6">
+                    <article class="card h-100 border-0 shadow-sm rounded-5 bg-white overflow-hidden">
+                        <div class="d-flex align-items-center gap-3 p-3 p-md-4">
+                            @if (!string.IsNullOrWhiteSpace(farmer.ImageUrl))
+                            {
+                                <img src="@farmer.ImageUrl" class="rounded-4 flex-shrink-0" style="width: 6rem; height: 6rem; object-fit: cover;" alt="@farmer.Name farm" />
+                            }
+                            else
+                            {
+                                <span class="d-inline-flex align-items-center justify-content-center rounded-4 bg-light text-muted flex-shrink-0" style="width: 6rem; height: 6rem;"><i class="bi bi-shop fs-3" aria-hidden="true"></i></span>
+                            }
+                            <div class="flex-grow-1 min-w-0"><div class="d-flex align-items-center gap-2 mb-1"><h3 class="h5 fw-bold text-dark mb-0 text-truncate">@farmer.Name</h3>@if (farmer.IsFeatured){<span class="badge rounded-pill soft-warning" title="Featured farm"><i class="bi bi-star-fill" aria-hidden="true"></i><span class="visually-hidden">Featured</span></span>}</div><div class="small text-muted mb-2"><i class="bi bi-geo-alt me-1" style="color: var(--ml-accent-text);" aria-hidden="true"></i>@farmer.Location</div><div class="small text-dark">@farmer.Specialty</div><div class="small text-muted mt-1">@farmer.FollowerCount</div></div>
+                            <form asp-controller="Customer" asp-action="RemoveFavorite" method="post" class="flex-shrink-0">
+                                <input type="hidden" name="id" value="@farmer.Id" />
+                                <input type="hidden" name="kind" value="farmer" />
+                                <button type="submit" class="btn btn-sm btn-link text-muted" aria-label="Unfollow @farmer.Name"><i class="bi bi-heart-fill" style="color: var(--ml-accent-coral);" aria-hidden="true"></i></button>
+                            </form>
+                        </div>
+                        <div class="px-3 px-md-4 pb-3 pb-md-4"><a asp-controller="Market" asp-action="Index" class="btn btn-sm btn-outline-success rounded-pill fw-semibold" style="border-color: var(--ml-accent-text); color: var(--ml-accent-text);">Visit market stall <i class="bi bi-arrow-up-right ms-1" aria-hidden="true"></i></a></div>
+                    </article>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section id="saved-markets" aria-labelledby="saved-markets-heading">
+        <div class="d-flex align-items-center justify-content-between mb-3"><h2 id="saved-markets-heading" class="h4 fw-bold text-dark mb-0">Saved markets</h2><span class="small text-muted">@Model.Markets.Count market@(Model.Markets.Count == 1 ? string.Empty : "s")</span></div>
+        <div class="row g-4">
+            @foreach (var market in Model.Markets)
+            {
+                <div class="col-md-6">
+                    <article class="card h-100 border-0 shadow-sm rounded-5 bg-white overflow-hidden">
+                        <div class="d-flex align-items-center gap-3 p-3 p-md-4">
+                            @if (!string.IsNullOrWhiteSpace(market.ImageUrl))
+                            {
+                                <img src="@market.ImageUrl" class="rounded-4 flex-shrink-0" style="width: 6rem; height: 6rem; object-fit: cover;" alt="@market.Name market" />
+                            }
+                            else
+                            {
+                                <span class="d-inline-flex align-items-center justify-content-center rounded-4 bg-light text-muted flex-shrink-0" style="width: 6rem; height: 6rem;"><i class="bi bi-shop fs-3" aria-hidden="true"></i></span>
+                            }
+                            <div class="flex-grow-1 min-w-0">
+                                <h3 class="h5 fw-bold text-dark mb-0 text-truncate">@market.Name</h3>
+                                <div class="small text-muted mb-2"><i class="bi bi-geo-alt me-1" style="color: var(--ml-accent-text);" aria-hidden="true"></i>@market.Address, @market.City</div>
+                                <div class="small text-dark"><i class="bi bi-clock me-1" style="color: var(--ml-accent-text);" aria-hidden="true"></i>@market.OpenTime - @market.CloseTime &middot; @market.OperatingDays</div>
+                                <div class="small text-muted mt-1"><i class="bi bi-people me-1" style="color: var(--ml-accent-text);" aria-hidden="true"></i>@market.FarmerCount farmers &middot; @market.ProductCount products</div>
+                            </div>
+                            <form asp-controller="Customer" asp-action="RemoveFavorite" method="post" class="flex-shrink-0">
+                                <input type="hidden" name="id" value="@market.Id" />
+                                <input type="hidden" name="kind" value="market" />
+                                <button type="submit" class="btn btn-sm btn-link text-muted" aria-label="Remove @market.Name from saved markets"><i class="bi bi-heart-fill" style="color: var(--ml-accent-coral);" aria-hidden="true"></i></button>
+                            </form>
+                        </div>
+                        <div class="px-3 px-md-4 pb-3 pb-md-4"><a asp-controller="Market" asp-action="Details" asp-route-id="@market.Id" class="btn btn-sm btn-outline-success rounded-pill fw-semibold" style="border-color: var(--ml-accent-text); color: var(--ml-accent-text);">Visit market <i class="bi bi-arrow-up-right ms-1" aria-hidden="true"></i></a></div>
+                    </article>
+                </div>
+            }
+        </div>
+    </section>
+
+    <div class="account-note rounded-4 p-3 mt-5 d-flex gap-2 align-items-start small"><i class="bi bi-heart-fill mt-1" style="color: var(--ml-accent-coral);" aria-hidden="true"></i><span>Your saved items, farms and markets are stored in your MarketLink account and stay scoped to you.</span></div>
+</div>
+
+<style>
+    .min-w-0 {
+        min-width: 0;
+    }
+</style>

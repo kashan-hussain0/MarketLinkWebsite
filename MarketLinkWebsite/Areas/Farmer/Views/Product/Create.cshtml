@@ -1,0 +1,15 @@
+﻿@model ProductFormViewModel
+@{
+    ViewData["Title"] = "Add product";
+}
+
+<div class="farmer-page-header">
+    <div>
+        <a class="farmer-back-link" asp-area="Farmer" asp-controller="Product" asp-action="Index"><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to products</a>
+        <div class="farmer-page-kicker mt-3">NEW LISTING</div>
+        <h1 class="farmer-page-title">Add a product</h1>
+        <p class="farmer-page-subtitle">Share what you’re growing and help your community shop with confidence.</p>
+    </div>
+</div>
+
+@await Html.PartialAsync("_ProductForm", Model)

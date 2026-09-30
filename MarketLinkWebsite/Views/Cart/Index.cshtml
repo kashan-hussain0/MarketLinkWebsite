@@ -1,0 +1,147 @@
+@model CartViewModel
+@{
+    ViewData["Title"] = "Your pre-order basket";
+    var successMessage = TempData["Success"] as string;
+    var errorMessage = TempData["Error"] as string;
+}
+
+<section class="page-hero">
+    <div class="container position-relative" style="z-index: 2;">
+        <nav class="page-breadcrumb" aria-label="Breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Home</a><i class="bi bi-chevron-right"></i><span>Pre-order basket</span>
+        </nav>
+        <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3">
+            <div>
+                <span class="eyebrow">Reserved for pickup</span>
+                <h1>Your pre-order basket</h1>
+                <p>Review your quantities, choose a pickup window and confirm your reservation. Payment is collected at the stall.</p>
+            </div>
+            <a class="btn btn-outline-market" asp-controller="Product" asp-action="Index"><i class="bi bi-plus-lg"></i>Add more product</a>
+        </div>
+    </div>
+</section>
+
+<section class="section-block-sm">
+    <div class="container">
+        @if (!string.IsNullOrWhiteSpace(successMessage))
+        {
+            <div class="alert alert-success d-flex gap-2 align-items-center" role="status"><i class="bi bi-check-circle-fill"></i>@successMessage</div>
+        }
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-danger d-flex gap-2 align-items-center" role="alert"><i class="bi bi-exclamation-circle-fill"></i>@errorMessage</div>
+        }
+
+        @if (Model.Items.Count == 0)
+        {
+            <div class="empty-state">
+                <span class="empty-state-icon"><i class="bi bi-basket2"></i></span>
+                <h2 class="h4">Your basket is waiting for something fresh</h2>
+                <p class="mb-4">Browse this week's catalogue and reserve product from a local grower.</p>
+                <a class="btn btn-market" asp-controller="Product" asp-action="Index">Explore the harvest</a>
+            </div>
+        }
+        else
+        {
+            <div class="cart-layout">
+                <div class="cart-panel">
+                    <div class="cart-panel-header d-flex align-items-center justify-content-between gap-3">
+                        <h2><i class="bi bi-basket2 me-2 text-success"></i>@Model.ItemCount items reserved</h2>
+                        <span class="badge rounded-pill bg-success-subtle text-success">Live stock</span>
+                    </div>
+
+                    @foreach (var group in Model.Items.GroupBy(item => new { item.FarmName, item.MarketName }))
+                    {
+                        <div class="cart-group">
+                            <div class="cart-group-title">
+                                <span><i class="bi bi-shop me-2"></i>@group.Key.FarmName</span>
+                                <span>@group.Key.MarketName</span>
+                            </div>
+                            @foreach (var item in group)
+                            {
+                                var maxQuantity = Math.Max(1, item.QuantityAvailable);
+                                var unavailable = !item.IsAvailable || item.QuantityAvailable < 1;
+                                <div class="cart-item" data-cart-item data-product-id="@item.ProductId" data-unit-price="@item.UnitPrice.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)">
+                                    <div class="cart-item-image"><img src="@item.ImageUrl" alt="@item.ProductName" /></div>
+                                    <div>
+                                        <h3>@item.ProductName</h3>
+                                        <p>$@item.UnitPrice.ToString("0.00") / @item.Unit · @item.MarketName</p>
+                                        @if (unavailable)
+                                        {
+                                            <span class="badge rounded-pill bg-danger-subtle text-danger">Currently unavailable</span>
+                                        }
+                                        else
+                                        {
+                                            <form asp-controller="Cart" asp-action="Update" method="post" class="d-flex align-items-center gap-2 mt-2">
+                                                <input type="hidden" name="productId" value="@item.ProductId" />
+                                                <div class="quantity-control" data-quantity-control style="grid-template-columns:30px 38px 30px;" data-quantity-auto-submit="true">
+                                                    <button type="button" data-quantity-decrease aria-label="Decrease @item.ProductName quantity">−</button>
+                                                    <input type="number" name="quantity" value="@item.Quantity" min="1" max="@maxQuantity" aria-label="@item.ProductName quantity" />
+                                                    <button type="button" data-quantity-increase aria-label="Increase @item.ProductName quantity">+</button>
+                                                </div>
+                                                <button class="btn btn-link btn-sm text-decoration-none p-0" type="submit" data-quantity-commit>Update</button>
+                                            </form>
+                                        }
+                                        <form asp-controller="Cart" asp-action="Remove" method="post" class="mt-2">
+                                            <input type="hidden" name="productId" value="@item.ProductId" />
+                                            <button class="btn btn-link btn-sm text-danger text-decoration-none p-0" type="submit">Remove</button>
+                                        </form>
+                                    </div>
+                                    <div class="cart-item-price" data-cart-line-total>$@item.LineTotal.ToString("0.00")</div>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <div class="p-3 border-top cart-summary-bar d-flex flex-wrap justify-content-between gap-2">
+                        <a class="btn btn-link text-decoration-none px-0" asp-controller="Product" asp-action="Index"><i class="bi bi-arrow-left me-1"></i>Continue shopping</a>
+                        <form asp-controller="Cart" asp-action="Clear" method="post">
+                            <button class="btn btn-link text-danger text-decoration-none" type="submit">Clear basket</button>
+                        </form>
+                    </div>
+                </div>
+
+                <aside class="summary-panel">
+                    <div class="summary-panel-header"><h2>Order summary</h2></div>
+                    <div class="summary-body">
+                        <div class="summary-row"><span>Items subtotal</span><strong data-cart-subtotal>$@Model.GrandTotal.ToString("0.00")</strong></div>
+                        <div class="summary-row"><span>MarketLink fee</span><strong class="text-success">$0.00</strong></div>
+                        <div class="summary-row"><span>Pickup</span><strong>Free</strong></div>
+                        <div class="summary-total"><span>Pay at pickup</span><strong data-cart-total>$@Model.GrandTotal.ToString("0.00")</strong></div>
+
+                        @if (User.IsInRole("Customer"))
+                        {
+                            <a class="btn btn-market btn-lg w-100 mt-4" asp-controller="Cart" asp-action="Checkout">Choose pickup details <i class="bi bi-arrow-right"></i></a>
+                        }
+                        else if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <div class="alert alert-warning border-0 rounded-3 mt-4 mb-0 text-start" role="status">
+                                <i class="bi bi-info-circle-fill me-1" aria-hidden="true"></i>
+                                <strong>Customer account required to place an order.</strong>
+                                <span class="d-block small mt-1">
+                                    You are signed in as @(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value.ToLowerInvariant() ?? "a staff") account.
+                                    Browse the market with this account, and use a customer account to reserve items.
+                                </span>
+                            </div>
+                            <a class="btn btn-outline-success btn-lg w-100 mt-3" asp-controller="Account" asp-action="Logout">
+                                Log out and use a customer account
+                            </a>
+                        }
+                        else
+                        {
+                            <a class="btn btn-market btn-lg w-100 mt-4" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@(Url.Action("Checkout", "Cart") as string)">
+                                Log in to place this order <i class="bi bi-arrow-right"></i>
+                            </a>
+                            <p class="text-center text-muted small mt-2 mb-0">
+                                You need a MarketLink account before you can reserve items.
+                                <a asp-controller="Account" asp-action="Register">Create one free</a>.
+                            </p>
+                        }
+
+                        <div class="pickup-note"><i class="bi bi-info-circle-fill"></i><span>No payment is taken online. Bring the exact amount if possible; all farms accept cash at their stall.</span></div>
+                    </div>
+                </aside>
+            </div>
+        }
+    </div>
+</section>

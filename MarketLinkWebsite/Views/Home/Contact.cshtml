@@ -1,0 +1,162 @@
+@model ContactFormViewModel
+@{
+    ViewData["Title"] = "Contact MarketLink";
+    var platformName = ViewData["PlatformName"] as string ?? "MarketLink";
+    var supportEmail = ViewData["SupportEmail"] as string ?? string.Empty;
+    var supportPhone = ViewData["SupportPhone"] as string ?? string.Empty;
+    var supportAddress = ViewData["SupportAddress"] as string ?? string.Empty;
+    var mapProvider = ViewData["MapProvider"] as string ?? "OpenStreetMap";
+    var mapUrl = ViewData["MapUrl"] as string;    var pinLat = ViewData["MapLatitude"] as double?;
+    var pinLon = ViewData["MapLongitude"] as double?;
+    var contactPin = pinLat.HasValue && pinLon.HasValue
+        ? new MarketMapMarker
+        {
+            Kind = "market",
+            Lat = pinLat.Value,
+            Lon = pinLon.Value,
+            Title = @platformName,
+            Subtitle = ViewData["SupportAddress"] as string,
+            Meta = new List<MarketMapFact>
+            {
+                new() { Label = "Email", Value = ViewData["SupportEmail"] as string ?? string.Empty },
+                new() { Label = "Phone", Value = ViewData["SupportPhone"] as string ?? string.Empty }
+            }
+        }
+        : null;
+    var directionsUrl = ViewData["DirectionsUrl"] as string;
+}
+
+<section class="content-hero">
+    <div class="container">
+        <nav class="page-breadcrumb" aria-label="Breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Home</a><i class="bi bi-chevron-right"></i><span>Contact</span>
+        </nav>
+        <div class="row align-items-end g-4">
+            <div class="col-lg-8">
+                <span class="eyebrow">We are here to help</span>
+                <h1 class="display-5 fw-bold mb-3">Questions about a market, order or farmer?</h1>
+                <p class="lead text-muted mb-0">Send the team a note and we will point you in the right direction.</p>
+            </div>
+            <div class="col-lg-4">
+                @if (!string.IsNullOrWhiteSpace(supportEmail))
+                {
+                    <a class="btn btn-market btn-lg w-100" href="mailto:@supportEmail"><i class="bi bi-envelope me-2"></i>Email the team</a>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block-sm">
+    <div class="container">
+        @if (TempData["SuccessMessage"] is string success)
+        {
+            <div class="alert alert-success d-flex gap-2 align-items-center" role="status"><i class="bi bi-check-circle-fill"></i>@success</div>
+        }
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <article class="contact-card h-100">
+                    <i class="bi bi-geo-alt fs-3"></i>
+                    <h2 class="h5 mt-3">Where the team is</h2>
+                    <p class="small text-muted">@(string.IsNullOrWhiteSpace(supportAddress) ? "Central Square, Northbridge" : supportAddress)</p>
+                    @if (directionsUrl is not null)
+                    {
+                        <a class="small fw-semibold" href="@directionsUrl" target="_blank" rel="noopener"><i class="bi bi-sign-turn-right me-1"></i>Get directions</a>
+                    }
+                </article>
+            </div>
+            <div class="col-md-4">
+                <article class="contact-card h-100">
+                    <i class="bi bi-envelope fs-3"></i>
+                    <h2 class="h5 mt-3">Email support</h2>
+                    <p class="small text-muted">Account, order and market questions. We reply within one working day.</p>
+                    @if (!string.IsNullOrWhiteSpace(supportEmail))
+                    {
+                        <a href="mailto:@supportEmail">@supportEmail</a>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(supportPhone))
+                    {
+                        <p class="small text-muted mt-2 mb-0"><i class="bi bi-telephone me-1"></i>@supportPhone</p>
+                    }
+                </article>
+            </div>
+            <div class="col-md-4">
+                <article class="contact-card h-100">
+                    <i class="bi bi-clock-history fs-3"></i>
+                    <h2 class="h5 mt-3">Response time</h2>
+                    <p class="small text-muted">Urgent pickup questions should be directed to the farmer through their stall on the order page.</p>
+                    <span class="small text-success fw-bold">Monday - Saturday</span>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="pb-5">
+    <div class="container">
+        <div class="row g-4 align-items-stretch">
+            <div class="col-lg-7">
+                <div class="content-card h-100 p-4 p-lg-5">
+                    <span class="eyebrow">Send a message</span>
+                    <h2 class="h3 mb-4">How can we help?</h2>
+                    <form asp-controller="Home" asp-action="Contact" method="post" data-guard>
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label" asp-for="Name" type="text" required minlength="2" maxlength="80" pattern="[A-Za-z][A-Za-z'\-.]*" title="Start with a letter."></label>
+                                <input class="form-control" asp-for="Name" placeholder="Your name" autocomplete="name" />
+                                <span asp-validation-for="Name" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" asp-for="Email"></label>
+                                <input class="form-control" asp-for="Email" type="email" placeholder="you@example.com" autocomplete="email" />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="Topic"></label>
+                            <select class="form-select" asp-for="Topic">
+                                <option>General question</option>
+                                <option>Customer order</option>
+                                <option>Farmer support</option>
+                                <option>Market information</option>
+                                <option>Report a listing</option>
+                            </select>
+                            <span asp-validation-for="Topic" class="text-danger small"></span>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label" asp-for="Message" required minlength="15" maxlength="1000" rows="5"></label>
+                            <textarea class="form-control" asp-for="Message" rows="6" placeholder="Tell us what you need help with"></textarea>
+                            <span asp-validation-for="Message" class="text-danger small"></span>
+                        </div>
+                        <button class="btn btn-market px-4" type="submit">Send message <i class="bi bi-send ms-1"></i></button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="content-card h-100 p-0 overflow-hidden">
+@if (contactPin is not null)
+{
+    @await Html.PartialAsync("_MarketMap", new MarketMapViewModel
+    {
+        Title = "Find " + @platformName,
+        Subtitle = "Our support desk. Tap the pin for directions.",
+        HeightClass = "market-map-canvas-mid",
+        Markers = new List<MarketMapMarker> { contactPin }
+    })
+}
+else
+{
+    <div class="empty-state justify-content-center">
+        <span class="empty-state-icon"><i class="bi bi-map"></i></span>
+        <h2 class="h5">Map coordinates are not published</h2>
+        <p class="mb-0">Contact the support team for directions.</p>
+    </div>
+}
+<small class="text-muted d-block p-3">Map data provided by @mapProvider</small>
+</div></div>
+        </div>
+    </div>
+</section>

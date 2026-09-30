@@ -1,0 +1,81 @@
+@{
+    ViewData["Title"] = "Market assistant";
+    var mode = ViewData["AssistantMode"] as string ?? "Local catalogue";
+}
+<section class="page-hero">
+    <div class="container position-relative" style="z-index: 2;">
+        <nav class="page-breadcrumb" aria-label="Breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Home</a><i class="bi bi-chevron-right"></i><span>Market assistant</span>
+        </nav>
+        <span class="eyebrow">Ask MarketLink</span>
+        <h1>Your market guide</h1>
+        <p>Ask about opening times, pickup windows, farm availability or what is in season this week. Answers come straight from the live MarketLink catalogue.</p>
+    </div>
+</section>
+
+<section class="section-block-sm">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="content-card p-4">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded-3" style="width:2.8rem;height:2.8rem;background:var(--ml-sage);color:var(--ml-leaf);"><i class="bi bi-stars"></i></span>
+                        <div>
+                            <div class="eyebrow text-uppercase fw-bold" style="color:var(--ml-accent-text);letter-spacing:.12em;font-size:.72rem;">Answer source</div>
+                            <h2 class="h4 fw-bold text-dark mb-0">@mode</h2>
+                        </div>
+                    </div>
+
+                    <form id="assistantForm" asp-controller="Assistant" asp-action="Ask" method="post">
+                        @Html.AntiForgeryToken()
+                        <label class="form-label" for="assistantQuestion">Your question</label>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                            <input id="assistantQuestion" name="question" class="form-control border-start-0" type="text" placeholder="What is open this weekend?" autocomplete="off" required />
+                            <button class="btn btn-market" type="submit" id="assistantSend">Ask</button>
+                        </div>
+                    </form>
+
+                    <div class="d-flex flex-wrap gap-2 mb-4">
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill" type="button" data-assistant-prompt="What is open this weekend?">Opening times</button>
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill" type="button" data-assistant-prompt="What are the pickup windows?">Pickup windows</button>
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill" type="button" data-assistant-prompt="Who is available on Saturday?">Farmer availability</button>
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill" type="button" data-assistant-prompt="Do you have organic apples?">Find produce</button>
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill" type="button" data-assistant-prompt="How does payment work?">Payment</button>
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill" type="button" data-assistant-prompt="How do I get directions to a market?">Directions</button>
+                    </div>
+
+                    <div class="assistant-messages" id="assistantMessages" style="min-height:8rem;">
+                        <div class="assistant-bubble">Ask a question and the assistant will answer from this week's real catalogue.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="content-card p-4 h-100">
+                    <h2 class="h5 fw-bold text-dark mb-3"><i class="bi bi-lightbulb me-2 text-success"></i>Things you can ask</h2>
+                    <ul class="list-unstyled small text-muted d-grid gap-2 mb-0">
+                        <li><i class="bi bi-check2-circle me-2 text-success"></i>Which markets open on a given day</li>
+                        <li><i class="bi bi-check2-circle me-2 text-success"></i>Where a market is and how to get there</li>
+                        <li><i class="bi bi-check2-circle me-2 text-success"></i>Which farms trade on which day</li>
+                        <li><i class="bi bi-check2-circle me-2 text-success"></i>Farmer pickup windows and order cut-offs</li>
+                        <li><i class="bi bi-check2-circle me-2 text-success"></i>What produce is available and at what price</li>
+                        <li><i class="bi bi-check2-circle me-2 text-success"></i>How payment works at pickup</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('[data-assistant-prompt]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                const field = document.getElementById('assistantQuestion');
+                if (field) field.value = button.getAttribute('data-assistant-prompt');
+                document.getElementById('assistantForm')?.requestSubmit();
+            });
+        });
+    </script>
+}

@@ -1,0 +1,247 @@
+@model CheckoutFormViewModel
+@{
+    ViewData["Title"] = "Choose pickup details";
+    var markets = ViewData["Markets"] as IReadOnlyList<MarketCardViewModel> ?? Array.Empty<MarketCardViewModel>();
+    var pickupSlots = ViewData["PickupSlots"] as IReadOnlyList<string> ?? Array.Empty<string>();
+    var today = DateTime.Today.ToString("yyyy-MM-dd");
+    var selectedFarms = Model.MarketOptions.FirstOrDefault(option => option.Id == Model.MarketId)?.FarmNames ?? new List<string>();
+}
+
+<section class="page-hero">
+    <div class="container position-relative" style="z-index: 2;">
+        <nav class="page-breadcrumb" aria-label="Breadcrumb">
+            <a asp-controller="Cart" asp-action="Index">Basket</a><i class="bi bi-chevron-right"></i><span>Pickup details</span>
+        </nav>
+        <span class="eyebrow">Final step</span>
+        <h1>Choose your pickup details</h1>
+        <p>Select where and when you will collect your reservation. The selected slot will be shown to the farmer for confirmation.</p>
+    </div>
+</section>
+
+<section class="section-block-sm">
+    <div class="container">
+        <div class="row g-4 justify-content-center">
+            <div class="col-lg-8">
+                <form class="checkout-card" asp-controller="Cart" asp-action="Checkout" method="post">
+                    <div class="checkout-card-header">
+                        <h2 class="h4 mb-1">Pickup reservation</h2>
+                        <p class="small text-muted mb-0">All times are local to the selected market.</p>
+                    </div>
+                    <div class="checkout-card-body">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        @if (Model.BasketItems.Count > 0)
+                        {
+                            <section class="checkout-basket mb-4" aria-labelledby="basket-markets-heading">
+                                <h3 class="checkout-basket-title" id="basket-markets-heading">
+                                    <i class="bi bi-basket2"></i> Where each item comes from
+                                </h3>
+                                <p class="small text-muted">Every farm trades at its own markets. Pick one market that all of them share.</p>
+                                <ul class="checkout-basket-list">
+                                    @foreach (var item in Model.BasketItems)
+                                    {
+                                        <li>
+                                            <span class="checkout-basket-name">@item.Name</span>
+                                            <span class="checkout-basket-farm">@item.FarmName</span>
+                                            @if (item.Markets.Count == 0)
+                                            {
+                                                <span class="checkout-basket-none">This farm has no active market yet</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="checkout-basket-markets">
+                                                    @foreach (var market in item.Markets)
+                                                    {
+                                                        <span class="checkout-market-chip">@market.Name</span>
+                                                    }
+                                                </span>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            </section>
+                        }
+
+                        @if (Model.BasketConflicts.Count > 0)
+                        {
+                            <div class="alert alert-warning d-flex gap-2 align-items-start" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                <div>
+                                    <strong class="d-block mb-1">No single market covers your whole basket</strong>
+                                    @foreach (var conflict in Model.BasketConflicts)
+                                    {
+                                        <span class="d-block small">@conflict</span>
+                                    }
+                                    <span class="d-block small mt-2">Remove the items from a farm that does not trade at your chosen market, or place two separate orders.</span>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="mb-4">
+                            <label class="form-label" for="MarketId">Pickup market</label>
+                            <select class="form-select" asp-for="MarketId" disabled="@(Model.MarketOptions.Count == 0 ? "disabled" : null)">
+                                @if (Model.MarketOptions.Count == 0)
+                                {
+                                    <option value="0">No active market is available</option>
+                                }
+                                else
+                                {
+                                    @foreach (var market in Model.MarketOptions)
+                                    {
+                                        var farms = market.FarmNames.Count > 0
+                                            ? $"collect from {market.FarmNamesLabel}"
+                                            : "no farms from your basket trade here";
+                                        var label = market.CoversWholeBasket
+                                            ? $"{market.Name} · {market.Day} · {farms}"
+                                            : $"{market.Name} · {market.Day} · {farms}";
+                                        <option value="@market.Id" selected="@(market.Id == Model.MarketId)">@label</option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="MarketId" class="text-danger small"></span>
+                            @if (Model.MarketOptions.Any(option => option.CoversWholeBasket))
+                            {
+                                <span class="form-text d-block text-success">
+                                    <i class="bi bi-check-circle"></i>
+                                    @Model.MarketOptions.Count(option => option.CoversWholeBasket) market@(Model.MarketOptions.Count(option => option.CoversWholeBasket) == 1 ? "" : "s") can cover everything you picked.
+                                </span>
+                            }
+
+                            @if (selectedFarms.Count > 0)
+                            {
+                                <div class="checkout-pickup-farms">
+                                    <span class="small text-muted d-block mb-1">You will collect from</span>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @foreach (var farm in selectedFarms)
+                                        {
+                                            <span class="checkout-market-chip"><i class="bi bi-shop" aria-hidden="true"></i>@farm</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label" asp-for="PickupDate"></label>
+                                <input class="form-control" asp-for="PickupDate" min="@today" />
+                                <span asp-validation-for="PickupDate" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" asp-for="PickupSlot"></label>
+                                <select class="form-select" asp-for="PickupSlot" id="pickupSlot" disabled="@(pickupSlots.Count == 0 ? "disabled" : null)">
+                                    @foreach (var slot in pickupSlots)
+                                    {
+                                        <option value="@slot">@slot</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="PickupSlot" class="text-danger small"></span>
+                                <span class="form-text d-block" id="pickupSlotHint"></span>
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label" asp-for="CustomerName"></label>
+                                <input class="form-control" asp-for="CustomerName" placeholder="Full name" />
+                                <span asp-validation-for="CustomerName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" asp-for="Phone"></label>
+                                <input class="form-control" asp-for="Phone" placeholder="Contact number" />
+                                <span asp-validation-for="Phone" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-8">
+                                <label class="form-label" asp-for="PickupAddress"></label>
+                                <input class="form-control" asp-for="PickupAddress" placeholder="Street address or pickup landmark" />
+                                <span asp-validation-for="PickupAddress" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" asp-for="City"></label>
+                                <input class="form-control" asp-for="City" placeholder="City" />
+                                <span asp-validation-for="City" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label" asp-for="PickupNotes"></label>
+                            <textarea class="form-control" asp-for="PickupNotes" rows="4" placeholder="Add a note for the farmer or pickup team"></textarea>
+                            <span asp-validation-for="PickupNotes" class="text-danger small"></span>
+                        </div>
+
+                        <div class="alert alert-success d-flex gap-2 align-items-start">
+                            <i class="bi bi-cash-stack fs-5"></i>
+                            <div><strong>No online payment</strong><div class="small">Your order is saved as a reservation. Pay the farmer directly when you collect it.</div></div>
+                        </div>
+
+                        <div class="d-flex flex-column flex-sm-row justify-content-between gap-2">
+                            <a class="btn btn-outline-market" asp-controller="Cart" asp-action="Index"><i class="bi bi-arrow-left"></i>Back to basket</a>
+                            <button class="btn btn-market px-4" type="submit" disabled="@(markets.Count == 0 ? "disabled" : null)">Confirm pre-order <i class="bi bi-check2-circle"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Every market brings its own opening hours, so the slot list has to change
+        // with the market. The lists are already on the page, which keeps this
+        // instant and avoids a round trip.
+        (function () {
+            var slotsByMarket = @Html.Raw(ViewData["SlotsByMarket"] as string ?? "{}");
+            var daysByMarket = @Html.Raw(ViewData["DaysByMarket"] as string ?? "{}");
+            var marketSelect = document.getElementById('MarketId');
+            var slotSelect = document.getElementById('pickupSlot');
+            var dateInput = document.getElementById('PickupDate');
+            var hint = document.getElementById('pickupSlotHint');
+            if (!marketSelect || !slotSelect) return;
+
+            function nextDateFor(days) {
+                if (!days || days.length === 0) return null;
+                for (var offset = 0; offset < 14; offset++) {
+                    var candidate = new Date();
+                    candidate.setDate(candidate.getDate() + offset);
+                    for (var i = 0; i < days.length; i++) {
+                        if (days[i].toLowerCase() === candidate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()) {
+                            return candidate.toISOString().slice(0, 10);
+                        }
+                    }
+                }
+                return null;
+            }
+
+            marketSelect.addEventListener('change', function () {
+                var slots = slotsByMarket[marketSelect.value] || [];
+                slotSelect.innerHTML = '';
+
+                if (slots.length === 0) {
+                    slotSelect.disabled = true;
+                    if (hint) hint.textContent = 'This market has no open pickup times.';
+                } else {
+                    slots.forEach(function (slot) {
+                        var option = document.createElement('option');
+                        option.value = slot;
+                        option.textContent = slot;
+                        slotSelect.appendChild(option);
+                    });
+                    slotSelect.disabled = false;
+                    if (hint) hint.textContent = 'Pickup times for the selected market.';
+                }
+
+                // Keep the date on a day this market is actually open.
+                if (dateInput) {
+                    var next = nextDateFor(daysByMarket[marketSelect.value]);
+                    if (next) dateInput.value = next;
+                }
+            });
+        })();
+    </script>
+}

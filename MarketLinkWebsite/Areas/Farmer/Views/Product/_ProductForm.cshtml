@@ -1,0 +1,228 @@
+@model ProductFormViewModel
+@{
+    var isEditing = Model.Id > 0;
+    var unitOptions = new[] { "per piece", "per kg", "per gram", "per litre", "per dozen", "per bundle", "per basket", "per box", "per bag", "per jar", "per pound" };
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Notice))
+{
+    <div class="farmer-alert farmer-alert-success" role="status">
+        <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+        <span>@Model.Notice</span>
+    </div>
+}
+
+<form class="farmer-product-form" method="post" enctype="multipart/form-data" asp-area="Farmer" asp-controller="Product" asp-action="@(isEditing ? "Edit" : "Create")" asp-route-id="@(isEditing ? Model.Id : (int?)null)" data-guard>
+    <input type="hidden" asp-for="Id" />
+    <div asp-validation-summary="ModelOnly" class="farmer-alert farmer-alert-danger" role="alert"></div>
+
+    <div class="row g-4 align-items-start">
+        <div class="col-12 col-xl-8">
+            <section class="farmer-panel farmer-form-panel" aria-labelledby="product-details-heading">
+                <div class="farmer-form-section-heading">
+                    <span class="farmer-form-step">01</span>
+                    <div>
+                        <h2 id="product-details-heading">Product details</h2>
+                        <p>Tell shoppers what makes this harvest special.</p>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-12">
+                        <label class="form-label farmer-form-label" asp-for="Name">Product name</label>
+                        <input class="form-control farmer-form-control" asp-for="Name" placeholder="e.g. Heirloom tomatoes" autocomplete="off" required />
+                        <span class="farmer-form-hint">Use the name you use at your market stall.</span>
+                        <span class="text-danger farmer-validation" asp-validation-for="Name"></span>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label farmer-form-label" asp-for="Category">Category</label>
+                        <select class="form-select farmer-form-control" asp-for="Category" required>
+                            <option value="">Choose a category</option>
+                            @foreach (var category in Model.Categories)
+                            {
+                                <option value="@category.Name" selected="@(string.Equals(Model.Category, category.Name, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@category.Name</option>
+                            }
+                        </select>
+                        <span class="text-danger farmer-validation" asp-validation-for="Category"></span>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label farmer-form-label" asp-for="Unit">Sold by</label>
+                        <select class="form-select farmer-form-control" asp-for="Unit" required>
+                            @foreach (var unit in unitOptions)
+                            {
+                                <option value="@unit" selected="@(string.Equals(Model.Unit, unit, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@unit</option>
+                            }
+                        </select>
+                        <span class="text-danger farmer-validation" asp-validation-for="Unit"></span>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label farmer-form-label" asp-for="Price">Price</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input class="form-control farmer-form-control" asp-for="Price" type="number" min="0.01" step="0.01" placeholder="0.00" required />
+                        </div>
+                        <span class="text-danger farmer-validation" asp-validation-for="Price"></span>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label farmer-form-label" asp-for="Stock">Available quantity</label>
+                        <div class="input-group">
+                            <input class="form-control farmer-form-control" asp-for="Stock" type="number" min="0" step="1" placeholder="0" required />
+                            <span class="input-group-text">units</span>
+                        </div>
+                        <span class="farmer-form-hint">We’ll remind you when stock gets low.</span>
+                        <span class="text-danger farmer-validation" asp-validation-for="Stock"></span>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label farmer-form-label" asp-for="ReorderThreshold">Low-stock alert at</label>
+                        <div class="input-group">
+                            <input class="form-control farmer-form-control" asp-for="ReorderThreshold" type="number" min="0" step="1" placeholder="5" />
+                            <span class="input-group-text">units</span>
+                        </div>
+                        <span class="text-danger farmer-validation" asp-validation-for="ReorderThreshold"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label farmer-form-label" asp-for="Description">Description</label>
+                        <textarea class="form-control farmer-form-control farmer-textarea" asp-for="Description" rows="5" placeholder="Share the flavor, growing practice, or story behind this product..." required></textarea>
+                        <div class="d-flex justify-content-between">
+                            <span class="farmer-form-hint">A short, warm description helps your farm stand stand out.</span>
+                            <span class="farmer-form-hint">600 characters max</span>
+                        </div>
+                        <span class="text-danger farmer-validation" asp-validation-for="Description"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label farmer-form-label" asp-for="ImageUrl">Photo URL</label>
+                        <input class="form-control farmer-form-control" asp-for="ImageUrl" type="text" placeholder="https://..." data-image-preview-input autocomplete="off" />
+                        <span class="farmer-form-hint">Optional. Paste any public image link, or upload a file in the next step. Leave both empty to use the default farm photo.</span>
+                        <span class="text-danger farmer-validation" asp-validation-for="ImageUrl"></span>
+                        <div class="image-preview is-hidden" data-image-preview-for="ImageUrl">
+                            <img src="" alt="" />
+                            <span class="image-preview-copy">
+                                <strong>Checking the picture</strong>
+                                <span>Paste a link to preview it.</span>
+                            </span>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(Model.ExistingImageUrl))
+                        {
+                            <label class="farmer-setting-row mt-2 mb-0" for="RemoveImage">
+                                <input type="checkbox" name="RemoveImage" value="true" id="RemoveImage" />
+                                <span>Remove the current photo and go back to the default farm image</span>
+                            </label>
+                        }
+                    </div>
+                </div>
+            </section>
+
+            <section class="farmer-panel farmer-form-panel mt-4" aria-labelledby="product-photo-heading">
+                <div class="farmer-form-section-heading">
+                    <span class="farmer-form-step">02</span>
+                    <div>
+                        <h2 id="product-photo-heading">Product photo</h2>
+                        <p>A clear, natural-light photo helps your product stand out.</p>
+                    </div>
+                </div>
+                <div class="farmer-upload-zone">
+                    <span class="farmer-upload-icon"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i></span>
+                    <strong>Drop a photo here, or browse</strong>
+                    <span>Any picture &mdash; JPG, PNG, GIF, WEBP, BMP, TIFF, AVIF, HEIC or SVG, up to 8 MB</span>
+                    <label class="farmer-btn farmer-btn-secondary farmer-upload-button" for="product-image">Choose image</label>
+                    <input class="visually-hidden" id="product-image" asp-for="ImageFile" type="file" accept="image/*" />
+                </div>
+                <span class="text-danger farmer-validation" asp-validation-for="ImageFile"></span>
+                @if (!string.IsNullOrWhiteSpace(Model.ExistingImageUrl))
+                {
+                    <div class="farmer-current-image mt-3">
+                        <img src="@Model.ExistingImageUrl" alt="Current product photo" />
+                        <div><strong>Current photo</strong><span>Uploading a new image will replace this preview.</span></div>
+                    </div>
+                }
+            </section>
+
+            <section class="farmer-panel farmer-form-panel mt-4" aria-labelledby="weekly-stock-heading">
+                <div class="farmer-form-section-heading">
+                    <span class="farmer-form-step">03</span>
+                    <div>
+                        <h2 id="weekly-stock-heading">Weekly stock plan</h2>
+                        <p>Set the quantities you expect to offer throughout the week.</p>
+                    </div>
+                </div>
+                <div class="farmer-setting-row">
+                    <div>
+                        <strong>Use a weekly plan</strong>
+                        <span>Keep each day visible while you prepare for market.</span>
+                    </div>
+                    <div class="form-check form-switch farmer-switch">
+                        <input class="form-check-input" asp-for="RecurringStockEnabled" type="checkbox" role="switch" />
+                        <label class="visually-hidden" asp-for="RecurringStockEnabled">Use weekly stock plan</label>
+                    </div>
+                </div>
+                <div class="row g-3 mt-1">
+                    <div class="col-6 col-md-3"><label class="form-label farmer-form-label" asp-for="MondayStock">Monday</label><input class="form-control farmer-form-control" asp-for="MondayStock" type="number" min="0" step="1" /></div>
+                    <div class="col-6 col-md-3"><label class="form-label farmer-form-label" asp-for="TuesdayStock">Tuesday</label><input class="form-control farmer-form-control" asp-for="TuesdayStock" type="number" min="0" step="1" /></div>
+                    <div class="col-6 col-md-3"><label class="form-label farmer-form-label" asp-for="WednesdayStock">Wednesday</label><input class="form-control farmer-form-control" asp-for="WednesdayStock" type="number" min="0" step="1" /></div>
+                    <div class="col-6 col-md-3"><label class="form-label farmer-form-label" asp-for="ThursdayStock">Thursday</label><input class="form-control farmer-form-control" asp-for="ThursdayStock" type="number" min="0" step="1" /></div>
+                    <div class="col-6 col-md-3"><label class="form-label farmer-form-label" asp-for="FridayStock">Friday</label><input class="form-control farmer-form-control" asp-for="FridayStock" type="number" min="0" step="1" /></div>
+                    <div class="col-6 col-md-3"><label class="form-label farmer-form-label" asp-for="SaturdayStock">Saturday</label><input class="form-control farmer-form-control" asp-for="SaturdayStock" type="number" min="0" step="1" /></div>
+                    <div class="col-6 col-md-3"><label class="form-label farmer-form-label" asp-for="SundayStock">Sunday</label><input class="form-control farmer-form-control" asp-for="SundayStock" type="number" min="0" step="1" /></div>
+                </div>
+                <span class="farmer-form-hint mt-3">The plan is saved with this listing; the current available quantity above remains the live inventory used for orders.</span>
+            </section>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <aside class="farmer-form-sidebar">
+                <section class="farmer-panel farmer-form-panel" aria-labelledby="listing-settings-heading">
+                    <div class="farmer-form-section-heading compact">
+                        <span class="farmer-form-step">04</span>
+                        <div>
+                            <h2 id="listing-settings-heading">Listing settings</h2>
+                            <p>Choose how this item appears.</p>
+                        </div>
+                    </div>
+                    <div class="farmer-setting-row">
+                        <div>
+                            <strong>Organic</strong>
+                            <span>Show the organic growing mark.</span>
+                        </div>
+                        <div class="form-check form-switch farmer-switch">
+                            <input class="form-check-input" asp-for="IsOrganic" type="checkbox" role="switch" />
+                            <label class="visually-hidden" asp-for="IsOrganic">Organic product</label>
+                        </div>
+                    </div>
+                    <div class="farmer-setting-row">
+                        <div>
+                            <strong>Available now</strong>
+                            <span>Shoppers can add this item.</span>
+                        </div>
+                        <div class="form-check form-switch farmer-switch">
+                            <input class="form-check-input" asp-for="IsAvailable" type="checkbox" role="switch" />
+                            <label class="visually-hidden" asp-for="IsAvailable">Product is available</label>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="farmer-side-tip mt-4" aria-label="Listing tip">
+                    <span class="farmer-side-tip-icon"><i class="bi bi-stars" aria-hidden="true"></i></span>
+                    <div>
+                        <strong>Make it memorable</strong>
+                        <p>Listings with a clear photo and a little story get more saves from neighbors.</p>
+                    </div>
+                </section>
+
+                <div class="farmer-form-actions">
+                    <button class="farmer-btn farmer-btn-primary w-100" type="submit">
+                        <i class="bi @(isEditing ? "bi-check2" : "bi-plus-lg")" aria-hidden="true"></i>
+                        @(isEditing ? "Save changes" : "Save product")
+                    </button>
+                    <a class="farmer-btn farmer-btn-link w-100" asp-area="Farmer" asp-controller="Product" asp-action="Index">Cancel</a>
+                </div>
+            </aside>
+        </div>
+    </div>
+</form>

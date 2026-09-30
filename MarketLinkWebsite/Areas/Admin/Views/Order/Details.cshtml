@@ -1,0 +1,94 @@
+@model MarketLinkWebsite.Areas.Admin.Models.OrderDetailsViewModel
+@{
+    ViewData["Title"] = "Order record";
+    var order = Model.Order;
+}
+
+<div class="admin-page-header">
+    <div>
+        <div class="admin-page-eyebrow">Records</div>
+        <h1 class="admin-page-title">@order.OrderNumber</h1>
+        <p class="admin-page-subtitle">Placed @order.PlacedLabel · @Model.Items.Count line@(Model.Items.Count == 1 ? string.Empty : "s") · @order.CustomerName</p>
+    </div>
+    <div class="admin-page-actions">
+        <a class="admin-btn admin-btn-secondary" asp-area="Admin" asp-controller="Order" asp-action="Index"><i class="bi bi-arrow-left" aria-hidden="true"></i>Back to records</a>
+    </div>
+</div>
+
+<div class="alert alert-info rounded-3 border-0 mb-4" role="note">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    This page is a read-only record. The farmer who supplied these products accepts, prepares, completes or cancels the reservation from their own workspace.
+</div>
+
+<section class="admin-order-detail-grid" aria-label="Order details">
+    <article class="admin-card admin-order-detail-card">
+        <div class="admin-card-header">
+            <div><h2 class="admin-card-title">What was purchased</h2><p class="admin-card-description">Grouped by the farmer who supplied each item.</p></div>
+            <span class="admin-status status-@order.PaymentTone">@order.PaymentStatus</span>
+        </div>
+        @foreach (var group in Model.Items.GroupBy(item => item.Variant))
+        {
+            <div class="admin-order-farm-group">
+                <div class="admin-order-farm-group-head">
+                    <span class="admin-order-farm-icon" aria-hidden="true"><i class="bi bi-tree"></i></span>
+                    <span>
+                        <strong>@group.Key</strong>
+                        <small>@group.Count() item@(group.Count() == 1 ? string.Empty : "s") from this farm</small>
+                    </span>
+                </div>
+                <div class="admin-order-line-items">
+                    @foreach (var item in group)
+                    {
+                        <div class="admin-order-line-item">
+                            <span class="admin-order-product-icon" aria-hidden="true"><i class="bi bi-basket"></i></span>
+                            <span class="admin-order-line-copy"><strong>@item.ProductName</strong><small>Qty @item.Quantity · @item.UnitPrice.ToString("C") each</small></span>
+                            <span class="admin-order-line-total">@item.LineTotal.ToString("C")</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        <div class="admin-order-detail-total"><span>Order total</span><strong>@order.Total.ToString("C")</strong></div>
+    </article>
+
+    <aside>
+        <article class="admin-card admin-order-timeline-card">
+            <div class="admin-card-header mb-0"><div><h2 class="admin-card-title">Fulfillment timeline</h2><p class="admin-card-description">Recorded by the farmer and the customer</p></div></div>
+            <ol class="admin-timeline">
+                @foreach (var eventItem in Model.Timeline)
+                {
+                    <li class="admin-timeline-item @(eventItem.IsComplete ? "admin-timeline-item-complete" : string.Empty) @(eventItem.IsCurrent ? "admin-timeline-item-current" : string.Empty)">
+                        <span class="admin-timeline-dot" aria-hidden="true"></span>
+                        <h3 class="admin-timeline-title">@eventItem.Title</h3>
+                        <time class="admin-timeline-time">@eventItem.TimeLabel</time>
+                        <p class="admin-timeline-description">@eventItem.Description</p>
+                    </li>
+                }
+            </ol>
+        </article>
+        <article class="admin-card admin-order-timeline-card mt-3">
+            <div class="admin-card-header mb-0"><div><h2 class="admin-card-title">Customer &amp; pickup</h2><p class="admin-card-description">Contact and collection details</p></div></div>
+            <div class="admin-detail-meta-list">
+                <div class="admin-detail-meta-row"><span>Customer</span><strong>@order.CustomerName</strong></div>
+                <div class="admin-detail-meta-row"><span>Contact</span><strong>@Model.CustomerEmail<br />@Model.CustomerPhone</strong></div>
+                <div class="admin-detail-meta-row"><span>Placed</span><strong>@order.PlacedLabel</strong></div>
+                <div class="admin-detail-meta-row"><span>Market</span><strong>@Model.MarketName</strong></div>
+                <div class="admin-detail-meta-row"><span>Pickup</span><strong>@order.DeliveryLabel</strong></div>
+                <div class="admin-detail-meta-row"><span>Status</span><strong><span class="admin-status status-@order.FulfillmentTone">@order.FulfillmentStatus</span></strong></div>
+                <div class="admin-detail-meta-row"><span>Payment</span><strong>@Model.PaymentMethod · @order.PaymentStatus</strong></div>
+            </div>
+            <div class="mt-3 pt-3 border-top">
+                <span class="admin-form-label mb-2">Pickup address</span>
+                <p class="admin-address-block">@Model.ShippingAddress</p>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Model.Notes))
+            {
+                <div class="mt-3 pt-3 border-top">
+                    <span class="admin-form-label mb-2">Customer notes</span>
+                    <p class="mb-0">@Model.Notes</p>
+                </div>
+            }
+        </article>
+    </aside>
+</section>
+
